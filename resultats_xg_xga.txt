@@ -1,0 +1,224 @@
+====================================================================================
+0. CADRAGE DES DONNEES
+====================================================================================
+   172 equipes-saisons, 9 ligues-saisons (Big-5), saisons 2024/25 et 2025/26
+   Source : Understat (agregats equipe-saison). Unites : par 90 minutes.
+
+   Identite comptable : dans une ligue, somme(xG) = somme(xGA), donc la
+   moyenne de xG90 = moyenne de xGA90 = mu. Les deux mesures sont donc sur
+   la MEME echelle : +0,1 xG/90 et -0,1 xGA/90 sont directement comparables.
+
+   ligue-saison           mu(xG90)  sd xG90 sd xGA90  buts/xG        n
+   --------------------------------------------------------------------------
+   Bundesliga 2024/2025       1.63    0.422    0.324    0.961       18
+   Bundesliga 2025/2026       1.70    0.481    0.229    0.950       18
+   EPL 2024/2025              1.60    0.381    0.377    0.916       20
+   EPL 2025/2026              1.53    0.329    0.252    0.899       20
+   La_Liga 2024/2025          1.43    0.454    0.252    0.919       20
+   La_Liga 2025/2026          1.50    0.386    0.195    0.898       20
+   Ligue_1 2024/2025          1.65    0.481    0.389    0.903       18
+   Ligue_1 2025/2026          1.51    0.378    0.240    0.931       18
+   Serie_A 2025/2026          1.40    0.367    0.261    0.869       20
+
+   sd(xG90) moyen  = 0.409  ;  sd(xGA90) moyen = 0.280
+   -> l'ecart-type des xG concédés est plus faible que celui des xG crees : il y a
+      moins de dispersion entre equipes du cote defensif.
+
+====================================================================================
+1. REGRESSIONS EQUIPE-SAISON (variables centrees par ligue-saison)
+====================================================================================
+
+   corr(xG90, xGA90) = -0.702  -> les deux dimensions sont fortement liees :
+   une equipe qui produit beaucoup de xG en concède en general moins.
+
+   variable expliquee       b(xG90)    t(xG)  b(xGA90)   t(xGA)   beta* xG  beta* xGA       R2
+   ------------------------------------------------------------------------------------
+   points / match             0.695     14.1    -0.614     -8.7      0.612     -0.377    0.839
+   victoires / match          0.258     14.1    -0.184     -7.0      0.649     -0.323    0.819
+   nuls / match              -0.078     -4.2    -0.063     -2.3     -0.427     -0.238    0.096
+   defaites / match          -0.179     -9.3     0.246      8.9     -0.485      0.464    0.766
+
+   b()  = effet d'un but/90 de PLUS de xG crees (resp. de xG concédés)
+   beta* = coefficient standardise : de combien de SD la cible bouge quand
+          xG90 (resp. xGA90) bouge de 1 SD. Mesure du poids relatif.
+
+   SD intra-ligue : xG90 = 0.401 buts/90, xGA90 = 0.280 buts/90  -> les equipes
+   se ressemblent BEAUCOUP moins en attaque qu'en defense.
+
+   Correlations simples :
+      corr(points, xG90) = +0.876 | corr(points, xGA90) = -0.806 | corr(points, xGD90) = +0.916
+      corr(victoires, xG90) = +0.875 | corr(victoires, xGA90) = -0.778 | corr(victoires, xGD90) = +0.903
+      corr(nuls, xG90) = -0.260 | corr(nuls, xGA90) = +0.061 | corr(nuls, xGD90) = -0.193
+      corr(defaites, xG90) = -0.810 | corr(defaites, xGA90) = +0.804 | corr(defaites, xGD90) = -0.873
+
+====================================================================================
+2. MODELE DE POISSON PAR MATCH : quel poids donner a l'attaque / a la defense ?
+====================================================================================
+   lambda_dom = k * mu * (xG90_dom/mu)^p * (xGA90_ext/mu)^q * hfa
+   lambda_ext = k * mu * (xG90_ext/mu)^p * (xGA90_dom/mu)^q / hfa
+   mu = moyenne de la ligue, k = calibration globale, hfa = avantage domicile.
+   Cible d'ajustement : les POINTS ATTENDUS xPTS d'Understat (calculés sur les
+   xG de chaque match, donc sans le bruit de finition) -> cible 'propre'.
+
+   modele                                         p       q       k     hfa  RMSE xPPG corr xPPTS   corr PPG
+   ----------------------------------------------------------------------------------------------------
+   A. attaque + defense, poids libres          1.00    1.05   0.832   1.010      0.033      0.996      0.918
+   B. attaque seule (xGA ignore)               1.23    0.00   1.187   0.998      0.110      0.952      0.881
+   C. defense seule (xG ignore)                0.00    1.51   1.463   0.993      0.165      0.889      0.814
+
+   RMSE xPPG : ecart entre les points attendus du modele et xPTS (Understat)
+   corr xPPTS: correlation entre prediction du modele et xPTS (cible propre)
+   corr PPG  : correlation entre prediction du modele et les POINTS REELS
+
+   Modele A : p = 1.00 (attaque), q = 1.05 (defense)  ->  rapport q/p = 1.04
+   Les poids optimaux sont donc quasi symetriques : 1 unite d'ecart a la
+   moyenne en xG concédés compte autant que 1 unite en xG crees.
+   NB : hfa n'est pas identifiable avec des bilans de saison (chaque equipe
+   joue autant a domicile qu'a l'exterieur) : il est laisse a 1.12 plus bas.
+
+====================================================================================
+3. EFFETS MARGINAUX : +0,1 xG/90  vs  -0,1 xGA/90 (meme gain de xGD)
+====================================================================================
+   Modele structurel p = q = 1 (les poids optimaux sont symetriques, cf. 2).
+   mu = 1.55 xG/match/equipe ; 1 xG = 0.915 but (calage) ; hfa = 1.12
+   (Un match 'moyen' : 1.59 - 1.26 a domicile, 1.26 - 1.59 a l'exterieur.)
+
+A) Terrain NEUTRE, equipe moyenne vs equipe moyenne
+
+  neutre  [xG90 = 1.42, xGA90 = 1.42]
+  scenario                     P(victo)     P(nul)     P(def)  P(non-def)      P(CS)
+  ------------------------------------------------------------------------------
+  reference                      0.3744     0.2512     0.3744      0.6256     0.2428
+  +0.10 xG/90  (attaque)         0.3993     0.2459     0.3548      0.6452     0.2428
+  -0.10 xGA/90 (defense)         0.3949     0.2561     0.3490      0.6510     0.2683
+  -0.10 xG/90  (attaque)         0.3490     0.2561     0.3949      0.6051     0.2428
+  +0.10 xGA/90 (defense)         0.3548     0.2459     0.3993      0.6007     0.2197
+                               P(victo)                        P(non-def)
+  gain ATTAQUE                   0.0249                            0.0196
+  gain DEFENSE                   0.0205                            0.0254
+  rapport defense/attaque          0.82                              1.30
+
+B) Equipe MOYENNE a DOMICILE vs equipe moyenne
+
+  domicile  [xG90 = 1.59, xGA90 = 1.26]
+  scenario                     P(victo)     P(nul)     P(def)  P(non-def)      P(CS)
+  ------------------------------------------------------------------------------
+  reference                      0.4487     0.2467     0.3046      0.6954     0.2825
+  +0.10 xG/90  (attaque)         0.4730     0.2395     0.2875      0.7125     0.2825
+  -0.10 xGA/90 (defense)         0.4712     0.2490     0.2798      0.7202     0.3123
+  -0.10 xG/90  (attaque)         0.4237     0.2537     0.3226      0.6774     0.2825
+  +0.10 xGA/90 (defense)         0.4271     0.2437     0.3291      0.6709     0.2557
+                               P(victo)                        P(non-def)
+  gain ATTAQUE                   0.0243                            0.0171
+  gain DEFENSE                   0.0224                            0.0248
+  rapport defense/attaque          0.92                              1.45
+
+C) Equipe MOYENNE a L'EXTERIEUR vs equipe moyenne
+
+  exterieur  [xG90 = 1.26, xGA90 = 1.59]
+  scenario                     P(victo)     P(nul)     P(def)  P(non-def)      P(CS)
+  ------------------------------------------------------------------------------
+  reference                      0.3046     0.2467     0.4487      0.5513     0.2049
+  +0.10 xG/90  (attaque)         0.3291     0.2437     0.4271      0.5729     0.2049
+  -0.10 xGA/90 (defense)         0.3226     0.2537     0.4237      0.5763     0.2264
+  -0.10 xG/90  (attaque)         0.2798     0.2490     0.4712      0.5288     0.2049
+  +0.10 xGA/90 (defense)         0.2875     0.2395     0.4730      0.5270     0.1854
+                               P(victo)                        P(non-def)
+  gain ATTAQUE                   0.0245                            0.0216
+  gain DEFENSE                   0.0180                            0.0250
+  rapport defense/attaque          0.73                              1.16
+
+D) Equipe FORTE (+0.5 xG/90, -0.3 xGA/90) a domicile
+
+  forte  [xG90 = 2.10, xGA90 = 1.02]
+  scenario                     P(victo)     P(nul)     P(def)  P(non-def)      P(CS)
+  ------------------------------------------------------------------------------
+  reference                      0.6216     0.2033     0.1750      0.8250     0.3611
+  +0.10 xG/90  (attaque)         0.6415     0.1945     0.1640      0.8360     0.3611
+  -0.10 xGA/90 (defense)         0.6453     0.1998     0.1549      0.8451     0.3990
+  -0.10 xG/90  (attaque)         0.6009     0.2124     0.1868      0.8132     0.3611
+  +0.10 xGA/90 (defense)         0.5984     0.2061     0.1955      0.8045     0.3267
+                               P(victo)                        P(non-def)
+  gain ATTAQUE                   0.0199                            0.0111
+  gain DEFENSE                   0.0237                            0.0202
+  rapport defense/attaque          1.19                              1.82
+
+E) Equipe FAIBLE (-0.5 xG/90, +0.3 xGA/90) a l'exterieur
+
+  faible  [xG90 = 0.86, xGA90 = 1.89]
+  scenario                     P(victo)     P(nul)     P(def)  P(non-def)      P(CS)
+  ------------------------------------------------------------------------------
+  reference                      0.1639     0.2180     0.6180      0.3820     0.1506
+  +0.10 xG/90  (attaque)         0.1859     0.2208     0.5934      0.4066     0.1506
+  -0.10 xGA/90 (defense)         0.1756     0.2287     0.5957      0.4043     0.1665
+  -0.10 xG/90  (attaque)         0.1423     0.2144     0.6433      0.3567     0.1506
+  +0.10 xGA/90 (defense)         0.1530     0.2077     0.6393      0.3607     0.1363
+                               P(victo)                        P(non-def)
+  gain ATTAQUE                   0.0219                            0.0247
+  gain DEFENSE                   0.0117                            0.0223
+  rapport defense/attaque          0.53                              0.91
+
+--------------------------------------------------------------------------------
+F) LE VRAI MATCH-TYPE : 1 ECART-TYPE d'attaque contre 1 ECART-TYPE de defense
+    (+0.40 xG/90 vs 0.28 xGA/90 : c'est l'amplitude reelle des ecarts entre
+    equipes d'une meme ligue). Moyenne domicile + exterieur.
+--------------------------------------------------------------------------------
+
+   profil                             P(victoire)      P(nul)  P(defaite) P(non-defaite)
+   --------------------------------------------------------------------------------
+   equipe moyenne                          0.3767      0.2467      0.3767      0.6233
+   +1 SD d'attaque (+0.40 xG)              0.4638      0.2258      0.3104      0.6896
+   +1 SD de defense (0.28 xGA)             0.4300      0.2586      0.3114      0.6886
+   les deux                                0.5195      0.2291      0.2514      0.7486
+
+   GAIN 1 SD D'ATTAQUE   : P(victoire) +0.0871   P(non-defaite) +0.0663   points/match +0.240
+   GAIN 1 SD DE DEFENSE  : P(victoire) +0.0533   P(non-defaite) +0.0652   points/match +0.172
+   RAPPORT defense / attaque : 0.61 sur P(victoire), 0.98 sur P(non-defaite), 0.71 sur les points
+
+====================================================================================
+4. A xGD EGAL, VAUT-IL MIEUX ATTAQUER OU DEFENDRE ?
+====================================================================================
+   Deux equipes avec le meme xGD, l'une qui le doit a l'attaque, l'autre a la
+   defense. Saison simulee contre des adversaires moyens (moitie dom, moitie ext).
+
+   profil (xGD = +0.4)              xG90    xGA90   P(victo)     P(nul) P(non-def)  pts/match
+   ------------------------------------------------------------------------------
+   equipe moyenne (xGD = 0)         1.55     1.55     0.3767     0.2467     0.6233       1.38
+   tout par l'attaque               1.95     1.55     0.4636     0.2259     0.6895       1.62
+   tout par la defense              1.55     1.15     0.4549     0.2627     0.7176       1.63
+   moitie-moitie                    1.75     1.35     0.4599     0.2423     0.7021       1.62
+
+   profil (xGD = -0.4)              xG90    xGA90   P(victo)     P(nul) P(non-def)  pts/match
+   ------------------------------------------------------------------------------
+   trou en attaque                  1.15     1.55     0.2824     0.2627     0.5451       1.11
+   trou en defense                  1.55     1.95     0.3105     0.2259     0.5364       1.16
+   moitie-moitie                    1.35     1.75     0.2979     0.2423     0.5401       1.14
+
+   Ecart attaque - defense : -0.011 pts/match pour un xGD de +0.4 (-0.4 pts/saison),
+   et -0.047 pts/match pour un xGD de -0.4 (-1.8 pts/saison).
+
+====================================================================================
+5. FIABILITE : quel signal est le plus stable et le plus predictif ?
+====================================================================================
+
+   65 equipes presentes dans les deux saisons (Bundesliga, EPL, La_Liga, Ligue_1)
+
+   Stabilite d'une saison sur l'autre (autocorrelation) :
+      corr(xG90  S1 -> xG90  S2)  = +0.762  (brut) / +0.783 (centre par ligue)
+      corr(xGA90 S1 -> xGA90 S2)  = +0.546  (brut) / +0.526 (centre par ligue)
+      corr(xGD90 S1 -> xGD90 S2)  = +0.781  (brut) / +0.782 (centre par ligue)
+
+   Prediction des POINTS de la saison suivante (S2), centre par ligue :
+      corr(xG90  S1, PPG S2)  = +0.731  (brut +0.710)
+      corr(xGA90 S1, PPG S2)  = -0.565  (brut -0.533)
+      corr(xGD90 S1, PPG S2)  = +0.730  (brut +0.727)
+      corr(PPG   S1, PPG S2)  = +0.708   (reference naive : les points passes)
+
+   Regressions (S1 -> S2), variables centrees par ligue :
+      PPG ~ xG90 seul      R2 = 0.534  beta* = +0.731 (t = +8.5)
+      PPG ~ xGA90 seul     R2 = 0.320  beta* = -0.973 (t = -5.4)
+      PPG ~ xG90 + xGA90   R2 = 0.546  beta*(xG) = +0.635 (t = +5.6) | beta*(xGA) = -0.145 (t = -1.3)
+
+   Prediction des DEFAITES de la saison suivante (risque de perdre) :
+      defaites/match S2 : R2 = 0.463  beta*(xG) = -0.635 (t = -5.1) | beta*(xGA) = +0.066 (t = +0.5)
+      victoires S2  R2 = 0.548  beta*(xG) = +0.615 (t = +5.4) | beta*(xGA) = -0.172 (t = -1.5)
