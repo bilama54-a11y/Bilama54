@@ -83,7 +83,7 @@ npm test
 npm run build
 ```
 
-24 tests unitaires couvrent les distributions, les partitions à 100 %, la conversion des unités, les données invalides, les cotes, les coupons, la sécurité de l’import JSON et le parseur OCR.
+34 tests unitaires couvrent les distributions, les partitions à 100 %, la conversion des unités, les données invalides, les cotes, les coupons, la sécurité de l’import JSON et le parseur OCR.
 
 Tests navigateur (nécessitent un serveur lancé et Chromium) :
 
@@ -110,3 +110,37 @@ npm run test:portable
 ```
 
 Le test ouvre réellement le fichier en `file://`, coupe le réseau, vérifie les calculs et effectue une lecture OCR sur une capture synthétique. Cette distribution est conservée car elle constitue un livrable directement ouvrable, indépendant de la disponibilité du serveur de prévisualisation.
+
+## Version 1.1 — essai gratuit de collecte automatique
+
+Le bouton **Données gratuites** charge les calendriers et scores du projet **OpenFootball / football.json** via l’API publique de GitHub, sans compte, clé ni abonnement. La source est en domaine public / CC0. Référence : https://github.com/openfootball/football.json
+
+Championnat sélectionnable : Premier League, Ligue 1, Bundesliga, La Liga, Serie A, Eredivisie, Primeira Liga et Championship, sous réserve de la présence du fichier demandé. Les saisons historiques sont explicitement indiquées ; une saison antérieure n’est pas présentée comme la saison en cours. La Ligue des nations et la NVSL ne sont pas proposées dans ce connecteur.
+
+### Ce qui est automatique
+
+- Téléchargement du calendrier et des scores confirmés, puis date du dernier commit du fichier source.
+- Cache local de 10 minutes ; bouton Actualiser et rafraîchissement toutes les 10 minutes quand l’écran est ouvert et visible.
+- Sélection d’un match à venir, puis calcul des moyennes de buts sur les 5, 10 ou tous les résultats antérieurs disponibles. Le nombre effectif de matchs est observé, pas fixé arbitrairement à 5 ou 10.
+- Recalcul avec le **mode buts réels, sans xG**. Les xG, tirs, possession, blessures et cotes ne sont pas fabriqués.
+- Moins de 3 résultats par équipe ou résultat antérieur non confirmé : analyse suspendue plutôt que calcul faussement complet.
+- Les scores du match cible, les matchs futurs et tous les matchs du jour courant sont exclus des entrées. Les heures de la source ne sont pas converties vers UTC sans garantie de fuseau.
+
+### Limites de fraîcheur et de qualité
+
+OpenFootball est maintenu par une communauté : il ne s’agit pas d’un flux live ni d’un service avec SLA. Le fichier Premier League contrôlé le 2 octobre 2026 était daté du **22 septembre 2026**, avec **45 scores sur 380 fixtures**. Certains matchs étaient donc volontairement non analysables. Les dates de récupération et de modification de la source sont affichées séparément. Une récupération aujourd’hui ne prouve pas une actualisation aujourd’hui.
+
+En cas de panne ou de limite de requêtes, un ancien cache est signalé comme tel ; sans cache la source est déclarée indisponible. L’API publique de GitHub applique sa propre limite de requêtes anonymes. Aucune clé privée n’est embarquée et la validation HTTPS normale n’est pas désactivée dans l’application.
+
+L’essai teste l’import, la couverture et l’ergonomie, **pas la rentabilité d’un modèle non calibré**. Pour évoluer vers des xG fiables et une couverture élargie, un fournisseur autorisé et des évaluations historiques seront nécessaires.
+
+### Confidentialité et tests
+
+Le mode en ligne nécessite Internet et contacte GitHub ; celui-ci voit les requêtes et l’adresse IP du navigateur. Les photos OCR et calculs restent locaux. Aucun compte ou mot de passe de bookmaker n’est demandé. La version autonome embarque toujours l’OCR ; seule la récupération de nouvelles données nécessite Internet.
+
+```bash
+npm test
+npm run test:free-data
+```
+
+Le test navigateur du connecteur utilise un calendrier synthétique pour vérifier l’import, les échantillons, la sauvegarde, le cache, les erreurs réseau et le mobile. Une récupération réelle de la saison 2026/2027 et son import ont aussi été contrôlés. Dans le sandbox de test seulement, le navigateur peut nécessiter la confiance du certificat du proxy HTTPS ; cela ne change pas la validation TLS des utilisateurs.

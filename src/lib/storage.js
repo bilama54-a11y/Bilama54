@@ -1,6 +1,7 @@
 import { SAMPLE, COUPON_SAMPLE, DEFAULT_PARAMETERS, clone } from './data.js';
 import { validateMatch, number } from './model.js';
 const KEY = 'matchlab:workspace:v1';
+const safeTimestamp = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) ? new Date(value).toISOString() : null;
 
 export const defaultWorkspace = () => ({ match: clone(SAMPLE), parameters: { ...DEFAULT_PARAMETERS }, coupon: [], history: [] });
 
@@ -16,15 +17,17 @@ export function validateImport(input) {
       else if (key === 'color') clean.color = /^#[0-9a-f]{6}$/i.test(team.color || '') ? team.color : '#396958';
       else if (key === 'name') clean.name = team.name.trim();
       else if (key === 'form') clean.form = Array.isArray(team.form) ? team.form.slice(-5).filter(x => ['W', 'D', 'L'].includes(x)) : [];
+      else if (['xgFor', 'xgAgainst'].includes(key) && match.modelMode === 'goals') clean[key] = '';
       else clean[key] = Number.isFinite(number(team[key])) ? String(team[key]).slice(0, 14) : (['games', 'goalsFor', 'goalsAgainst', 'xgFor', 'xgAgainst'].includes(key) ? String(fallback) : '');
     }
     return clean;
   };
   return {
-    version: 1, home: cleanTeam(match.home), away: cleanTeam(match.away),
+    version: 1, modelMode: match.modelMode === 'goals' ? 'goals' : 'xg', home: cleanTeam(match.home), away: cleanTeam(match.away),
     competition: String(match.competition || 'Football').slice(0, 70), season: String(match.season || '').slice(0, 20),
     source: String(match.source || 'Import JSON').slice(0, 120), captureDate: String(match.captureDate || '').slice(0, 30),
     venue: match.venue, sampleConfirmed: match.sampleConfirmed === true, xgUnit: match.xgUnit,
+    dataSource: match.dataSource?.provider === 'openfootball' ? { provider: 'openfootball', league: String(match.dataSource.league || '').slice(0,10), season: String(match.dataSource.season || '').slice(0,10), fixtureId: String(match.dataSource.fixtureId || '').slice(0,220), fixtureDate: String(match.dataSource.fixtureDate || '').slice(0,10), cutoffDate: String(match.dataSource.cutoffDate || '').slice(0,10), retrievedAt: safeTimestamp(match.dataSource.retrievedAt), updatedAt: safeTimestamp(match.dataSource.updatedAt), delivery: ['network','cache','offline-cache'].includes(match.dataSource.delivery) ? match.dataSource.delivery : 'cache', window: [5,10,200].includes(match.dataSource.window) ? match.dataSource.window : 10 } : null,
     h2h: match.h2h && ['home', 'draw', 'away'].every(key => Number.isInteger(match.h2h[key]) && match.h2h[key] >= 0 && match.h2h[key] <= 500) ? { home: match.h2h.home, draw: match.h2h.draw, away: match.h2h.away } : null,
   };
 }

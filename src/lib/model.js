@@ -12,6 +12,7 @@ export const number = value => {
 export function validateMatch(match) {
   const errors = [];
   if (!match || typeof match !== 'object') return ['Données du match absentes.'];
+  if (match.modelMode != null && !['xg', 'goals'].includes(match.modelMode)) errors.push('Mode du modèle invalide.');
   if (!['total', 'average'].includes(match.xgUnit)) errors.push('Choisissez l’unité des xG.');
   if (!['home', 'neutral'].includes(match.venue)) errors.push('Lieu du match invalide.');
   for (const side of ['home', 'away']) {
@@ -21,7 +22,8 @@ export function validateMatch(match) {
     if (typeof team.name !== 'string' || !team.name.trim() || team.name.length > 70) errors.push(`${label} : nom requis (70 caractères maximum).`);
     const games = number(team.games);
     if (!Number.isInteger(games) || games < 1 || games > 200) errors.push(`${label} : nombre de matchs entier entre 1 et 200 requis.`);
-    for (const field of ['goalsFor', 'goalsAgainst', 'xgFor', 'xgAgainst']) {
+    const fields = match.modelMode === 'goals' ? ['goalsFor', 'goalsAgainst'] : ['goalsFor', 'goalsAgainst', 'xgFor', 'xgAgainst'];
+    for (const field of fields) {
       const n = number(team[field]);
       const limit = field.startsWith('xg') && match.xgUnit === 'total' ? 1000 : 15;
       if (!Number.isFinite(n) || n < 0 || n > limit) errors.push(`${team.name || label} : ${field.startsWith('xg') ? 'xG' : 'moyenne de buts'} invalide (0–${limit}).`);
@@ -51,13 +53,15 @@ export function predict(match, inputParameters = DEFAULT_PARAMETERS) {
   parameters.homeAdvantage = bound(parameters.homeAdvantage, 0, 0.4);
   parameters.awayPenalty = bound(parameters.awayPenalty, 0, 0.4);
 
+  const mode = match.modelMode || 'xg';
+  if (mode === 'goals') parameters.xgWeight = 0;
   const rate = team => {
     const games = number(team.games);
     const divisor = match.xgUnit === 'total' ? games : 1;
-    const xg = number(team.xgFor) / divisor;
-    const xga = number(team.xgAgainst) / divisor;
-    const attackRaw = parameters.xgWeight * xg + (1 - parameters.xgWeight) * number(team.goalsFor);
-    const defenseRaw = parameters.xgWeight * xga + (1 - parameters.xgWeight) * number(team.goalsAgainst);
+    const xg = mode === 'xg' ? number(team.xgFor) / divisor : null;
+    const xga = mode === 'xg' ? number(team.xgAgainst) / divisor : null;
+    const attackRaw = mode === 'xg' ? parameters.xgWeight * xg + (1 - parameters.xgWeight) * number(team.goalsFor) : number(team.goalsFor);
+    const defenseRaw = mode === 'xg' ? parameters.xgWeight * xga + (1 - parameters.xgWeight) * number(team.goalsAgainst) : number(team.goalsAgainst);
     const weight = games / (games + parameters.priorMatches);
     return {
       attack: weight * attackRaw + (1 - weight) * parameters.baseline,
@@ -103,7 +107,7 @@ export function predict(match, inputParameters = DEFAULT_PARAMETERS) {
     market('btts-yes', 'Les deux équipes marquent', btts, 'btts'),
     market('btts-no', 'Au moins une équipe ne marque pas', 1 - btts, 'btts'),
   ];
-  return { valid: true, errors: [], parameters, lambdaHome, lambdaAway, totalGoals: lambdaHome + lambdaAway, home, draw, away, btts, over, markets, scores, matrix, maxGoals, truncatedMass: 1 - mass, homeRate, awayRate };
+  return { valid: true, mode, errors: [], parameters, lambdaHome, lambdaAway, totalGoals: lambdaHome + lambdaAway, home, draw, away, btts, over, markets, scores, matrix, maxGoals, truncatedMass: 1 - mass, homeRate, awayRate };
 }
 
 export function evaluateOdds(probability, decimalOdds) {

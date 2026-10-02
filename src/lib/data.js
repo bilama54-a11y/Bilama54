@@ -1,5 +1,6 @@
 export const SAMPLE = {
   version: 1,
+  modelMode: 'xg',
   competition: 'Premier League',
   season: '2026/2027',
   source: 'Captures FotMob fournies',
