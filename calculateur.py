@@ -68,12 +68,12 @@ def force_en_mots(v, sens="att"):
     if abs(e) < 4:
         return "dans la moyenne"
     if sens == "att":
-        mot = ("excellente" if e >= 25 else "tres bonne" if e >= 12 else "correcte"
-               if e > 0 else "faible" if e > -12 else "tres faible" if e > -25
+        mot = ("excellente" if e >= 25 else "très bonne" if e >= 12 else "correcte"
+               if e > 0 else "faible" if e > -12 else "très faible" if e > -25
                else "catastrophique")
     else:
-        mot = ("catastrophique" if e >= 25 else "tres fragile" if e >= 12 else "fragile"
-               if e > 0 else "solide" if e > -12 else "tres solide" if e > -25
+        mot = ("catastrophique" if e >= 25 else "très fragile" if e >= 12 else "fragile"
+               if e > 0 else "solide" if e > -12 else "très solide" if e > -25
                else "excellente")
     return f"{mot} ({'+' if e > 0 else ''}{e:.0f} % de xG concédés)" if sens == "def" \
         else f"{mot} ({'+' if e > 0 else ''}{e:.0f} % de xG créés)"

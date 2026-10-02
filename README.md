@@ -16,6 +16,10 @@ Ouvrez la page affichée, choisissez deux équipes, entrez les cotes de votre bo
 L'outil répond : qui gagne le plus souvent, quelle est la cote juste, et s'il y a de la
 valeur (vert = jouable, orange = douteux, rouge = ne pas jouer).
 
+**Sans serveur ni internet :** ouvrez directement [`analyseur.html`](analyseur.html) dans
+n'importe quel navigateur (téléphone compris). C'est le même outil, en un seul fichier,
+qui fonctionne hors-ligne. Utile si l'aperçu Arena ne s'ouvre pas chez vous.
+
 ---
 
 ## Analyse : xG vs xGA — lequel pèse le plus ?
@@ -51,6 +55,7 @@ mise : [`MODELE_xG_xGA.md`](MODELE_xG_xGA.md)
 |---|---|
 | `GUIDE_SIMPLE.md` | **la méthode en langage clair** (à lire en premier) |
 | `calculateur.py` | **l'outil** : page web, deux équipes + vos cotes → verdict |
+| `analyseur.html` | **version hors-ligne** du même outil, un seul fichier, sans serveur |
 | `RAPPORT_xG_vs_xGA.md` | étude : résultats, tableaux, conséquences pratiques, limites |
 | `MODELE_xG_xGA.md` | la formule : constantes, ratings, λ, probabilités, edge/Kelly, validation |
 | `modele_xg.py` | le modèle de match (1N2, 1X, Over/Under, BTTS, value, Kelly) + backtest |
