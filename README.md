@@ -1,6 +1,23 @@
 # Bilama54
 Parieur sportif
 
+## Commencer ici
+
+**[`GUIDE_SIMPLE.md`](GUIDE_SIMPLE.md)** — la méthode en langage clair, sans formule :
+4 gestes, un tableau de lecture, 4 règles d'argent, 3 pièges.
+
+**L'outil :**
+
+```bash
+python3 calculateur.py
+```
+
+Ouvrez la page affichée, choisissez deux équipes, entrez les cotes de votre bookmaker.
+L'outil répond : qui gagne le plus souvent, quelle est la cote juste, et s'il y a de la
+valeur (vert = jouable, orange = douteux, rouge = ne pas jouer).
+
+---
+
 ## Analyse : xG vs xGA — lequel pèse le plus ?
 
 **Question :** entre les xG (occasions créées) et les xGA (occasions concédées),
@@ -16,7 +33,7 @@ lequel pèse le plus sur une victoire, et lequel contribue le plus à ne pas per
 
 Détail, méthode et chiffres : [`RAPPORT_xG_vs_xGA.md`](RAPPORT_xG_vs_xGA.md)
 
-## La formule de match
+## Pour aller plus loin (mathématiques)
 
 ```
 A = (xG90/μ)^0,78        force d'attaque        D = (xGA90/μ)^0,53   faiblesse défensive
@@ -32,8 +49,10 @@ mise : [`MODELE_xG_xGA.md`](MODELE_xG_xGA.md)
 
 | Fichier | Rôle |
 |---|---|
-| `MODELE_xG_xGA.md` | **la formule** : constantes, ratings, λ, probabilités, edge/Kelly, validation |
+| `GUIDE_SIMPLE.md` | **la méthode en langage clair** (à lire en premier) |
+| `calculateur.py` | **l'outil** : page web, deux équipes + vos cotes → verdict |
 | `RAPPORT_xG_vs_xGA.md` | étude : résultats, tableaux, conséquences pratiques, limites |
+| `MODELE_xG_xGA.md` | la formule : constantes, ratings, λ, probabilités, edge/Kelly, validation |
 | `modele_xg.py` | le modèle de match (1N2, 1X, Over/Under, BTTS, value, Kelly) + backtest |
 | `analyse_xg_xga.py` | script de l'étude (bibliothèque standard uniquement) |
 | `data/understat_team_seasons.csv` | données : 172 équipes-saisons, Big-5, 2024/25 + 2025/26 (Understat) |
@@ -41,6 +60,7 @@ mise : [`MODELE_xG_xGA.md`](MODELE_xG_xGA.md)
 Reproduire :
 
 ```bash
+python3 calculateur.py       # l'outil (page web)
 python3 analyse_xg_xga.py    # l'étude
 python3 modele_xg.py         # la formule + backtest + tables
 ```
