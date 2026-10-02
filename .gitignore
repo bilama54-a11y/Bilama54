@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.cache/
+public/ocr/
+test-results/
+playwright-report/
+.env
+.env.*
+!.env.example
+*.local
+.DS_Store
+
+.venv/
+
+image-search/
