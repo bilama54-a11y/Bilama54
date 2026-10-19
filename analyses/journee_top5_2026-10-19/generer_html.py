@@ -91,7 +91,7 @@ cards = [
     ("48", "matchs au programme", "10 + 10 + 10 + 9 + 9"),
     (f"{len(applicable)}", "matchs arbitrés par la règle", f"{len(equal)} à égalité · {len(zero)} sans historique"),
     (f"{fr(rate,1)} %", "de réussite", f"{len(ok)} validés · {len(ko)} contredits"),
-    ("1 / 5", "matchs où la règle a échoué en Serie A", "son pire championnat"),
+    ("1 / 5", "de réussite en Serie A", "le championnat qui la contredit le plus"),
 ]
 
 rows = []
