@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bilan H2H — dernière journée du top 5 européen</title>
+<style>
+  :root { --ink:#101820; --muted:#64748b; --line:#e2e8f0; --bg:#f6f7f9; --ok:#0f766e; --ko:#b91c1c; --na:#94a3b8; --wait:#b45309; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Segoe UI",system-ui,-apple-system,sans-serif; line-height:1.5; }
+  .wrap { max-width:1000px; margin:0 auto; padding:36px 20px 60px; }
+  header { border-bottom:3px solid var(--ink); padding-bottom:20px; margin-bottom:26px; }
+  .kicker { text-transform:uppercase; letter-spacing:.14em; font-size:12px; color:var(--muted); font-weight:700; }
+  h1 { font-size:34px; line-height:1.15; margin:8px 0 10px; }
+  .lead { color:#334155; max-width:70ch; }
+  .quote { border-left:4px solid var(--ink); padding:8px 16px; color:#334155; font-style:italic; margin:18px 0 0; }
+  .cards { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:26px 0; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .card b { display:block; font-size:28px; line-height:1; margin-bottom:6px; }
+  .card span { font-size:13px; color:#334155; display:block; }
+  .card small { color:var(--muted); font-size:11.5px; }
+  .panel { background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin:22px 0; }
+  h2 { font-size:19px; margin:0; }
+  .lghead { display:flex; align-items:baseline; justify-content:space-between; margin:30px 0 10px; border-bottom:1px solid var(--line); padding-bottom:8px; }
+  .lgrate { font-weight:700; font-size:15px; }
+  .lgrate small { display:block; font-weight:400; color:var(--muted); font-size:11.5px; text-align:right; }
+  details.match { background:#fff; border:1px solid var(--line); border-radius:10px; margin-bottom:8px; }
+  details.match summary { list-style:none; cursor:pointer; display:flex; align-items:center; gap:12px; padding:11px 14px; }
+  details.match summary::-webkit-details-marker { display:none; }
+  .score { min-width:52px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .teams { flex:1; }
+  .vs { color:#cbd5e1; }
+  .b { font-size:11.5px; font-weight:700; padding:4px 9px; border-radius:999px; white-space:nowrap; }
+  .b.ok { background:#ccfbf1; color:var(--ok); }
+  .b.ko { background:#fee2e2; color:var(--ko); }
+  .b.na { background:#f1f5f9; color:var(--na); }
+  .b.wait { background:#fef3c7; color:var(--wait); }
+  .body { border-top:1px dashed var(--line); padding:10px 14px 6px; }
+  ul.h2h { margin:4px 0 8px; padding-left:18px; }
+  ul.h2h li { margin:3px 0; font-size:14px; }
+  .season { display:inline-block; min-width:58px; color:var(--muted); font-weight:600; font-size:12px; }
+  .fav { margin:6px 0 8px; font-size:13.5px; color:#334155; }
+  .note { font-size:13.5px; color:#475569; margin:4px 0 8px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); }
+  th { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .bar { height:6px; background:#e2e8f0; border-radius:99px; overflow:hidden; }
+  .bar i { display:block; height:100%; background:var(--ok); }
+  .split { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  ul.clean { padding-left:18px; margin:8px 0 0; }
+  ul.clean li { margin:6px 0; font-size:14.5px; }
+  .foot { margin-top:34px; color:var(--muted); font-size:12.5px; border-top:1px solid var(--line); padding-top:14px; }
+  @media (max-width:760px) { .cards { grid-template-columns:repeat(2,1fr); } .split { grid-template-columns:1fr; } h1 { font-size:26px; } }
+  @media print { details.match { break-inside:avoid; } details.match .body { display:block; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="kicker">Bilan à la loupe · 16-19 octobre 2026</div>
+  <h1>La règle des confrontations directes<br>sur la dernière journée du top 5 européen</h1>
+  <p class="lead">Premier League (J7), Liga (J9), Serie A (J7), Bundesliga (J6), Ligue 1 (J7) : 48 matchs passés au crible,
+  confrontation par confrontation, sur les deux dernières saisons de championnat.</p>
+  <p class="quote">« Les équipes ayant remporté le plus de matchs dans les confrontations directes des 2 dernières années
+  font victoire ou match nul dans le match du jour. »</p>
+</header>
+
+<div class="cards">
+  <div class="card"><b>48</b><span>matchs au programme</span><small>10 + 10 + 10 + 9 + 9</small></div><div class="card"><b>28</b><span>matchs arbitrés par la règle</span><small>7 à égalité · 10 sans historique</small></div><div class="card"><b>67,9 %</b><span>de réussite</span><small>19 validés · 9 contredits</small></div><div class="card"><b>1 / 5</b><span>matchs où la règle a échoué en Serie A</span><small>son pire championnat</small></div>
+</div>
+
+<div class="panel">
+  <h2>Le bilan par championnat</h2>
+  <table>
+    <thead><tr><th>Championnat</th><th class="num">Arbitrés</th><th class="num">Validés</th><th class="num">Contredits</th><th>Taux</th></tr></thead>
+    <tbody>
+    <tr><td>Premier League</td><td class="num">8</td><td class="num">6</td>
+      <td class="num">2</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="bar" style="flex:1"><i style="width:75.0%"></i></div>
+      <span style="font-size:12.5px;font-weight:700;min-width:42px">75 %</span></div></td></tr><tr><td>La Liga</td><td class="num">4</td><td class="num">4</td>
+      <td class="num">0</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="bar" style="flex:1"><i style="width:100.0%"></i></div>
+      <span style="font-size:12.5px;font-weight:700;min-width:42px">100 %</span></div></td></tr><tr><td>Serie A</td><td class="num">5</td><td class="num">1</td>
+      <td class="num">4</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="bar" style="flex:1"><i style="width:20.0%"></i></div>
+      <span style="font-size:12.5px;font-weight:700;min-width:42px">20 %</span></div></td></tr><tr><td>Bundesliga</td><td class="num">5</td><td class="num">4</td>
+      <td class="num">1</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="bar" style="flex:1"><i style="width:80.0%"></i></div>
+      <span style="font-size:12.5px;font-weight:700;min-width:42px">80 %</span></div></td></tr><tr><td>Ligue 1</td><td class="num">6</td><td class="num">4</td>
+      <td class="num">2</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="bar" style="flex:1"><i style="width:66.66666666666667%"></i></div>
+      <span style="font-size:12.5px;font-weight:700;min-width:42px">67 %</span></div></td></tr>
+    </tbody>
+  </table>
+  <p class="note">La règle a fonctionné deux fois sur trois. Mais elle a été parfaite en Liga (4/4) et calamiteuse en Serie A (1/5) :
+  sa valeur dépend fortement du championnat et du contexte des clubs.</p>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <h2>Ce qui a marché</h2>
+    <ul class="clean">
+      <li><b>Real Madrid 4-1 Séville</b> — 4 victoires en 4 confrontations, le signal le plus net du week-end.</li>
+      <li><b>Bayern 6-1 Leipzig</b> — 3 victoires et 1 nul dans l'historique.</li>
+      <li><b>Trois nuls</b> ont sauvé la double chance : Leeds, Villarreal et Union Berlin.</li>
+      <li><b>11 favoris à domicile sur 14</b> ont tenu (79 %), contre 8 sur 14 à l'extérieur (57 %).</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h2>Ce qui a raté</h2>
+    <ul class="clean">
+      <li><b>Brighton 5-0 Crystal Palace</b> — Palace avait 3 victoires et 1 nul sur 4.</li>
+      <li><b>Monza 4-0 Cagliari</b> — Cagliari avait gagné les deux confrontations.</li>
+      <li><b>Le Havre 1-3 Auxerre</b> et <b>Udinese 0-3 Lecce</b> — 3 victoires sur 4, et deux défaites à domicile.</li>
+      <li><b>Milan 3-2 Atalanta</b> — l'Atalanta avait 3 victoires et 1 nul.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Le détail, match par match</h2>
+  <p class="note">Cliquez sur une ligne pour dérouler l'historique des confrontations.</p>
+</div>
+
+
+    <section>
+      <div class="lghead"><h2>Premier League</h2><div class="lgrate">75 %<small>6/8 arbitrés</small></div></div>
+      
+    <details class="match">
+      <summary>
+        <span class="score">0-2</span>
+        <span class="teams">Everton <span class="vs">/</span> Chelsea</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Everton <b>3-0</b> Chelsea &nbsp;·&nbsp; Chelsea <b>2-0</b> Everton</li><li><span class='season'>2024-25</span> Everton <b>0-0</b> Chelsea &nbsp;·&nbsp; Chelsea <b>1-0</b> Everton</li></ul><p class='fav'>Favori : <b>Chelsea</b> — 1 v. / 1 n. / 2 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">1-2</span>
+        <span class="teams">Brentford <span class="vs">/</span> Liverpool</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Brentford <b>3-2</b> Liverpool &nbsp;·&nbsp; Liverpool <b>1-1</b> Brentford</li><li><span class='season'>2024-25</span> Brentford <b>0-2</b> Liverpool &nbsp;·&nbsp; Liverpool <b>2-0</b> Brentford</li></ul><p class='fav'>Favori : <b>Liverpool</b> — 1 v. / 1 n. / 2 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">1-0</span>
+        <span class="teams">Fulham <span class="vs">/</span> Hull City</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><p class='note'>Hull City n'était pas dans l'élite en 2024-25 ni en 2025-26 (deuxième division anglaise).</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">3-2</span>
+        <span class="teams">Manchester City <span class="vs">/</span> Ipswich</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2024-25</span> Manchester City <b>4-1</b> Ipswich &nbsp;·&nbsp; Ipswich <b>0-6</b> Manchester City</li></ul><p class='fav'>Favori : <b>Manchester City</b> — 2 v. / 0 n. / 0 d. sur 2 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">0-1</span>
+        <span class="teams">Newcastle <span class="vs">/</span> Aston Villa</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Newcastle <b>0-2</b> Aston Villa &nbsp;·&nbsp; Aston Villa <b>0-0</b> Newcastle</li><li><span class='season'>2024-25</span> Newcastle <b>3-0</b> Aston Villa &nbsp;·&nbsp; Aston Villa <b>4-1</b> Newcastle</li></ul><p class='fav'>Favori : <b>Aston Villa</b> — 1 v. / 1 n. / 2 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">2-0</span>
+        <span class="teams">Bournemouth <span class="vs">/</span> Sunderland</span>
+        <span class="b ko">contredit</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Bournemouth <b>1-1</b> Sunderland &nbsp;·&nbsp; Sunderland <b>3-2</b> Bournemouth</li></ul><p class='fav'>Favori : <b>Sunderland</b> — 0 v. / 1 n. / 1 d. sur 2 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">5-0</span>
+        <span class="teams">Brighton <span class="vs">/</span> Crystal Palace</span>
+        <span class="b ko">contredit</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Brighton <b>0-1</b> Crystal Palace &nbsp;·&nbsp; Crystal Palace <b>0-0</b> Brighton</li><li><span class='season'>2024-25</span> Brighton <b>1-3</b> Crystal Palace &nbsp;·&nbsp; Crystal Palace <b>2-1</b> Brighton</li></ul><p class='fav'>Favori : <b>Crystal Palace</b> — 0 v. / 1 n. / 3 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">1-1</span>
+        <span class="teams">Leeds <span class="vs">/</span> Manchester United</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Leeds <b>1-1</b> Manchester United &nbsp;·&nbsp; Manchester United <b>1-2</b> Leeds</li></ul><p class='fav'>Favori : <b>Leeds</b> — 1 v. / 1 n. / 0 d. sur 2 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">0-1</span>
+        <span class="teams">Nottingham Forest <span class="vs">/</span> Arsenal</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Nottingham Forest <b>0-0</b> Arsenal &nbsp;·&nbsp; Arsenal <b>3-0</b> Nottingham Forest</li><li><span class='season'>2024-25</span> Nottingham Forest <b>0-0</b> Arsenal &nbsp;·&nbsp; Arsenal <b>3-0</b> Nottingham Forest</li></ul><p class='fav'>Favori : <b>Arsenal</b> — 0 v. / 2 n. / 2 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">–</span>
+        <span class="teams">Tottenham <span class="vs">/</span> Coventry City</span>
+        <span class="b wait">à jouer</span>
+      </summary>
+      <div class="body"><p class='note'>Coventry City n'était pas dans l'élite en 2024-25 ni en 2025-26 (deuxième division anglaise).</p></div>
+    </details>
+    </section>
+    <section>
+      <div class="lghead"><h2>La Liga</h2><div class="lgrate">100 %<small>4/4 arbitrés</small></div></div>
+      
+    <details class="match">
+      <summary>
+        <span class="score">1-1</span>
+        <span class="teams">Deportivo La Corogne <span class="vs">/</span> Levante</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><p class='note'>Deportivo évoluait en deuxième division espagnole.</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">0-1</span>
+        <span class="teams">Espanyol <span class="vs">/</span> Atlético Madrid</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Espanyol <b>2-1</b> Atlético Madrid &nbsp;·&nbsp; Atlético Madrid <b>4-2</b> Espanyol</li><li><span class='season'>2024-25</span> Espanyol <b>1-1</b> Atlético Madrid &nbsp;·&nbsp; Atlético Madrid <b>0-0</b> Espanyol</li></ul><p class='fav'>Aucun favori : égalité parfaite du nombre de victoires (1 – 2 – 1).</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">0-0</span>
+        <span class="teams">Villarreal <span class="vs">/</span> Elche</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Villarreal <b>2-1</b> Elche &nbsp;·&nbsp; Elche <b>1-3</b> Villarreal</li></ul><p class='fav'>Favori : <b>Villarreal</b> — 2 v. / 0 n. / 0 d. sur 2 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">2-5</span>
+        <span class="teams">Betis <span class="vs">/</span> Barcelona</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Betis <b>3-5</b> Barcelona &nbsp;·&nbsp; Barcelona <b>3-1</b> Betis</li><li><span class='season'>2024-25</span> Betis <b>2-2</b> Barcelona &nbsp;·&nbsp; Barcelona <b>1-1</b> Betis</li></ul><p class='fav'>Favori : <b>Barcelona</b> — 0 v. / 2 n. / 2 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">0-0</span>
+        <span class="teams">Valencia <span class="vs">/</span> Athletic Bilbao</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Valencia <b>2-0</b> Athletic Bilbao &nbsp;·&nbsp; Athletic Bilbao <b>0-1</b> Valencia</li><li><span class='season'>2024-25</span> Valencia <b>0-1</b> Athletic Bilbao &nbsp;·&nbsp; Athletic Bilbao <b>1-0</b> Valencia</li></ul><p class='fav'>Aucun favori : égalité parfaite du nombre de victoires (2 – 0 – 2).</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">2-0</span>
+        <span class="teams">Osasuna <span class="vs">/</span> Racing Santander</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><p class='note'>Racing Santander évoluait en deuxième division espagnole.</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">2-1</span>
+        <span class="teams">Celta Vigo <span class="vs">/</span> Alavés</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Celta Vigo <b>3-4</b> Alavés &nbsp;·&nbsp; Alavés <b>0-1</b> Celta Vigo</li><li><span class='season'>2024-25</span> Celta Vigo <b>2-1</b> Alavés &nbsp;·&nbsp; Alavés <b>1-1</b> Celta Vigo</li></ul><p class='fav'>Favori : <b>Celta Vigo</b> — 2 v. / 1 n. / 1 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">2-5</span>
+        <span class="teams">Málaga <span class="vs">/</span> Real Sociedad</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><p class='note'>Málaga évoluait en deuxième division espagnole.</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">4-1</span>
+        <span class="teams">Real Madrid <span class="vs">/</span> Sevilla</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Real Madrid <b>2-0</b> Sevilla &nbsp;·&nbsp; Sevilla <b>0-1</b> Real Madrid</li><li><span class='season'>2024-25</span> Real Madrid <b>4-2</b> Sevilla &nbsp;·&nbsp; Sevilla <b>0-2</b> Real Madrid</li></ul><p class='fav'>Favori : <b>Real Madrid</b> — 4 v. / 0 n. / 0 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">–</span>
+        <span class="teams">Getafe <span class="vs">/</span> Rayo Vallecano</span>
+        <span class="b wait">à jouer</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Getafe <b>0-2</b> Rayo Vallecano &nbsp;·&nbsp; Rayo Vallecano <b>1-1</b> Getafe</li><li><span class='season'>2024-25</span> Getafe <b>0-0</b> Rayo Vallecano &nbsp;·&nbsp; Rayo Vallecano <b>1-0</b> Getafe</li></ul><p class='fav'>Favori : <b>Rayo Vallecano</b> — 0 v. / 2 n. / 2 d. sur 4 confrontations</p></div>
+    </details>
+    </section>
+    <section>
+      <div class="lghead"><h2>Serie A</h2><div class="lgrate">20 %<small>1/5 arbitrés</small></div></div>
+      
+    <details class="match">
+      <summary>
+        <span class="score">4-2</span>
+        <span class="teams">Frosinone <span class="vs">/</span> Sassuolo</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><p class='note'>Frosinone évoluait en Serie B (relégué en 2024).</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">1-0</span>
+        <span class="teams">Venezia <span class="vs">/</span> Napoli</span>
+        <span class="b ko">contredit</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2024-25</span> Venezia <b>0-0</b> Napoli &nbsp;·&nbsp; Napoli <b>1-0</b> Venezia</li></ul><p class='fav'>Favori : <b>Napoli</b> — 0 v. / 1 n. / 1 d. sur 2 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">1-3</span>
+        <span class="teams">Bologna <span class="vs">/</span> Inter</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Bologna <b>3-3</b> Inter &nbsp;·&nbsp; Inter <b>3-1</b> Bologna</li><li><span class='season'>2024-25</span> Bologna <b>1-0</b> Inter &nbsp;·&nbsp; Inter <b>2-2</b> Bologna</li></ul><p class='fav'>Aucun favori : égalité parfaite du nombre de victoires (1 – 2 – 1).</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">2-0</span>
+        <span class="teams">Roma <span class="vs">/</span> Genoa</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Roma <b>3-1</b> Genoa &nbsp;·&nbsp; Genoa <b>2-1</b> Roma</li><li><span class='season'>2024-25</span> Roma <b>3-1</b> Genoa &nbsp;·&nbsp; Genoa <b>1-1</b> Roma</li></ul><p class='fav'>Favori : <b>Roma</b> — 2 v. / 1 n. / 1 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">0-3</span>
+        <span class="teams">Udinese <span class="vs">/</span> Lecce</span>
+        <span class="b ko">contredit</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Udinese <b>3-2</b> Lecce &nbsp;·&nbsp; Lecce <b>2-1</b> Udinese</li><li><span class='season'>2024-25</span> Udinese <b>1-0</b> Lecce &nbsp;·&nbsp; Lecce <b>0-1</b> Udinese</li></ul><p class='fav'>Favori : <b>Udinese</b> — 3 v. / 0 n. / 1 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">1-3</span>
+        <span class="teams">Fiorentina <span class="vs">/</span> Como</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Fiorentina <b>1-2</b> Como &nbsp;·&nbsp; Como <b>1-2</b> Fiorentina</li><li><span class='season'>2024-25</span> Fiorentina <b>0-2</b> Como &nbsp;·&nbsp; Como <b>0-2</b> Fiorentina</li></ul><p class='fav'>Aucun favori : égalité parfaite du nombre de victoires (2 – 0 – 2).</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">3-2</span>
+        <span class="teams">Milan <span class="vs">/</span> Atalanta</span>
+        <span class="b ko">contredit</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Milan <b>2-3</b> Atalanta &nbsp;·&nbsp; Atalanta <b>1-1</b> Milan</li><li><span class='season'>2024-25</span> Milan <b>0-1</b> Atalanta &nbsp;·&nbsp; Atalanta <b>2-1</b> Milan</li></ul><p class='fav'>Favori : <b>Atalanta</b> — 0 v. / 1 n. / 3 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">0-3</span>
+        <span class="teams">Juventus <span class="vs">/</span> Lazio</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Juventus <b>2-2</b> Lazio &nbsp;·&nbsp; Lazio <b>1-0</b> Juventus</li><li><span class='season'>2024-25</span> Juventus <b>1-0</b> Lazio &nbsp;·&nbsp; Lazio <b>1-1</b> Juventus</li></ul><p class='fav'>Aucun favori : égalité parfaite du nombre de victoires (1 – 2 – 1).</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">4-0</span>
+        <span class="teams">Monza <span class="vs">/</span> Cagliari</span>
+        <span class="b ko">contredit</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2024-25</span> Monza <b>1-2</b> Cagliari &nbsp;·&nbsp; Cagliari <b>3-0</b> Monza</li></ul><p class='fav'>Favori : <b>Cagliari</b> — 0 v. / 0 n. / 2 d. sur 2 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">–</span>
+        <span class="teams">Parma <span class="vs">/</span> Torino</span>
+        <span class="b wait">à jouer</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Parma <b>2-1</b> Torino &nbsp;·&nbsp; Torino <b>4-1</b> Parma</li><li><span class='season'>2024-25</span> Parma <b>2-2</b> Torino &nbsp;·&nbsp; Torino <b>0-0</b> Parma</li></ul><p class='fav'>Aucun favori : égalité parfaite du nombre de victoires (1 – 2 – 1).</p></div>
+    </details>
+    </section>
+    <section>
+      <div class="lghead"><h2>Bundesliga</h2><div class="lgrate">80 %<small>4/5 arbitrés</small></div></div>
+      
+    <details class="match">
+      <summary>
+        <span class="score">1-0</span>
+        <span class="teams">Eintracht Francfort <span class="vs">/</span> Cologne</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Eintracht Francfort <b>2-2</b> Cologne &nbsp;·&nbsp; Cologne <b>3-4</b> Eintracht Francfort</li></ul><p class='fav'>Favori : <b>Eintracht Francfort</b> — 1 v. / 1 n. / 0 d. sur 2 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">0-0</span>
+        <span class="teams">Union Berlin <span class="vs">/</span> Borussia Dortmund</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Union Berlin <b>0-3</b> Borussia Dortmund &nbsp;·&nbsp; Borussia Dortmund <b>3-0</b> Union Berlin</li><li><span class='season'>2024-25</span> Union Berlin <b>2-1</b> Borussia Dortmund &nbsp;·&nbsp; Borussia Dortmund <b>6-0</b> Union Berlin</li></ul><p class='fav'>Favori : <b>Borussia Dortmund</b> — 1 v. / 0 n. / 3 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">1-0</span>
+        <span class="teams">Hambourg SV <span class="vs">/</span> Stuttgart</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Hambourg SV <b>2-1</b> Stuttgart &nbsp;·&nbsp; Stuttgart <b>4-0</b> Hambourg SV</li></ul><p class='fav'>Aucun favori : égalité parfaite du nombre de victoires (1 – 0 – 1).</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">2-2</span>
+        <span class="teams">Werder Brême <span class="vs">/</span> Paderborn</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><p class='note'>Paderborn évoluait en 2. Bundesliga.</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">0-1</span>
+        <span class="teams">Schalke 04 <span class="vs">/</span> Mayence</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><p class='note'>Schalke 04 évoluait en 2. Bundesliga.</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">4-3</span>
+        <span class="teams">Elversberg <span class="vs">/</span> Augsbourg</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><p class='note'>Elversberg évoluait en 2. Bundesliga.</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">6-1</span>
+        <span class="teams">Bayern Munich <span class="vs">/</span> RB Leipzig</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Bayern Munich <b>6-0</b> RB Leipzig &nbsp;·&nbsp; RB Leipzig <b>1-5</b> Bayern Munich</li><li><span class='season'>2024-25</span> Bayern Munich <b>5-1</b> RB Leipzig &nbsp;·&nbsp; RB Leipzig <b>3-3</b> Bayern Munich</li></ul><p class='fav'>Favori : <b>Bayern Munich</b> — 3 v. / 1 n. / 0 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">2-1</span>
+        <span class="teams">Bayer Leverkusen <span class="vs">/</span> Fribourg</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Bayer Leverkusen <b>2-0</b> Fribourg &nbsp;·&nbsp; Fribourg <b>3-3</b> Bayer Leverkusen</li><li><span class='season'>2024-25</span> Bayer Leverkusen <b>5-1</b> Fribourg &nbsp;·&nbsp; Fribourg <b>2-2</b> Bayer Leverkusen</li></ul><p class='fav'>Favori : <b>Bayer Leverkusen</b> — 2 v. / 2 n. / 0 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">1-2</span>
+        <span class="teams">Mönchengladbach <span class="vs">/</span> Hoffenheim</span>
+        <span class="b ko">contredit</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Mönchengladbach <b>4-0</b> Hoffenheim &nbsp;·&nbsp; Hoffenheim <b>5-1</b> Mönchengladbach</li><li><span class='season'>2024-25</span> Mönchengladbach <b>4-4</b> Hoffenheim &nbsp;·&nbsp; Hoffenheim <b>1-2</b> Mönchengladbach</li></ul><p class='fav'>Favori : <b>Mönchengladbach</b> — 2 v. / 1 n. / 1 d. sur 4 confrontations</p></div>
+    </details>
+    </section>
+    <section>
+      <div class="lghead"><h2>Ligue 1</h2><div class="lgrate">67 %<small>4/6 arbitrés</small></div></div>
+      
+    <details class="match">
+      <summary>
+        <span class="score">0-3</span>
+        <span class="teams">Le Mans <span class="vs">/</span> Toulouse</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><p class='note'>Le Mans évoluait en Ligue 2.</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">1-3</span>
+        <span class="teams">Strasbourg <span class="vs">/</span> Paris SG</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Strasbourg <b>1-2</b> Paris SG &nbsp;·&nbsp; Paris SG <b>3-3</b> Strasbourg</li><li><span class='season'>2024-25</span> Strasbourg <b>2-1</b> Paris SG &nbsp;·&nbsp; Paris SG <b>4-2</b> Strasbourg</li></ul><p class='fav'>Favori : <b>Paris SG</b> — 1 v. / 1 n. / 2 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">1-1</span>
+        <span class="teams">Lille <span class="vs">/</span> Brest</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Lille <b>1-1</b> Brest &nbsp;·&nbsp; Brest <b>3-3</b> Lille</li><li><span class='season'>2024-25</span> Lille <b>3-1</b> Brest &nbsp;·&nbsp; Brest <b>2-0</b> Lille</li></ul><p class='fav'>Aucun favori : égalité parfaite du nombre de victoires (1 – 2 – 1).</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">1-3</span>
+        <span class="teams">Troyes <span class="vs">/</span> Lens</span>
+        <span class="b na">non applicable</span>
+      </summary>
+      <div class="body"><p class='note'>Troyes évoluait en Ligue 2.</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">2-5</span>
+        <span class="teams">Angers <span class="vs">/</span> Marseille</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Angers <b>2-5</b> Marseille &nbsp;·&nbsp; Marseille <b>2-2</b> Angers</li><li><span class='season'>2024-25</span> Angers <b>0-2</b> Marseille &nbsp;·&nbsp; Marseille <b>1-1</b> Angers</li></ul><p class='fav'>Favori : <b>Marseille</b> — 0 v. / 2 n. / 2 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">1-3</span>
+        <span class="teams">Le Havre <span class="vs">/</span> Auxerre</span>
+        <span class="b ko">contredit</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Le Havre <b>1-1</b> Auxerre &nbsp;·&nbsp; Auxerre <b>0-1</b> Le Havre</li><li><span class='season'>2024-25</span> Le Havre <b>3-1</b> Auxerre &nbsp;·&nbsp; Auxerre <b>1-2</b> Le Havre</li></ul><p class='fav'>Favori : <b>Le Havre</b> — 3 v. / 1 n. / 0 d. sur 4 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">1-0</span>
+        <span class="teams">Lorient <span class="vs">/</span> Monaco</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Lorient <b>3-1</b> Monaco &nbsp;·&nbsp; Monaco <b>1-3</b> Lorient</li></ul><p class='fav'>Favori : <b>Lorient</b> — 2 v. / 0 n. / 0 d. sur 2 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">4-3</span>
+        <span class="teams">Paris FC <span class="vs">/</span> Rennes</span>
+        <span class="b ko">contredit</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Paris FC <b>0-1</b> Rennes &nbsp;·&nbsp; Rennes <b>2-1</b> Paris FC</li></ul><p class='fav'>Favori : <b>Rennes</b> — 0 v. / 0 n. / 2 d. sur 2 confrontations</p></div>
+    </details>
+    <details class="match">
+      <summary>
+        <span class="score">2-1</span>
+        <span class="teams">Lyon <span class="vs">/</span> Nice</span>
+        <span class="b ok">validé</span>
+      </summary>
+      <div class="body"><ul class='h2h'><li><span class='season'>2025-26</span> Lyon <b>2-0</b> Nice &nbsp;·&nbsp; Nice <b>3-2</b> Lyon</li><li><span class='season'>2024-25</span> Lyon <b>4-1</b> Nice &nbsp;·&nbsp; Nice <b>0-2</b> Lyon</li></ul><p class='fav'>Favori : <b>Lyon</b> — 3 v. / 0 n. / 1 d. sur 4 confrontations</p></div>
+    </details>
+    </section>
+
+<div class="panel">
+  <h2>Mode d'emploi et limites</h2>
+  <ul class="clean">
+    <li><b>Fenêtre :</b> saisons 2024-25 et 2025-26, championnat uniquement (coupes exclues).</li>
+    <li><b>Favori :</b> le club avec strictement plus de victoires. Validé s'il gagne ou fait match nul.</li>
+    <li><b>Couverture :</b> 17 matchs sur 45 échappent au critère (égalité parfaite ou aucun historique), soit
+      38 % de la journée.</li>
+    <li><b>Prudence :</b> 28 observations sur un seul week-end ne suffisent pas à conclure statistiquement.</li>
+  </ul>
+</div>
+
+<div class="foot">
+  Sources : matrices de résultats des saisons 2024-25 et 2025-26 (championnat) et résultats de la journée recoupés
+  sur les sources de référence de chaque championnat. Données détaillées : <code>bilan_h2h.csv</code>.
+</div>
+</div>
+</body>
+</html>
