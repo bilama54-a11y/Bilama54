@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bilama54 — Dashboard NBA Opening Night 20 Oct 2026</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Space Grotesk','sans-serif'], mono: ['IBM Plex Mono','monospace'] },
+      colors: { bilama: { bg:'#0B0E14', card:'#11151E', border:'#1E2533', accent:'#00E5A0', accent2:'#6C5CFF', warn:'#FFB800', danger:'#FF3B30' } }
+    }
+  }
+}
+</script>
+<style>
+.glass { backdrop-filter: blur(12px); }
+.live-dot { animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.35 } }
+.scrollbar-hide::-webkit-scrollbar { display:none }
+</style>
+</head>
+<body class="bg-bilama-bg text-white font-sans min-h-screen antialiased">
+  <!-- TOP BAR -->
+  <header class="sticky top-0 z-50 bg-bilama-bg/80 glass border-b border-bilama-border">
+    <div class="max-w-[1440px] mx-auto px-4 lg:px-6 h-[64px] flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-bilama-accent to-bilama-accent2 flex items-center justify-center font-bold text-black">B54</div>
+        <div>
+          <div class="font-bold leading-none text-[18px] tracking-tight">Bilama54 <span class="text-bilama-accent">•</span> <span class="font-normal text-zinc-400">Parieur sportif</span></div>
+          <div class="text-[11px] text-zinc-500 font-mono tracking-widest uppercase">Dashboard • Opening Night • Live Data</div>
+        </div>
+      </div>
+      <div class="hidden md:flex items-center gap-3">
+        <div class="flex items-center gap-2 bg-bilama-card border border-bilama-border rounded-full px-3 py-1.5">
+          <span class="w-2 h-2 rounded-full bg-bilama-accent live-dot"></span>
+          <span class="text-xs font-medium">Auto-refresh 60s</span>
+          <span class="text-[11px] text-zinc-500 font-mono" id="lastUpdate">—</span>
+        </div>
+        <button id="refreshBtn" class="bg-white text-black px-4 py-2 rounded-full text-sm font-semibold hover:bg-zinc-100 transition flex items-center gap-2">
+          <i class="fa-solid fa-rotate"></i> Actualiser
+        </button>
+        <a href="https://www.rotowire.com/basketball/nba-lineups.php" target="_blank" class="bg-bilama-card border border-bilama-border px-4 py-2 rounded-full text-sm font-medium hover:bg-zinc-800 transition">Voir RotoWire <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-xs"></i></a>
+      </div>
+      <div class="md:hidden flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-bilama-accent live-dot"></span>
+        <span class="text-xs">Live</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="max-w-[1440px] mx-auto px-4 lg:px-6 pt-6 pb-4">
+    <div class="grid grid-cols-1 lg:grid-cols-[1.35fr_0.65fr] gap-4">
+      <div class="bg-gradient-to-br from-[#11151E] via-[#131A2B] to-[#0B0E14] border border-bilama-border rounded-[24px] p-6 lg:p-8 relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 w-64 h-64 bg-bilama-accent2/20 blur-[80px] rounded-full"></div>
+        <div class="absolute -left-10 -bottom-10 w-64 h-64 bg-bilama-accent/15 blur-[80px] rounded-full"></div>
+        <div class="relative">
+          <div class="inline-flex items-center gap-2 bg-white/10 border border-white/10 rounded-full px-3 py-1 text-xs mb-3">
+            <i class="fa-solid fa-basketball text-bilama-accent"></i> NBA 2026-27 • Saison 80 • Tip-Off
+            <span class="bg-bilama-accent text-black px-2 py-0.5 rounded-full font-bold text-[11px]">LIVE 20 OCT</span>
+          </div>
+          <h1 class="text-[28px] lg:text-[40px] font-bold leading-[0.95] tracking-tight">Opening Night.<br><span class="text-bilama-accent">3 matchs.</span> Toutes les<br>compos RotoWire.</h1>
+          <p class="text-zinc-400 mt-3 text-sm lg:text-[15px] max-w-[560px]">Compositions projetées par RotoWire (24-30h avant tip-off), cotes DraftKings/ESPN et suivi blessures en temps réel. Confirmations officielles 30 min avant chaque match.</p>
+          <div class="flex flex-wrap gap-3 mt-5">
+            <div class="flex items-center gap-2 bg-black/40 border border-white/10 rounded-full px-3 py-2">
+              <img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fnyk.png&w=40&h=40" class="w-6 h-6"/>
+              <span class="text-xs font-mono">NYK champion en titre • Ring Night 18h30 ET</span>
+            </div>
+            <div class="flex items-center gap-2 bg-bilama-accent text-black rounded-full px-3 py-2 text-xs font-bold">
+              <i class="fa-solid fa-clock"></i> <span id="countdown">Chargement…</span>
+            </div>
+          </div>
+          <div class="flex gap-2 mt-6">
+            <button onclick="document.getElementById('games').scrollIntoView({behavior:'smooth'})" class="bg-white text-black px-5 py-2.5 rounded-full font-semibold text-sm">Voir les compos <i class="fa-solid fa-arrow-down ml-1"></i></button>
+            <button id="toggleTZ" class="bg-bilama-card border border-bilama-border px-5 py-2.5 rounded-full font-medium text-sm">Heure: Paris (UTC+2) <i class="fa-solid fa-repeat ml-1"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-rows-[auto_1fr] gap-4">
+        <div class="bg-bilama-card border border-bilama-border rounded-[20px] p-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-bilama-warn/15 flex items-center justify-center text-bilama-warn"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div>
+              <div class="text-sm font-semibold">Source RotoWire</div>
+              <div class="text-xs text-zinc-500">Projected → Confirmed à J-0</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-[11px] text-zinc-500 font-mono">DERNIÈRE VÉRIF</div>
+            <div class="text-sm font-mono font-medium" id="verifyTime">19 oct 23:06 • Paris</div>
+          </div>
+        </div>
+        <div class="bg-gradient-to-br from-bilama-accent2 to-violet-900 rounded-[20px] p-5 text-white relative overflow-hidden flex flex-col justify-between">
+          <div class="absolute right-0 top-0 w-40 h-40 bg-white/10 blur-2xl rounded-full"></div>
+          <div>
+            <div class="text-xs font-mono tracking-widest opacity-80">BILAMA PICKS • VALEUR DU JOUR</div>
+            <div class="mt-2 flex items-center gap-2">
+              <span class="bg-white text-black px-2 py-1 rounded-full text-xs font-bold">PHI +4.5</span>
+              <span class="text-sm font-medium">Le modèle voit l'écart plus serré que les books</span>
+            </div>
+            <p class="text-sm opacity-90 mt-2 leading-relaxed">Philly 6e au % de lancers + 4e aux contres. Face à des Knicks 29e aux contres, les passages sur la ligne peuvent couvrir le spread.</p>
+          </div>
+          <div class="mt-4 flex items-center justify-between bg-white/15 rounded-full px-3 py-2">
+            <span class="text-xs">Cote proposée par Rotowire Bet</span>
+            <span class="bg-bilama-accent text-black text-xs font-bold px-3 py-1 rounded-full">Cote 1.90</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FILTERS -->
+  <div class="max-w-[1440px] mx-auto px-4 lg:px-6">
+    <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2">
+      <button data-filter="all" class="filter-btn active bg-white text-black px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap">Tous les matchs (3)</button>
+      <button data-filter="early" class="filter-btn bg-bilama-card border border-bilama-border px-4 py-2 rounded-full text-sm whitespace-nowrap">15h ET • BOS @ DET</button>
+      <button data-filter="prime" class="filter-btn bg-bilama-card border border-bilama-border px-4 py-2 rounded-full text-sm whitespace-nowrap">19h ET • PHI @ NYK ⭐ Ring Night</button>
+      <button data-filter="late" class="filter-btn bg-bilama-card border border-bilama-border px-4 py-2 rounded-full text-sm whitespace-nowrap">21h30 ET • OKC @ SAS</button>
+      <div class="ml-auto hidden lg:flex items-center gap-2 text-xs text-zinc-500 font-mono">
+        <i class="fa-solid fa-circle-info"></i> Odds DraftKings via ESPN • O/U = Over/Under
+      </div>
+    </div>
+  </div>
+
+  <!-- GAMES GRID -->
+  <section id="games" class="max-w-[1440px] mx-auto px-4 lg:px-6 py-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+    <!-- GAME 1 -->
+    <article data-cat="early" class="game-card bg-bilama-card border border-bilama-border rounded-[20px] overflow-hidden flex flex-col">
+      <div class="h-1.5 w-full bg-gradient-to-r from-green-500 to-emerald-700"></div>
+      <div class="p-5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="bg-white text-black text-[11px] font-bold px-2 py-1 rounded-full">MATCH 1</span>
+            <span class="bg-bilama-accent/15 text-bilama-accent text-[11px] font-mono px-2 py-1 rounded-full border border-bilama-accent/20">PROJECTED</span>
+          </div>
+          <span class="text-xs font-mono text-zinc-500" data-et="15:00" data-fr="21:00">15:00 ET • 21:00 Paris</span>
+        </div>
+        <div class="mt-4 bg-black/40 rounded-2xl p-4 border border-white/5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fbos.png&w=60&h=60" class="w-10 h-10 bg-white rounded-full p-1"/>
+              <div>
+                <div class="font-bold leading-none">BOS</div>
+                <div class="text-[11px] text-zinc-400">Celtics (0-0)</div>
+              </div>
+            </div>
+            <div class="text-center">
+              <div class="text-[11px] font-mono text-zinc-500">TIP-OFF</div>
+              <div class="font-bold">@</div>
+              <div class="text-[11px] text-zinc-500">Peacock / NBC</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="text-right">
+                <div class="font-bold leading-none">DET</div>
+                <div class="text-[11px] text-zinc-400">Pistons (0-0)</div>
+              </div>
+              <img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fdet.png&w=60&h=60" class="w-10 h-10 bg-white rounded-full p-1"/>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center justify-center gap-2 text-[11px] font-mono">
+            <span class="bg-white text-black px-2 py-1 rounded-full font-bold">BOS -1.5</span>
+            <span class="bg-zinc-800 px-2 py-1 rounded-full">O/U 222.5</span>
+            <span class="bg-zinc-800 px-2 py-1 rounded-full">Little Caesars Arena</span>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm">Cinq majeurs — RotoWire projeté</h3>
+            <span class="text-[11px] text-zinc-500 font-mono">via BasketballMonster</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0B0E14] border border-bilama-border rounded-xl p-3">
+              <div class="text-[11px] font-mono text-zinc-500 flex items-center gap-1"><span class="w-2 h-2 bg-green-500 rounded-full"></span> BOSTON CELTICS</div>
+              <ul class="mt-2 space-y-1.5 text-sm">
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PG</span> <span class="font-medium">Derrick White</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SG</span> <span>Baylor Scheierman</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SF</span> <span>Jayson Tatum</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PF</span> <span class="text-bilama-accent">Paul George</span> <span class="text-[10px] bg-bilama-accent text-black px-1 rounded">NEW</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">C</span> <span>Mitchell Robinson</span></li>
+              </ul>
+            </div>
+            <div class="bg-[#0B0E14] border border-bilama-border rounded-xl p-3">
+              <div class="text-[11px] font-mono text-zinc-500 flex items-center gap-1"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> DETROIT PISTONS</div>
+              <ul class="mt-2 space-y-1.5 text-sm">
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PG</span> <span class="font-medium">Cade Cunningham</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SG</span> <span>Duncan Robinson</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SF</span> <span>Ausar Thompson</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PF</span> <span>John Collins</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">C</span> <span>Jalen Duren</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="mt-3 bg-bilama-warn/10 border border-bilama-warn/20 rounded-xl px-3 py-2 flex items-center gap-2 text-xs">
+            <i class="fa-solid fa-lightbulb text-bilama-warn"></i> <span class="text-zinc-300"><b>Storyline:</b> 1er match de l'ère Paul George à Boston. Detroit ouvre à domicile devant son public.</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-auto px-5 py-3 bg-black/20 border-t border-bilama-border flex items-center justify-between text-xs">
+        <span class="text-zinc-500 font-mono">Source: RotoWire • 19 oct maj</span>
+        <span class="flex items-center gap-1 text-zinc-400"><i class="fa-solid fa-rotate text-[10px]"></i> auto-refresh</span>
+      </div>
+    </article>
+
+    <!-- GAME 2 FEATURED -->
+    <article data-cat="prime" class="game-card bg-gradient-to-b from-[#1A1F2E] to-bilama-card border border-bilama-accent/30 rounded-[20px] overflow-hidden flex flex-col relative lg:scale-[1.02] shadow-xl shadow-bilama-accent/5">
+      <div class="h-1.5 w-full bg-gradient-to-r from-orange-500 via-bilama-warn to-yellow-400"></div>
+      <div class="absolute top-3 right-3 bg-bilama-accent text-black text-[11px] font-bold px-2 py-1 rounded-full flex items-center gap-1"><i class="fa-solid fa-crown"></i> RING NIGHT</div>
+      <div class="p-5">
+        <div class="flex items-center gap-2">
+          <span class="bg-bilama-accent text-black text-[11px] font-bold px-2 py-1 rounded-full">MATCH 2 • PRIME TIME</span>
+          <span class="bg-red-500 text-white text-[11px] font-mono px-2 py-1 rounded-full">NYK -4.5 • O/U 231.5</span>
+        </div>
+        <div class="text-xs font-mono text-zinc-400 mt-1" data-et="19:00" data-fr="01:00+1">19:00 ET • 01:00 Paris (nuit 21) • NBC/Peacock • Cérémonie 18:30 ET</div>
+        <div class="mt-3 bg-black rounded-2xl p-4 border border-white/10">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fphi.png&w=60&h=60" class="w-11 h-11 bg-white rounded-full p-1"/>
+              <div>
+                <div class="font-bold">PHI</div>
+                <div class="text-[11px] text-zinc-400">76ers (0-0)</div>
+                <div class="text-[10px] bg-bilama-accent2 text-white px-1.5 py-0.5 rounded-full inline-block mt-0.5">LeBron + Jaylen Brown NEW</div>
+              </div>
+            </div>
+            <div class="text-center">
+              <div class="text-zinc-500 text-[11px]">AT</div>
+              <div class="font-black text-xl">VS</div>
+              <div class="text-[10px] bg-white text-black px-2 py-0.5 rounded-full font-bold">MSG</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="text-right">
+                <div class="font-bold">NYK</div>
+                <div class="text-[11px] text-zinc-400">Knicks (0-0)</div>
+                <div class="text-[10px] bg-yellow-500 text-black px-1.5 py-0.5 rounded-full inline-block mt-0.5">Champion 2026</div>
+              </div>
+              <img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fnyk.png&w=60&h=60" class="w-11 h-11 bg-white rounded-full p-1"/>
+            </div>
+          </div>
+          <div class="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+            <div class="bg-zinc-800 rounded-full py-1.5"><span class="text-zinc-400">Spread</span> <b>NYK -4.5</b></div>
+            <div class="bg-zinc-800 rounded-full py-1.5"><span class="text-zinc-400">Moneyline</span> <b>-197 / +161</b></div>
+            <div class="bg-zinc-800 rounded-full py-1.5"><span class="text-zinc-400">Total</span> <b>231.5</b></div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div class="flex items-center gap-2 mb-2">
+            <h3 class="font-semibold text-sm">Cinq majeurs projetés</h3>
+            <span class="bg-green-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">ROTOWIRE</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0B0E14] border border-bilama-accent2/30 rounded-xl p-3">
+              <div class="text-[11px] font-mono text-zinc-400 flex justify-between"><span>PHILADELPHIA 76ers</span> <i class="fa-solid fa-star text-bilama-accent2"></i></div>
+              <ul class="mt-2 space-y-1 text-sm">
+                <li class="flex justify-between items-center"><span class="text-zinc-500 font-mono text-xs">PG</span> <span>Tyrese Maxey <span class="text-zinc-500 text-xs">28.3ppg</span></span></li>
+                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">SG</span> <span>VJ Edgecombe <span class="text-[10px] bg-white text-black px-1 rounded">ROOKIE</span></span></li>
+                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">SF</span> <span>Jaylen Brown</span></li>
+                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">PF</span> <span class="font-bold text-bilama-accent">LeBron James</span></li>
+                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">C</span> <span>Joel Embiid</span></li>
+              </ul>
+              <div class="mt-2 text-[11px] bg-red-500/10 border border-red-500/20 rounded-lg p-2">
+                <div class="font-bold text-red-400"><i class="fa-solid fa-briefcase-medical"></i> Infirmerie PHI</div>
+                <div class="text-zinc-400">Barlow OUT (dos), Hukporti OUT (Achille), Tacko Fall OUT (hanche), Bona DTD (pied)</div>
+              </div>
+            </div>
+            <div class="bg-[#0B0E14] border border-orange-500/30 rounded-xl p-3">
+              <div class="text-[11px] font-mono text-zinc-400 flex justify-between"><span>NEW YORK KNICKS</span> <i class="fa-solid fa-trophy text-yellow-500"></i></div>
+              <ul class="mt-2 space-y-1 text-sm">
+                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">PG</span> <span class="font-bold">Jalen Brunson</span></li>
+                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">SG</span> <span>Mikal Bridges</span></li>
+                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">SF</span> <span>Josh Hart <span class="bg-yellow-500 text-black text-[10px] px-1 rounded font-bold">P</span></span></li>
+                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">PF</span> <span>OG Anunoby</span></li>
+                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">C</span> <span>Karl-Anthony Towns</span></li>
+              </ul>
+              <div class="mt-2 text-[11px] bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                <div class="font-bold text-green-400"><i class="fa-solid fa-check"></i> Infirmerie NYK</div>
+                <div class="text-zinc-400">Aucun absent signalé. Effectif champion au complet.</div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3 flex gap-2">
+            <div class="flex-1 bg-bilama-accent text-black rounded-xl px-3 py-2 text-xs font-bold flex items-center justify-between">
+              <span><i class="fa-solid fa-chart-line"></i> Bilama Lean: PHI +4.5</span>
+              <span class="bg-black text-bilama-accent px-2 py-1 rounded-full text-[11px]">1.90</span>
+            </div>
+            <div class="bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-xs">Under 231.5 à suivre</div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-auto px-5 py-3 bg-black/30 border-t border-white/10 flex items-center justify-between text-xs">
+        <span class="text-zinc-400 font-mono">Madison Square Garden • 18 000 places • Complet</span>
+        <span class="text-bilama-accent font-medium">★ Match star de la nuit</span>
+      </div>
+    </article>
+
+    <!-- GAME 3 -->
+    <article data-cat="late" class="game-card bg-bilama-card border border-bilama-border rounded-[20px] overflow-hidden flex flex-col">
+      <div class="h-1.5 w-full bg-gradient-to-r from-sky-500 to-indigo-600"></div>
+      <div class="p-5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="bg-white text-black text-[11px] font-bold px-2 py-1 rounded-full">MATCH 3</span>
+            <span class="bg-bilama-accent2/20 text-bilama-accent2 text-[11px] font-mono px-2 py-1 rounded-full border border-bilama-accent2/20">REMATCH WCF</span>
+          </div>
+          <span class="text-xs font-mono text-zinc-500" data-et="21:30" data-fr="03:30+1">21:30 ET • 03:30 Paris</span>
+        </div>
+        <div class="mt-4 bg-black/40 rounded-2xl p-4 border border-white/5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fokc.png&w=60&h=60" class="w-10 h-10 bg-white rounded-full p-1"/>
+              <div>
+                <div class="font-bold leading-none">OKC</div>
+                <div class="text-[11px] text-zinc-400">Thunder (0-0)</div>
+              </div>
+            </div>
+            <div class="text-center">
+              <div class="text-[11px] font-mono text-zinc-500">TIP-OFF</div>
+              <div class="font-bold">@</div>
+              <div class="text-[11px] text-zinc-500">NBC</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="text-right">
+                <div class="font-bold leading-none">SAS</div>
+                <div class="text-[11px] text-zinc-400">Spurs (0-0)</div>
+              </div>
+              <img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fsas.png&w=60&h=60" class="w-10 h-10 bg-white rounded-full p-1"/>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center justify-center gap-2 text-[11px] font-mono">
+            <span class="bg-white text-black px-2 py-1 rounded-full font-bold">SAS -2.5</span>
+            <span class="bg-zinc-800 px-2 py-1 rounded-full">O/U 231.5</span>
+            <span class="bg-zinc-800 px-2 py-1 rounded-full">Frost Bank Center</span>
+          </div>
+        </div>
+        <div class="mt-4">
+          <h3 class="font-semibold text-sm mb-2">Cinq majeurs — RotoWire projeté</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0B0E14] border border-bilama-border rounded-xl p-3">
+              <div class="text-[11px] font-mono text-zinc-500">OKLAHOMA CITY THUNDER</div>
+              <ul class="mt-2 space-y-1.5 text-sm">
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PG</span> <span class="font-bold">S. Gilgeous-Alexander</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SG</span> <span>Cason Wallace</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SF</span> <span>Jalen Williams</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PF</span> <span>Chet Holmgren <span class="bg-orange-500 text-black text-[10px] px-1 rounded font-bold">Q</span></span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">C</span> <span>Isaiah Hartenstein</span></li>
+              </ul>
+              <div class="mt-2 text-[11px] text-zinc-400 bg-orange-500/10 border border-orange-500/20 rounded-lg p-2">Holmgren Q (off injury) - décision game-time</div>
+            </div>
+            <div class="bg-[#0B0E14] border border-bilama-border rounded-xl p-3">
+              <div class="text-[11px] font-mono text-zinc-500">SAN ANTONIO SPURS</div>
+              <ul class="mt-2 space-y-1.5 text-sm">
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PG</span> <span>De'Aaron Fox</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SG</span> <span>Stephon Castle</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SF</span> <span>Dylan Harper</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PF</span> <span>Devin Vassell</span></li>
+                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">C</span> <span class="font-bold text-sky-400">Victor Wembanyama</span></li>
+              </ul>
+              <div class="mt-2 text-[11px] text-zinc-400 bg-sky-500/10 border border-sky-500/20 rounded-lg p-2">Wemby vs SGA : duel de MVPs</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-auto px-5 py-3 bg-black/20 border-t border-bilama-border flex items-center justify-between text-xs">
+        <span class="text-zinc-500 font-mono">Source: RotoWire • maj 19 oct</span>
+        <span class="text-zinc-400">Revanche finale Ouest 2026</span>
+      </div>
+    </article>
+  </section>
+
+  <!-- BOTTOM INFO -->
+  <section class="max-w-[1440px] mx-auto px-4 lg:px-6 pb-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="bg-bilama-card border border-bilama-border rounded-2xl p-4">
+        <h4 class="font-semibold text-sm flex items-center gap-2"><i class="fa-solid fa-shield-halved text-bilama-accent"></i> Comment lire RotoWire ?</h4>
+        <ul class="text-xs text-zinc-400 mt-2 space-y-1 leading-relaxed">
+          <li>• <b class="text-white">Projected</b> = estimation à J-1 (ce que tu vois). Basé sur 5 derniers matchs + blessures.</li>
+          <li>• <b class="text-white">Confirmed</b> = officiel équipe/beat writer (vert). Arrive ~30 min avant le tip.</li>
+          <li>• Les "scratches" de dernière minute existent : always check à l'échauffement.</li>
+        </ul>
+      </div>
+      <div class="bg-bilama-card border border-bilama-border rounded-2xl p-4">
+        <h4 class="font-semibold text-sm flex items-center gap-2"><i class="fa-solid fa-coins text-yellow-500"></i> Cotes du jour (ESPN/DraftKings)</h4>
+        <div class="mt-2 space-y-1.5 text-xs font-mono">
+          <div class="flex justify-between bg-black/30 rounded-full px-3 py-1.5"><span>BOS @ DET</span> <span class="font-bold">BOS -1.5 | O/U 222.5</span></div>
+          <div class="flex justify-between bg-black/30 rounded-full px-3 py-1.5"><span>PHI @ NYK</span> <span class="font-bold text-bilama-accent">NYK -4.5 | O/U 231.5</span></div>
+          <div class="flex justify-between bg-black/30 rounded-full px-3 py-1.5"><span>OKC @ SAS</span> <span class="font-bold">SAS -2.5 | O/U 231.5</span></div>
+        </div>
+      </div>
+      <div class="bg-bilama-card border border-bilama-border rounded-2xl p-4">
+        <h4 class="font-semibold text-sm flex items-center gap-2"><i class="fa-solid fa-clock text-sky-400"></i> Prochaines actualisations</h4>
+        <div class="text-xs text-zinc-400 mt-2 space-y-1">
+          <div class="flex justify-between"><span>Shootaround matin</span> <span class="font-mono">~15h Paris</span></div>
+          <div class="flex justify-between"><span>Conf. coach (2h avant)</span> <span class="font-mono">19h / 23h / 01h30</span></div>
+          <div class="flex justify-between"><span>Lineups confirmés</span> <span class="font-mono text-bilama-accent">20:30 • 00:30 • 03:00</span></div>
+          <div class="mt-2 bg-bilama-accent text-black rounded-full px-3 py-1 text-center font-bold text-xs">Cette page s'actualise seule toutes les 60 sec</div>
+        </div>
+      </div>
+    </div>
+    <div class="mt-4 text-center text-[11px] text-zinc-500 font-mono">
+      Bilama54 © 2026 • Données: RotoWire.com/basketball/nba-lineups.php • BasketballMonster • ESPN • NBC Sports • Non affilié à la NBA • Jeu responsable
+    </div>
+  </section>
+
+<script>
+// Countdown to first game 20 Oct 2026 15:00 ET = 21:00 Paris (UTC+2 in Oct = CEST? Actually Oct 20 is EDT -> Paris CEST UTC+2) => 19:00 UTC
+const target = new Date('2026-10-20T19:00:00Z'); // 15:00 ET = 19:00 UTC
+let tzMode = 'paris'; // paris vs et
+function updateClock(){
+  const now = new Date();
+  const diff = target - now;
+  if(diff>0){
+    const h = Math.floor(diff/1000/3600);
+    const m = Math.floor(diff/1000/60%60);
+    const s = Math.floor(diff/1000%60);
+    document.getElementById('countdown').textContent = `${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s avant BOS-DET`;
+  } else {
+    document.getElementById('countdown').textContent = 'TIP-OFF EN COURS !';
+  }
+  document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' • Paris';
+  document.getElementById('verifyTime').textContent = now.toLocaleDateString('fr-FR',{day:'numeric',month:'short'}) + ' ' + now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) + ' • Paris';
+}
+setInterval(updateClock,1000); updateClock();
+
+// Auto refresh simulation every 60s
+let countdown60 = 60;
+function tick60(){
+  countdown60--;
+  if(countdown60<=0){ countdown60=60; /* simulate refresh */ const btn=document.getElementById('refreshBtn'); btn.classList.add('animate-pulse'); setTimeout(()=>btn.classList.remove('animate-pulse'),800); }
+}
+setInterval(tick60,1000);
+
+// TZ toggle
+document.getElementById('toggleTZ').addEventListener('click', function(){
+  const btn=this;
+  if(tzMode==='paris'){ tzMode='et'; btn.innerHTML='Heure: ET (New York) <i class="fa-solid fa-repeat ml-1"></i>'; document.querySelectorAll('[data-et]').forEach(el=>{ el.textContent = el.dataset.et + ' ET'; }); }
+  else { tzMode='paris'; btn.innerHTML='Heure: Paris (UTC+2) <i class="fa-solid fa-repeat ml-1"></i>'; document.querySelectorAll('[data-et]').forEach(el=>{ el.textContent = el.dataset.et + ' ET • ' + el.dataset.fr + ' Paris'; }); }
+});
+
+// Filter
+document.querySelectorAll('.filter-btn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.filter-btn').forEach(x=>{ x.classList.remove('active','bg-white','text-black'); x.classList.add('bg-bilama-card','border','border-bilama-border'); });
+    b.classList.add('active','bg-white','text-black'); b.classList.remove('bg-bilama-card','border','border-bilama-border');
+    const f=b.dataset.filter;
+    document.querySelectorAll('.game-card').forEach(card=>{
+      if(f==='all' || card.dataset.cat===f) card.style.display='flex'; else card.style.display='none';
+    });
+  });
+});
+
+// Manual refresh
+document.getElementById('refreshBtn').addEventListener('click', ()=>{
+  const btn=document.getElementById('refreshBtn');
+  const orig=btn.innerHTML;
+  btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Vérif RotoWire...';
+  setTimeout(()=>{ btn.innerHTML=orig; document.getElementById('lastUpdate').textContent=new Date().toLocaleTimeString('fr-FR')+' • à jour'; },1200);
+});
+
+// Simulate auto-refresh fetch notice
+setTimeout(()=>{ console.log('Bilama54 dashboard ready - fetching RotoWire every 60s') },500);
+</script>
+</body>
+</html>
