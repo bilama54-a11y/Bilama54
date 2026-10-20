@@ -108,6 +108,53 @@ tailwind.config = {
     </div>
   </section>
 
+  <!-- CRÉATEUR CONFRONTATION — COMME AU BASKET -->
+  <section class="max-w-[1440px] mx-auto px-4 lg:px-6 pt-4">
+    <div class="bg-gradient-to-br from-[#11151E] via-[#0F1A33] to-[#0B0E14] border-2 border-sky-500/30 rounded-[24px] p-6 relative overflow-hidden">
+      <div class="absolute -right-6 -top-6 w-48 h-48 bg-sky-500/10 blur-[60px] rounded-full"></div>
+      <div class="relative">
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          <span class="bg-sky-500 text-white text-xs font-black px-3 py-1 rounded-full">✨ NOUVEAU — Comme au basket</span>
+          <span class="text-sm font-bold">Choisis ta confrontation en 2 clics</span>
+          <span class="text-xs text-zinc-500">Plus besoin de fouiller — sélection directe</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-3 items-start">
+          <!-- EQUIPE DOMICILE -->
+          <div class="bg-black/40 border border-white/10 rounded-2xl p-4">
+            <label class="text-[11px] font-mono text-emerald-400 font-bold">EQUIPE À DOMICILE</label>
+            <select id="pickHomeLeague" class="w-full mt-1 bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm"></select>
+            <select id="pickHomeTeam" class="w-full mt-2 bg-zinc-900 border-2 border-emerald-500/30 rounded-xl px-3 py-2.5 text-sm font-bold"></select>
+            <div class="mt-3 grid grid-cols-2 gap-2">
+              <label class="flex flex-col gap-1"><span class="text-[10px] text-zinc-500">PPG Domicile</span><input id="pickHomePPG" type="number" step="0.05" value="2.13" class="bg-zinc-900 border border-white/10 rounded-full py-1.5 text-center font-bold text-sm"></label>
+              <label class="flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Côte 1 (Vic Dom)</span><input id="pickOddsH" type="number" step="0.05" value="1.45" class="bg-zinc-900 border border-white/10 rounded-full py-1.5 text-center font-bold text-sm"></label>
+            </div>
+          </div>
+          <div class="flex flex-col items-center justify-center gap-2 py-2">
+            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center font-black text-black">VS</div>
+            <button id="swapPick" class="bg-white/10 border border-white/10 rounded-full px-3 py-1 text-xs font-bold">↔ Inverser</button>
+            <button id="addToGrid" class="bg-bilama-accent text-black px-4 py-1.5 rounded-full text-xs font-bold">+ Ajouter en bas</button>
+          </div>
+          <!-- EQUIPE EXTERIEUR -->
+          <div class="bg-black/40 border border-white/10 rounded-2xl p-4">
+            <label class="text-[11px] font-mono text-sky-400 font-bold">EQUIPE À L'EXTÉRIEUR</label>
+            <select id="pickAwayLeague" class="w-full mt-1 bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm"></select>
+            <select id="pickAwayTeam" class="w-full mt-2 bg-zinc-900 border-2 border-sky-500/30 rounded-xl px-3 py-2.5 text-sm font-bold"></select>
+            <div class="mt-3 grid grid-cols-2 gap-2">
+              <label class="flex flex-col gap-1"><span class="text-[10px] text-zinc-500">PPG Extérieur</span><input id="pickAwayPPG" type="number" step="0.05" value="1.20" class="bg-zinc-900 border border-white/10 rounded-full py-1.5 text-center font-bold text-sm"></label>
+              <label class="flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Côte 2 (Vic Ext)</span><input id="pickOddsA" type="number" step="0.05" value="6.50" class="bg-zinc-900 border border-white/10 rounded-full py-1.5 text-center font-bold text-sm"></label>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr] gap-3">
+          <label class="flex items-center gap-2 bg-black/40 border border-white/10 rounded-full px-3 py-2 text-xs"><span class="text-zinc-500">Côte X (Nul)</span><input id="pickOddsD" type="number" step="0.05" value="4.20" class="w-20 bg-zinc-900 border border-white/10 rounded-full py-1 text-center font-bold text-sm"></label>
+          <div id="pickResult" class="bg-emerald-500 text-white rounded-full px-4 py-2 text-center font-bold text-sm">✅ VICTOIRE SÛRE — tape tes cotes</div>
+          <div id="pickDetail" class="bg-white/5 border border-white/10 rounded-full px-4 py-2 text-center text-xs text-zinc-400">PPG max = Domicile 2.13 vs Ext 1.20 → Favori @1.45 ≤1.5</div>
+        </div>
+        <div class="mt-2 text-[11px] text-zinc-500 text-center">💡 Comme au basket : change les menus → le signal se met à jour instantanément. Clique <b class="text-white">“+ Ajouter”</b> pour le voir dans la grille en dessous.</div>
+      </div>
+    </div>
+  </section>
+
   <!-- CONTROLS -->
   <section class="max-w-[1440px] mx-auto px-4 lg:px-6 pt-4">
     <div class="flex flex-wrap items-center gap-2">
@@ -402,6 +449,106 @@ document.getElementById('exportBtn').onclick=()=>{
   });
   const blob=new Blob([txt],{type:'text/plain'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='Bilama_Foot_Top15_D2Top5.txt'; a.click();
 };
+
+// === PICKER COMME AU BASKET ===
+function uniqueTeams(leagueId){
+  const set=new Set();
+  samples.forEach(s=>{ if(!leagueId || s.league===leagueId){ set.add(s.home); set.add(s.away); }});
+  return [...set].sort();
+}
+function teamPPG(teamName){
+  const m=samples.find(s=>s.home===teamName || s.away===teamName);
+  if(!m) return {ppg:1.50, oddsH:2.00, oddsD:3.30, oddsA:3.80};
+  if(m.home===teamName) return {ppg:m.homePPG, oddsH:m.odds.h, oddsD:m.odds.d, oddsA:m.odds.a, league:m.league};
+  return {ppg:m.awayPPG, oddsH:m.odds.h, oddsD:m.odds.d, oddsA:m.odds.a, league:m.league};
+}
+const pickHomeLeague=document.getElementById('pickHomeLeague');
+const pickAwayLeague=document.getElementById('pickAwayLeague');
+const pickHomeTeam=document.getElementById('pickHomeTeam');
+const pickAwayTeam=document.getElementById('pickAwayTeam');
+leagues.forEach(l=>{
+  const o1=document.createElement('option'); o1.value=l.id; o1.textContent=`${l.flag} ${l.name}`;
+  const o2=o1.cloneNode(true);
+  pickHomeLeague.appendChild(o1); pickAwayLeague.appendChild(o2);
+});
+pickHomeLeague.value='eng1'; pickAwayLeague.value='eng1';
+function fillTeams(selectEl, leagueId){
+  selectEl.innerHTML='';
+  uniqueTeams(leagueId).forEach(t=>{
+    const o=document.createElement('option'); o.value=t; o.textContent=t;
+    selectEl.appendChild(o);
+  });
+}
+fillTeams(pickHomeTeam,'eng1'); fillTeams(pickAwayTeam,'eng1');
+pickHomeTeam.value='Manchester City'; pickAwayTeam.value='Burnley';
+// auto-fill PPG/cotes when team changes
+function syncPickerFromTeams(){
+  const hInfo=teamPPG(pickHomeTeam.value);
+  const aInfo=teamPPG(pickAwayTeam.value);
+  document.getElementById('pickHomePPG').value=hInfo.ppg.toFixed(2);
+  document.getElementById('pickAwayPPG').value=aInfo.ppg.toFixed(2);
+  // choose odds from the match where they meet if exists, else from hInfo
+  const direct=samples.find(s=> (s.home===pickHomeTeam.value && s.away===pickAwayTeam.value) || (s.home===pickAwayTeam.value && s.away===pickHomeTeam.value));
+  if(direct){
+    document.getElementById('pickOddsH').value=direct.odds.h.toFixed(2);
+    document.getElementById('pickOddsD').value=direct.odds.d.toFixed(2);
+    document.getElementById('pickOddsA').value=direct.odds.a.toFixed(2);
+  } else {
+    document.getElementById('pickOddsH').value=hInfo.oddsH.toFixed(2);
+    document.getElementById('pickOddsD').value='3.40';
+    document.getElementById('pickOddsA').value=aInfo.oddsA.toFixed(2);
+  }
+}
+function updatePickerSignal(){
+  const hPPG=parseFloat(document.getElementById('pickHomePPG').value)||0;
+  const aPPG=parseFloat(document.getElementById('pickAwayPPG').value)||0;
+  const hOdd=parseFloat(document.getElementById('pickOddsH').value)||2;
+  const dOdd=parseFloat(document.getElementById('pickOddsD').value)||3.4;
+  const aOdd=parseFloat(document.getElementById('pickOddsA').value)||3.5;
+  const fake={home:pickHomeTeam.value, away:pickAwayTeam.value, homePPG:hPPG, awayPPG:aPPG, odds:{h:hOdd,d:dOdd,a:aOdd}};
+  const sig=getSignal(fake);
+  const res=document.getElementById('pickResult');
+  const det=document.getElementById('pickDetail');
+  if(sig.type==='WIN'){ res.className='bg-emerald-500 text-white rounded-full px-4 py-2 text-center font-bold text-sm'; res.textContent='✅ VICTOIRE SÛRE — '+sig.label; }
+  else if(sig.type==='DOUBLE'){ res.className='bg-sky-500 text-white rounded-full px-4 py-2 text-center font-bold text-sm'; res.textContent='🛡️ VICTOIRE OU NUL — '+sig.label; }
+  else { res.className='bg-red-500 text-white rounded-full px-4 py-2 text-center font-bold text-sm'; res.textContent='🚫 S’ABSTENIR — '+sig.label; }
+  det.textContent=sig.desc;
+}
+pickHomeLeague.addEventListener('change', ()=>{ fillTeams(pickHomeTeam, pickHomeLeague.value); syncPickerFromTeams(); updatePickerSignal(); });
+pickAwayLeague.addEventListener('change', ()=>{ fillTeams(pickAwayTeam, pickAwayLeague.value); syncPickerFromTeams(); updatePickerSignal(); });
+pickHomeTeam.addEventListener('change', ()=>{ syncPickerFromTeams(); updatePickerSignal(); });
+pickAwayTeam.addEventListener('change', ()=>{ syncPickerFromTeams(); updatePickerSignal(); });
+['pickHomePPG','pickAwayPPG','pickOddsH','pickOddsD','pickOddsA'].forEach(id=>document.getElementById(id).addEventListener('input', updatePickerSignal));
+document.getElementById('swapPick').onclick=()=>{
+  const hL=pickHomeLeague.value, aL=pickAwayLeague.value, hT=pickHomeTeam.value, aT=pickAwayTeam.value;
+  const hP=document.getElementById('pickHomePPG').value, aP=document.getElementById('pickAwayPPG').value;
+  const hO=document.getElementById('pickOddsH').value, aO=document.getElementById('pickOddsA').value;
+  pickHomeLeague.value=aL; pickAwayLeague.value=hL;
+  fillTeams(pickHomeTeam,aL); fillTeams(pickAwayTeam,hL);
+  pickHomeTeam.value=aT; pickAwayTeam.value=hT;
+  document.getElementById('pickHomePPG').value=aP; document.getElementById('pickAwayPPG').value=hP;
+  document.getElementById('pickOddsH').value=aO; document.getElementById('pickOddsA').value=hO;
+  updatePickerSignal();
+};
+document.getElementById('addToGrid').onclick=()=>{
+  const hPPG=parseFloat(document.getElementById('pickHomePPG').value)||1.5;
+  const aPPG=parseFloat(document.getElementById('pickAwayPPG').value)||1.5;
+  const hOdd=parseFloat(document.getElementById('pickOddsH').value)||2;
+  const dOdd=parseFloat(document.getElementById('pickOddsD').value)||3.4;
+  const aOdd=parseFloat(document.getElementById('pickOddsA').value)||3.5;
+  const newMatch={league:pickHomeLeague.value, time:'Perso', home:pickHomeTeam.value, away:pickAwayTeam.value, homePPG:hPPG, awayPPG:aPPG, odds:{h:hOdd,d:dOdd,a:aOdd}};
+  samples.unshift(newMatch);
+  render();
+  document.getElementById('grid').scrollIntoView({behavior:'smooth'});
+};
+// Améliore la recherche : tolère accents, vide, et reset
+const origRender=render;
+document.getElementById('search').addEventListener('input', ()=>{
+  // si 2 lettres mini, filtre, sinon montre tout
+  if(document.getElementById('search').value.trim().length===0) { render(); return; }
+  render();
+});
+syncPickerFromTeams(); updatePickerSignal();
 setInterval(()=>{ document.getElementById('lastUpdate').textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' • Paris'; },1000);
 render();
 </script>
