@@ -356,6 +356,38 @@ tailwind.config = {
         </div>
       </div>
 
+      <!-- CONTRÔLES BOOK O/U ÉDITABLES -->
+      <div class="mx-6 lg:mx-8 mt-6 bg-gradient-to-r from-bilama-accent/10 via-sky-500/10 to-bilama-accent2/10 border-2 border-bilama-accent/30 rounded-2xl p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="bg-bilama-accent text-black text-xs font-black px-3 py-1 rounded-full animate-pulse">👉 TAPE ICI TON BOOK O/U</span>
+          <span class="text-xs text-zinc-400">Modifie la ligne du bookeur → le signal Over/Under se recalcule en direct</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div class="bg-black rounded-xl p-3 border border-white/10">
+            <div class="text-[11px] font-mono text-zinc-500 font-bold">MATCH 1 • BOS @ DET</div>
+            <div class="mt-2 flex gap-2">
+              <label class="flex-1 flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Book Spread (BOS)</span><input id="bookSpread1" type="number" step="0.5" value="-1.5" class="bg-zinc-900 border border-white/10 rounded-full px-3 py-1.5 text-center font-bold text-sm"></label>
+              <label class="flex-1 flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Book O/U</span><input id="bookTotal1" type="number" step="0.5" value="222.5" class="bg-zinc-900 border-2 border-bilama-accent/50 rounded-full px-3 py-1.5 text-center font-bold text-sm text-bilama-accent"></label>
+            </div>
+          </div>
+          <div class="bg-black rounded-xl p-3 border border-white/10">
+            <div class="text-[11px] font-mono text-zinc-500 font-bold">MATCH 2 • PHI @ NYK</div>
+            <div class="mt-2 flex gap-2">
+              <label class="flex-1 flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Book Spread (NYK)</span><input id="bookSpread2" type="number" step="0.5" value="-4.5" class="bg-zinc-900 border border-white/10 rounded-full px-3 py-1.5 text-center font-bold text-sm"></label>
+              <label class="flex-1 flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Book O/U</span><input id="bookTotal2" type="number" step="0.5" value="231.5" class="bg-zinc-900 border-2 border-bilama-accent/50 rounded-full px-3 py-1.5 text-center font-bold text-sm text-bilama-accent"></label>
+            </div>
+          </div>
+          <div class="bg-black rounded-xl p-3 border border-white/10">
+            <div class="text-[11px] font-mono text-zinc-500 font-bold">MATCH 3 • OKC @ SAS</div>
+            <div class="mt-2 flex gap-2">
+              <label class="flex-1 flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Book Spread (SAS)</span><input id="bookSpread3" type="number" step="0.5" value="-2.5" class="bg-zinc-900 border border-white/10 rounded-full px-3 py-1.5 text-center font-bold text-sm"></label>
+              <label class="flex-1 flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Book O/U</span><input id="bookTotal3" type="number" step="0.5" value="231.5" class="bg-zinc-900 border-2 border-bilama-accent/50 rounded-full px-3 py-1.5 text-center font-bold text-sm text-bilama-accent"></label>
+            </div>
+          </div>
+        </div>
+        <div class="mt-2 text-[11px] text-zinc-500 text-center">💡 Astuce : laisse 222.5 / 231.5 par défaut, ou mets ta cote exacte et regarde le bloc <b class="text-white">TOTAL — O/U</b> passer de ⚪ PASS à 🔼 OVER / 🔽 UNDER</div>
+      </div>
+
       <!-- PREDICTIONS -->
       <div class="p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-3 gap-4 bg-black/20">
         <!-- PRED 1 -->
@@ -379,14 +411,14 @@ tailwind.config = {
               <div class="bg-bilama-accent text-black rounded-xl px-3 py-2.5 text-center font-bold text-sm">✅ Pari recommandé : DET +1.5 @ 1.92<br><span class="font-normal text-xs">Mise 1.5U — Pace lente BOS annule l'avantage extérieur</span></div>
               <!-- OVER/UNDER -->
               <div class="bg-black border border-white/10 rounded-xl p-3">
-                <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500"><span>TOTAL — O/U 222.5</span><span class="bg-emerald-500 text-black px-2 py-1 rounded-full font-bold">🔼 OVER FORT</span></div>
+                <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500"><span>TOTAL — O/U <span id="bookOu1">222.5</span></span><span id="ouSignal1" class="bg-emerald-500 text-black px-2 py-1 rounded-full font-bold">🔼 OVER FORT</span></div>
                 <div class="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
-                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Modèle</span> <b class="text-white">229.0</b></div>
-                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Book</span> <b>222.5</b></div>
-                  <div class="bg-emerald-500/15 rounded-full py-1.5 border border-emerald-500/20"><span class="text-zinc-400">Edge</span> <b class="text-emerald-400">+6.5</b></div>
+                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Modèle</span> <b class="text-white" id="modelOu1">229.0</b></div>
+                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Book</span> <b id="bookOuVal1">222.5</b></div>
+                  <div class="bg-emerald-500/15 rounded-full py-1.5 border border-emerald-500/20"><span class="text-zinc-400">Edge</span> <b class="text-emerald-400" id="edgeOu1">+6.5</b></div>
                 </div>
-                <div class="mt-2 bg-emerald-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm">🔼 OVER 222.5 — Signal très fort</div>
-                <div class="mt-1 text-[11px] text-zinc-500 text-center">Pace 96.9 malgré BOS lent → DET pousse le rythme à domicile. Modèle 229.0 vs 222.5.</div>
+                <div class="mt-2 bg-emerald-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm" id="ouBox1">🔼 OVER 222.5 — Signal très fort</div>
+                <div class="mt-1 text-[11px] text-zinc-500 text-center" id="ouWhy1">Pace 96.9 malgré BOS lent → DET pousse le rythme à domicile. Modèle 229.0 vs 222.5.</div>
               </div>
               <div class="text-[11px] text-zinc-500 leading-relaxed"><b class="text-white">Pourquoi ?</b> DET était #1 Est (60-22) avec Net +8.2, déf #2. BOS sans Brown (parti à PHI) perd de la création. À domicile +3 pts, le modèle voit DET couvrir facilement.</div>
             </div>
@@ -415,14 +447,14 @@ tailwind.config = {
               <div class="bg-white text-black rounded-xl px-3 py-2.5 text-center font-bold text-sm">✅ Pari roi : PHI +4.5 @ 1.90<br><span class="font-normal text-xs">Vainqueur : NYK 58% mais spread trop large</span></div>
               <!-- OVER/UNDER -->
               <div class="bg-black border border-white/10 rounded-xl p-3">
-                <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500"><span>TOTAL — O/U 231.5</span><span class="bg-emerald-500 text-black px-2 py-1 rounded-full font-bold">🔼 OVER FORT</span></div>
+                <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500"><span>TOTAL — O/U <span id="bookOu2">231.5</span></span><span id="ouSignal2" class="bg-emerald-500 text-black px-2 py-1 rounded-full font-bold">🔼 OVER FORT</span></div>
                 <div class="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
-                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Modèle</span> <b class="text-white">237.0</b></div>
-                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Book</span> <b>231.5</b></div>
-                  <div class="bg-emerald-500/15 rounded-full py-1.5 border border-emerald-500/20"><span class="text-zinc-400">Edge</span> <b class="text-emerald-400">+5.5</b></div>
+                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Modèle</span> <b class="text-white" id="modelOu2">237.0</b></div>
+                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Book</span> <b id="bookOuVal2">231.5</b></div>
+                  <div class="bg-emerald-500/15 rounded-full py-1.5 border border-emerald-500/20"><span class="text-zinc-400">Edge</span> <b class="text-emerald-400" id="edgeOu2">+5.5</b></div>
                 </div>
-                <div class="mt-2 bg-emerald-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm">🔼 OVER 231.5 — Signal très fort</div>
-                <div class="mt-1 text-[11px] text-zinc-500 text-center">Pace 97.7 + deux attaques top 5 (ORtg 117.5 & 119.9) + FT rate PHI → Over value.</div>
+                <div class="mt-2 bg-emerald-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm" id="ouBox2">🔼 OVER 231.5 — Signal très fort</div>
+                <div class="mt-1 text-[11px] text-zinc-500 text-center" id="ouWhy2">Pace 97.7 + deux attaques top 5 (ORtg 117.5 & 119.9) + FT rate PHI → Over value.</div>
               </div>
               <div class="text-[11px] text-zinc-500 leading-relaxed"><b class="text-white">Clé :</b> PHI 4e aux contres (5.7) et 6e aux lancers (20.1 FT). Contre NYK 29e aux contres, Embiid/LeBron vont à la ligne. Les books surévaluent l'émotion du Ring Night.</div>
             </div>
@@ -451,14 +483,14 @@ tailwind.config = {
               <div class="bg-indigo-600 text-white rounded-xl px-3 py-2.5 text-center font-bold text-sm">✅ Pari : OKC +2.5 @ 1.88<br><span class="font-normal text-xs">Si Holmgren OUT → OKC +2.5 reste value mais mise 1U au lieu de 2U</span></div>
               <!-- OVER/UNDER -->
               <div class="bg-black border border-white/10 rounded-xl p-3">
-                <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500"><span>TOTAL — O/U 231.5</span><span class="bg-zinc-700 text-white px-2 py-1 rounded-full font-bold">⚪ PASS</span></div>
+                <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500"><span>TOTAL — O/U <span id="bookOu3">231.5</span></span><span id="ouSignal3" class="bg-zinc-700 text-white px-2 py-1 rounded-full font-bold">⚪ PASS</span></div>
                 <div class="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
-                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Modèle</span> <b class="text-white">231.1</b></div>
-                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Book</span> <b>231.5</b></div>
-                  <div class="bg-zinc-700 rounded-full py-1.5"><span class="text-zinc-400">Edge</span> <b class="text-zinc-300">-0.4</b></div>
+                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Modèle</span> <b class="text-white" id="modelOu3">231.1</b></div>
+                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Book</span> <b id="bookOuVal3">231.5</b></div>
+                  <div class="bg-zinc-700 rounded-full py-1.5"><span class="text-zinc-400">Edge</span> <b class="text-zinc-300" id="edgeOu3">-0.4</b></div>
                 </div>
-                <div class="mt-2 bg-zinc-800 text-zinc-300 rounded-xl px-3 py-2 text-center font-bold text-sm">⚪ PASS — Pas de value O/U</div>
-                <div class="mt-1 text-[11px] text-zinc-500 text-center">Pace 99.6 rapide mais OKC déf #1 (107.8) vs SAS ORtg 119.7 s'annulent → total pile sur le marché. Si Holmgren OUT → passe OVER.</div>
+                <div class="mt-2 bg-zinc-800 text-zinc-300 rounded-xl px-3 py-2 text-center font-bold text-sm" id="ouBox3">⚪ PASS — Pas de value O/U</div>
+                <div class="mt-1 text-[11px] text-zinc-500 text-center" id="ouWhy3">Pace 99.6 rapide mais OKC déf #1 (107.8) vs SAS ORtg 119.7 s'annulent → total pile sur le marché. Si Holmgren OUT → passe OVER.</div>
               </div>
               <div class="text-[11px] text-zinc-500 leading-relaxed"><b class="text-white">Duel MVP :</b> SGA vs Wemby. OKC #1 déf (107.8) étouffe SAS si Pace <100. SAS à domicile mais OKC a le meilleur Net NBA (+11.2).</div>
             </div>
@@ -588,6 +620,65 @@ function recalc(){
   document.getElementById('probOkc').textContent=`OKC ${Math.round(Math.min(68, Math.max(32, okcProb)))}%`;
   document.getElementById('probSas').textContent=`SAS ${Math.round(100- Math.min(68, Math.max(32, okcProb)))}%`;
 }
+// --- OVER/UNDER LIVE ---
+function updateOU(num){
+  const bookEl = document.getElementById('bookTotal'+num);
+  const modelEl = document.getElementById('modelOu'+num);
+  const bookValEl = document.getElementById('bookOuVal'+num);
+  const bookOuEl = document.getElementById('bookOu'+num);
+  const edgeEl = document.getElementById('edgeOu'+num);
+  const signalEl = document.getElementById('ouSignal'+num);
+  const boxEl = document.getElementById('ouBox'+num);
+  const whyEl = document.getElementById('ouWhy'+num);
+  if(!bookEl || !modelEl) return;
+  const book = parseFloat(bookEl.value)||222.5;
+  const model = parseFloat(modelEl.textContent)||229.0;
+  const edge = model - book;
+  bookValEl.textContent = book.toFixed(1);
+  bookOuEl.textContent = book.toFixed(1);
+  edgeEl.textContent = (edge>0?'+':'')+edge.toFixed(1);
+  if(edge >= 5){
+    signalEl.textContent='🔼 OVER FORT'; signalEl.className='bg-emerald-500 text-black px-2 py-1 rounded-full font-bold';
+    boxEl.textContent=`🔼 OVER ${book.toFixed(1)} — Signal très fort (+${edge.toFixed(1)})`; boxEl.className='mt-2 bg-emerald-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm';
+    edgeEl.className='text-emerald-400'; whyEl.textContent=`Modèle ${model.toFixed(1)} vs Book ${book.toFixed(1)} → +${edge.toFixed(1)} pts au-dessus. Pace + ORtg élevés.`;
+  } else if(edge >= 2.5){
+    signalEl.textContent='🔼 OVER'; signalEl.className='bg-sky-500 text-white px-2 py-1 rounded-full font-bold';
+    boxEl.textContent=`🔼 OVER ${book.toFixed(1)} — Value`; boxEl.className='mt-2 bg-sky-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm';
+    edgeEl.className='text-sky-400'; whyEl.textContent=`Léger Over : +${edge.toFixed(1)} pts au-dessus du marché.`;
+  } else if(edge <= -5){
+    signalEl.textContent='🔽 UNDER FORT'; signalEl.className='bg-red-500 text-white px-2 py-1 rounded-full font-bold';
+    boxEl.textContent=`🔽 UNDER ${book.toFixed(1)} — Signal très fort (${edge.toFixed(1)})`; boxEl.className='mt-2 bg-red-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm';
+    edgeEl.className='text-red-400'; whyEl.textContent=`Modèle ${model.toFixed(1)} vs Book ${book.toFixed(1)} → ${Math.abs(edge).toFixed(1)} pts en-dessous. Déf elite + Pace lente.`;
+  } else if(edge <= -2.5){
+    signalEl.textContent='🔽 UNDER'; signalEl.className='bg-orange-500 text-white px-2 py-1 rounded-full font-bold';
+    boxEl.textContent=`🔽 UNDER ${book.toFixed(1)} — Value`; boxEl.className='mt-2 bg-orange-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm';
+    edgeEl.className='text-orange-400'; whyEl.textContent=`Léger Under : ${Math.abs(edge).toFixed(1)} pts sous le marché.`;
+  } else {
+    signalEl.textContent='⚪ PASS'; signalEl.className='bg-zinc-700 text-white px-2 py-1 rounded-full font-bold';
+    boxEl.textContent=`⚪ PASS — Pas de value O/U (Edge ${edge.toFixed(1)})`; boxEl.className='mt-2 bg-zinc-800 text-zinc-300 rounded-xl px-3 py-2 text-center font-bold text-sm';
+    edgeEl.className='text-zinc-300'; whyEl.textContent=`Modèle ${model.toFixed(1)} proche du Book ${book.toFixed(1)} → pas de signal.`;
+  }
+}
+['bookTotal1','bookTotal2','bookTotal3','bookSpread1','bookSpread2','bookSpread3'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', ()=>{ const n=id.slice(-1); updateOU(n); }); });
+// Also hook Holmgren to update modelOu3 when OUT → model total rises
+const origRecalc = recalc;
+recalc = function(){
+  origRecalc();
+  // update modelOu3 based on Holmgren
+  const holmIn = document.getElementById('holmgrenToggle').value==='1';
+  document.getElementById('modelOu3').textContent = holmIn ? '231.1' : '232.6';
+  updateOU('3');
+  // Hart/Bona affect modelOu2 slightly
+  const hartIn = document.getElementById('hartToggle').value==='1';
+  const bonaIn = document.getElementById('bonaToggle').value==='1';
+  let m2 = 237.0;
+  if(!hartIn) m2 -= 0.9;
+  if(bonaIn) m2 += 0.4;
+  document.getElementById('modelOu2').textContent = m2.toFixed(1);
+  updateOU('2');
+  updateOU('1');
+};
+
 holmgrenToggle.addEventListener('input', recalc);
 hartToggle.addEventListener('input', recalc);
 bonaToggle.addEventListener('input', recalc);
