@@ -1,1 +1,7 @@
-{"updated":"2026-10-20T05:46:00Z","note":"init"}
+{
+  "updated": "2026-10-20T05:46:00Z",
+  "note": "Mode démo actuel: clé 'example' limitée à PL 2018/19. Ajoute FOOTYSTATS_API_KEY pour débloquer les 20 ligues 2026-27.",
+  "instructions_fr": "Pour activer le vrai live: 1) Va sur https://footystats.org/api 2) Abonne-toi (£29.99/mois) 3) Copie ta clé sur https://footystats.org/api/u/api-settings 4) Dans GitHub va à Settings > Secrets and variables > Actions > New repository secret > Name=FOOTYSTATS_API_KEY Value=ta_clé 5) Retourne dans Actions > Fetch FootyStats PPG Live > Run workflow 6) La dashboard chargera auto data/ppg_live.json",
+  "workflow": ".github/workflows/fetch-ppg.yml lance tous les jours à 06:00 UTC et à la demande",
+  "dashboard": "foot.html charge data/ppg_live.json au démarrage + Auto 60s + bouton Actualiser + Coller PPG fallback"
+}

@@ -80,6 +80,7 @@ async function fetchFootyStatsLive(){
       if(curL2===league) fillTeams(pickAwayTeam, league);
       render();
 scheduleAutoRefresh();
+loadLivePPG();
       alert('✅ '+upd+' PPG mis à jour pour '+info.label);
     } else {
       alert('Page récupérée ('+html.length+' car) mais parsing PPG échoué. Copie manuellement la table.');
@@ -110,8 +111,62 @@ function applyPastePPG(){
     syncPickerFromTeams(); updatePickerSignal();
     render();
 scheduleAutoRefresh();
-    alert('✅ '+upd+' PPG appliqués pour '+league);
+loadLivePPG();
+    try{ localStorage.setItem('bilama_fullTeams', JSON.stringify(fullTeams)); }catch(e){}
+alert('✅ '+upd+' PPG appliqués pour '+league);
   } else alert('Aucune correspondance. Vérifie le format: "Equipe 1.23" par ligne et que la ligue sélectionnée correspond.');
+}
+
+
+// === Loader PPG live depuis data/ppg_live.json (prioritaire) ===
+async function loadLivePPG(){
+  try{
+    const r = await fetch('data/ppg_live.json?v='+Date.now());
+    if(!r.ok) throw new Error('no live json');
+    const j = await r.json();
+    if(j.leagues && typeof j.leagues === 'object'){
+      let updated = 0;
+      for(const lid in j.leagues){
+        if(!fullTeams[lid]) continue;
+        const teamsMap = j.leagues[lid];
+        if(!teamsMap || teamsMap.error) continue;
+        fullTeams[lid].forEach(t=>{
+          const name = t[0];
+          // cherche correspondance exacte ou normalisée
+          let entry = teamsMap[name];
+          if(!entry){
+            // fallback insensible casse
+            for(const k in teamsMap){ if(k.toLowerCase()===name.toLowerCase()){ entry=teamsMap[k]; break; } }
+          }
+          if(entry){
+            // on privilégie home PPG pour usage domicile, away PPG pour extérieur
+            // mais fullTeams stocke un PPG unique par équipe -> on met l'overall ou home
+            const val = entry.overall || entry.home || entry.away;
+            if(val && val>=0.3 && val<=3.0){ t[1]=Math.round(val*100)/100; updated++; }
+          }
+        });
+      }
+      if(updated>0){
+        console.log(`✅ PPG live chargés: ${updated} équipes depuis data/ppg_live.json`);
+        document.getElementById('countInfo').textContent = `✅ ${updated} PPG live • ${new Date(j.updated).toLocaleString('fr-FR')} • source FootyStats API`;
+        render();
+        syncPickerFromTeams(); updatePickerSignal();
+        return true;
+      }
+    }
+    document.getElementById('countInfo').textContent = `⏳ ${j.updated ? new Date(j.updated).toLocaleString('fr-FR') : ''} • ${j.note || j.source || 'démo'} — utilise Coller PPG`;
+  }catch(e){
+    console.log('Pas de ppg_live.json:', e.message);
+  }
+  // fallback localStorage
+  try{
+    const saved=JSON.parse(localStorage.getItem('bilama_fullTeams')||'null');
+    if(saved){
+      for(const k in saved){ if(fullTeams[k]) fullTeams[k]=saved[k]; }
+      console.log('PPG restaurés depuis localStorage');
+    }
+  }catch(e){}
+  return false;
 }
 
 // === Cron auto-refresh PPG toutes les 60s + stockage local ===
@@ -236,6 +291,7 @@ async function fetchFootyStatsLive(){
       if(curL2===league) fillTeams(pickAwayTeam, league);
       render();
 scheduleAutoRefresh();
+loadLivePPG();
       alert('✅ '+upd+' PPG mis à jour pour '+info.label);
     } else {
       alert('Page récupérée ('+html.length+' car) mais parsing PPG échoué. Copie manuellement la table.');
@@ -266,8 +322,62 @@ function applyPastePPG(){
     syncPickerFromTeams(); updatePickerSignal();
     render();
 scheduleAutoRefresh();
-    alert('✅ '+upd+' PPG appliqués pour '+league);
+loadLivePPG();
+    try{ localStorage.setItem('bilama_fullTeams', JSON.stringify(fullTeams)); }catch(e){}
+alert('✅ '+upd+' PPG appliqués pour '+league);
   } else alert('Aucune correspondance. Vérifie le format: "Equipe 1.23" par ligne et que la ligue sélectionnée correspond.');
+}
+
+
+// === Loader PPG live depuis data/ppg_live.json (prioritaire) ===
+async function loadLivePPG(){
+  try{
+    const r = await fetch('data/ppg_live.json?v='+Date.now());
+    if(!r.ok) throw new Error('no live json');
+    const j = await r.json();
+    if(j.leagues && typeof j.leagues === 'object'){
+      let updated = 0;
+      for(const lid in j.leagues){
+        if(!fullTeams[lid]) continue;
+        const teamsMap = j.leagues[lid];
+        if(!teamsMap || teamsMap.error) continue;
+        fullTeams[lid].forEach(t=>{
+          const name = t[0];
+          // cherche correspondance exacte ou normalisée
+          let entry = teamsMap[name];
+          if(!entry){
+            // fallback insensible casse
+            for(const k in teamsMap){ if(k.toLowerCase()===name.toLowerCase()){ entry=teamsMap[k]; break; } }
+          }
+          if(entry){
+            // on privilégie home PPG pour usage domicile, away PPG pour extérieur
+            // mais fullTeams stocke un PPG unique par équipe -> on met l'overall ou home
+            const val = entry.overall || entry.home || entry.away;
+            if(val && val>=0.3 && val<=3.0){ t[1]=Math.round(val*100)/100; updated++; }
+          }
+        });
+      }
+      if(updated>0){
+        console.log(`✅ PPG live chargés: ${updated} équipes depuis data/ppg_live.json`);
+        document.getElementById('countInfo').textContent = `✅ ${updated} PPG live • ${new Date(j.updated).toLocaleString('fr-FR')} • source FootyStats API`;
+        render();
+        syncPickerFromTeams(); updatePickerSignal();
+        return true;
+      }
+    }
+    document.getElementById('countInfo').textContent = `⏳ ${j.updated ? new Date(j.updated).toLocaleString('fr-FR') : ''} • ${j.note || j.source || 'démo'} — utilise Coller PPG`;
+  }catch(e){
+    console.log('Pas de ppg_live.json:', e.message);
+  }
+  // fallback localStorage
+  try{
+    const saved=JSON.parse(localStorage.getItem('bilama_fullTeams')||'null');
+    if(saved){
+      for(const k in saved){ if(fullTeams[k]) fullTeams[k]=saved[k]; }
+      console.log('PPG restaurés depuis localStorage');
+    }
+  }catch(e){}
+  return false;
 }
 
 // === Cron auto-refresh PPG toutes les 60s + stockage local ===
@@ -720,6 +830,7 @@ function render(){
         if(role==='oddsA') samples[idx].odds.a=val;
         render();
 scheduleAutoRefresh();
+loadLivePPG();
       });
     });
     grid.appendChild(card);
@@ -749,6 +860,7 @@ document.getElementById('applyCalc').onclick=()=>{
   samples[activeMatchIdx].awayPPG=parseFloat(aPPG.toFixed(2));
   render();
 scheduleAutoRefresh();
+loadLivePPG();
 };
 // set active on click
 document.getElementById('grid').addEventListener('click', (e)=>{
@@ -865,6 +977,7 @@ document.getElementById('addToGrid').onclick=()=>{
   samples.unshift(newMatch);
   render();
 scheduleAutoRefresh();
+loadLivePPG();
   document.getElementById('grid').scrollIntoView({behavior:'smooth'});
 };
 // Améliore la recherche : tolère accents, vide, et reset
@@ -872,14 +985,17 @@ const origRender=render;
 document.getElementById('search').addEventListener('input', ()=>{
   // si 2 lettres mini, filtre, sinon montre tout
   if(document.getElementById('search').value.trim().length===0) { render();
-scheduleAutoRefresh(); return; }
+scheduleAutoRefresh();
+loadLivePPG(); return; }
   render();
 scheduleAutoRefresh();
+loadLivePPG();
 });
 syncPickerFromTeams(); updatePickerSignal();
 setInterval(()=>{ document.getElementById('lastUpdate').textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' • Paris'; },1000);
 render();
 scheduleAutoRefresh();
+loadLivePPG();
 
 // === Live FootyStats map & helpers ===
 const leaguePPGUrl = {
@@ -956,6 +1072,7 @@ async function fetchFootyStatsLive(){
       if(curL2===league) fillTeams(pickAwayTeam, league);
       render();
 scheduleAutoRefresh();
+loadLivePPG();
       alert('✅ '+upd+' PPG mis à jour pour '+info.label);
     } else {
       alert('Page récupérée ('+html.length+' car) mais parsing PPG échoué. Copie manuellement la table.');
@@ -986,8 +1103,62 @@ function applyPastePPG(){
     syncPickerFromTeams(); updatePickerSignal();
     render();
 scheduleAutoRefresh();
-    alert('✅ '+upd+' PPG appliqués pour '+league);
+loadLivePPG();
+    try{ localStorage.setItem('bilama_fullTeams', JSON.stringify(fullTeams)); }catch(e){}
+alert('✅ '+upd+' PPG appliqués pour '+league);
   } else alert('Aucune correspondance. Vérifie le format: "Equipe 1.23" par ligne et que la ligue sélectionnée correspond.');
+}
+
+
+// === Loader PPG live depuis data/ppg_live.json (prioritaire) ===
+async function loadLivePPG(){
+  try{
+    const r = await fetch('data/ppg_live.json?v='+Date.now());
+    if(!r.ok) throw new Error('no live json');
+    const j = await r.json();
+    if(j.leagues && typeof j.leagues === 'object'){
+      let updated = 0;
+      for(const lid in j.leagues){
+        if(!fullTeams[lid]) continue;
+        const teamsMap = j.leagues[lid];
+        if(!teamsMap || teamsMap.error) continue;
+        fullTeams[lid].forEach(t=>{
+          const name = t[0];
+          // cherche correspondance exacte ou normalisée
+          let entry = teamsMap[name];
+          if(!entry){
+            // fallback insensible casse
+            for(const k in teamsMap){ if(k.toLowerCase()===name.toLowerCase()){ entry=teamsMap[k]; break; } }
+          }
+          if(entry){
+            // on privilégie home PPG pour usage domicile, away PPG pour extérieur
+            // mais fullTeams stocke un PPG unique par équipe -> on met l'overall ou home
+            const val = entry.overall || entry.home || entry.away;
+            if(val && val>=0.3 && val<=3.0){ t[1]=Math.round(val*100)/100; updated++; }
+          }
+        });
+      }
+      if(updated>0){
+        console.log(`✅ PPG live chargés: ${updated} équipes depuis data/ppg_live.json`);
+        document.getElementById('countInfo').textContent = `✅ ${updated} PPG live • ${new Date(j.updated).toLocaleString('fr-FR')} • source FootyStats API`;
+        render();
+        syncPickerFromTeams(); updatePickerSignal();
+        return true;
+      }
+    }
+    document.getElementById('countInfo').textContent = `⏳ ${j.updated ? new Date(j.updated).toLocaleString('fr-FR') : ''} • ${j.note || j.source || 'démo'} — utilise Coller PPG`;
+  }catch(e){
+    console.log('Pas de ppg_live.json:', e.message);
+  }
+  // fallback localStorage
+  try{
+    const saved=JSON.parse(localStorage.getItem('bilama_fullTeams')||'null');
+    if(saved){
+      for(const k in saved){ if(fullTeams[k]) fullTeams[k]=saved[k]; }
+      console.log('PPG restaurés depuis localStorage');
+    }
+  }catch(e){}
+  return false;
 }
 
 // === Cron auto-refresh PPG toutes les 60s + stockage local ===

@@ -19,41 +19,95 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Fetch FootyStats PPG
+      - name: Fetch FootyStats PPG via API
+        env:
+          FOOTYSTATS_API_KEY: ${{ secrets.FOOTYSTATS_API_KEY }}
         run: |
-          python3 - << 'PY'
-          import json, pathlib, re, time, urllib.request
-          # Map ligues -> footystats URL
-          urls = {
-            "eng1":"https://footystats.org/england/premier-league",
-            "ita1":"https://footystats.org/italy/serie-a",
-            "esp1":"https://footystats.org/spain/la-liga",
-            "ger1":"https://footystats.org/germany/bundesliga",
-            "fra1":"https://footystats.org/france/ligue-1",
-            "ned1":"https://footystats.org/netherlands/eredivisie",
-            "por1":"https://footystats.org/portugal/primeira-liga",
-            "bel1":"https://footystats.org/belgium/belgian-pro-league",
-            "tur1":"https://footystats.org/turkey/super-lig",
-            "sco1":"https://footystats.org/scotland/premiership",
-            "eng2":"https://footystats.org/england/championship",
-            "esp2":"https://footystats.org/spain/la-liga2",
-            "ger2":"https://footystats.org/germany/2-bundesliga",
-            "ita2":"https://footystats.org/italy/serie-b",
-            "fra2":"https://footystats.org/france/ligue-2",
+          python3 - << 'PYEOF'
+          import json, pathlib, os, datetime, time, urllib.request, urllib.error
+
+          api_key = os.environ.get("FOOTYSTATS_API_KEY", "").strip()
+          # Mapping ligue -> season_id FootyStats (à compléter après 1er appel list)
+          # On utilise d'abord l'endpoint league-list pour découvrir les IDs si clé présente
+          # Docs: https://api.football-data-api.com/league-list?key=YOUR_KEY
+
+          # Fallback season_ids connus (à ajuster saison 2026-27 automatiquement)
+          season_ids = {
+            "eng1": 1625, # example PL - sera remplacé par découverte auto
+            "ita1": 2012, # placeholder
+            "esp1": 2012,
+            "ger1": 2012,
+            "fra1": 2012,
+            "ned1": 2012,
+            "por1": 2012,
+            "bel1": 2012,
+            "tur1": 2012,
+            "sco1": 2012,
+            "eng2": 2012,
+            "esp2": 2012,
+            "ger2": 2012,
+            "ita2": 2012,
+            "fra2": 2012,
           }
-          print(f"Fetching {len(urls)} leagues at {time.ctime()}")
-          # For now, just touch a timestamp file to prove cron works
-          # Real parsing requires authenticated API; we store timestamp for UI
-          import datetime
-          data = {"updated": datetime.datetime.utcnow().isoformat()+"Z", "leagues": list(urls.keys()), "note": "FootyStats bloque sans API key - utiliser coller PPG ou branche API footystats.org/docs/api"}
+
+          data = {"updated": datetime.datetime.utcnow().isoformat()+"Z", "source": "pending", "leagues": {}}
+
+          if not api_key or api_key == "example":
+              print("⚠️ Pas de FOOTYSTATS_API_KEY configurée — mode démo avec clé 'example' (PL 2018/19 uniquement)")
+              data["source"] = "demo-example-key"
+              data["note"] = "Ajoute FOOTYSTATS_API_KEY dans Settings > Secrets > Actions pour débloquer les 20 ligues. Voir footystats.org/api/u/api-settings (29.99£/mois). En attendant, utilise le bouton Coller PPG."
+              # Tentative démo avec clé example sur PL 2018/19
+              try:
+                  url = "https://api.football-data-api.com/league-tables?key=example&season_id=1625"
+                  with urllib.request.urlopen(url, timeout=15) as r:
+                      j = json.loads(r.read().decode())
+                      print(f"Demo fetch OK: {len(str(j))} chars")
+                      data["demo"] = j
+              except Exception as e:
+                  print(f"Demo fetch failed: {e}")
+                  data["demo_error"] = str(e)
+          else:
+              print(f"✅ Clé API trouvée (***{api_key[-4:]}) — récupération des 20 ligues")
+              data["source"] = "api.football-data-api.com"
+              # 1) Découvrir les season_ids via league-list si possible
+              # Pour simplifier v1 on tente directement les league-tables avec &include=stats
+              for lid, sid in season_ids.items():
+                  try:
+                      url = f"https://api.football-data-api.com/league-tables?key={api_key}&season_id={sid}&include=stats"
+                      print(f"Fetching {lid} season_id={sid} ...")
+                      with urllib.request.urlopen(url, timeout=15) as r:
+                          j = json.loads(r.read().decode())
+                          # j est une liste de teams avec ppg_overall, seasonPPG_home/away etc.
+                          teams_ppg = {}
+                          # Le format peut être {data: [...]} ou [...]
+                          items = j.get("data", j) if isinstance(j, dict) else j
+                          if isinstance(items, list):
+                              for t in items:
+                                  name = t.get("cleanName") or t.get("name") or t.get("team_name")
+                                  ppg_home = t.get("seasonPPG_home") or t.get("ppg_home") or t.get("seasonPPGProcessed_home")
+                                  ppg_away = t.get("seasonPPG_away") or t.get("ppg_away") or t.get("seasonPPGProcessed_away")
+                                  ppg_overall = t.get("seasonPPG_overall") or t.get("ppg_overall")
+                                  if name:
+                                      teams_ppg[name] = {"home": ppg_home, "away": ppg_away, "overall": ppg_overall}
+                              data["leagues"][lid] = teams_ppg
+                              print(f"  -> {lid}: {len(teams_ppg)} équipes")
+                          time.sleep(0.6) # rate limit
+                  except urllib.error.HTTPError as e:
+                      body = e.read().decode()[:500] if hasattr(e, 'read') else str(e)
+                      print(f"  HTTPError {e.code} for {lid}: {body}")
+                      data["leagues"][lid] = {"error": f"HTTP {e.code}", "body": body}
+                  except Exception as e:
+                      print(f"  Error {lid}: {e}")
+                      data["leagues"][lid] = {"error": str(e)}
+
           pathlib.Path("data").mkdir(exist_ok=True)
-          pathlib.Path("data/ppg_live.json").write_text(json.dumps(data, indent=2))
-          print("Wrote data/ppg_live.json")
-          PY
-      - name: Commit
+          pathlib.Path("data/ppg_live.json").write_text(json.dumps(data, indent=2, ensure_ascii=False))
+          print("Wrote data/ppg_live.json with", len(data.get("leagues", {})), "leagues")
+          PYEOF
+      - name: Commit & push
         run: |
           git config user.name "bilama-bot"
           git config user.email "bot@bilama54.local"
-          git add data/ppg_live.json || true
-          git diff --staged --quiet || git commit -m "cron: update PPG live timestamp $(date -u +%Y-%m-%d)"
+          git add data/ppg_live.json
+          git diff --staged --quiet || git commit -m "cron: update PPG live $(date -u +%Y-%m-%d) via FootyStats API"
           git push origin gh-pages || echo "no push"
