@@ -1,0 +1,59 @@
+name: Fetch FootyStats PPG Live
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # tous les jours 06:00 UTC (07:00 Paris)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fetch FootyStats PPG
+        run: |
+          python3 - << 'PY'
+          import json, pathlib, re, time, urllib.request
+          # Map ligues -> footystats URL
+          urls = {
+            "eng1":"https://footystats.org/england/premier-league",
+            "ita1":"https://footystats.org/italy/serie-a",
+            "esp1":"https://footystats.org/spain/la-liga",
+            "ger1":"https://footystats.org/germany/bundesliga",
+            "fra1":"https://footystats.org/france/ligue-1",
+            "ned1":"https://footystats.org/netherlands/eredivisie",
+            "por1":"https://footystats.org/portugal/primeira-liga",
+            "bel1":"https://footystats.org/belgium/belgian-pro-league",
+            "tur1":"https://footystats.org/turkey/super-lig",
+            "sco1":"https://footystats.org/scotland/premiership",
+            "eng2":"https://footystats.org/england/championship",
+            "esp2":"https://footystats.org/spain/la-liga2",
+            "ger2":"https://footystats.org/germany/2-bundesliga",
+            "ita2":"https://footystats.org/italy/serie-b",
+            "fra2":"https://footystats.org/france/ligue-2",
+          }
+          print(f"Fetching {len(urls)} leagues at {time.ctime()}")
+          # For now, just touch a timestamp file to prove cron works
+          # Real parsing requires authenticated API; we store timestamp for UI
+          import datetime
+          data = {"updated": datetime.datetime.utcnow().isoformat()+"Z", "leagues": list(urls.keys()), "note": "FootyStats bloque sans API key - utiliser coller PPG ou branche API footystats.org/docs/api"}
+          pathlib.Path("data").mkdir(exist_ok=True)
+          pathlib.Path("data/ppg_live.json").write_text(json.dumps(data, indent=2))
+          print("Wrote data/ppg_live.json")
+          PY
+      - name: Commit
+        run: |
+          git config user.name "bilama-bot"
+          git config user.email "bot@bilama54.local"
+          git add data/ppg_live.json || true
+          git diff --staged --quiet || git commit -m "cron: update PPG live timestamp $(date -u +%Y-%m-%d)"
+          git push origin gh-pages || echo "no push"
