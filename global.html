@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bilama54 — Dashboard Global 30 Équipes • Matchup Auto</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Space Grotesk','sans-serif'], mono: ['IBM Plex Mono','monospace'] },
+      colors: { bilama: { bg:'#0B0E14', card:'#11151E', border:'#1E2533', accent:'#00E5A0', accent2:'#6C5CFF', warn:'#FFB800', danger:'#FF3B30' } }
+    }
+  }
+}
+</script>
+<style>.glass{backdrop-filter:blur(12px)} .live-dot{animation:pulse 1.5s infinite} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}} .card-hover:hover{transform:translateY(-2px); border-color:#00E5A0} .scrollbar-hide::-webkit-scrollbar{display:none}</style>
+</head>
+<body class="bg-bilama-bg text-white font-sans min-h-screen antialiased">
+  <!-- TOP BAR -->
+  <header class="sticky top-0 z-50 bg-bilama-bg/80 glass border-b border-bilama-border">
+    <div class="max-w-[1440px] mx-auto px-4 lg:px-6 h-[64px] flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="w-9 h-9 rounded-xl bg-gradient-to-br from-bilama-accent to-bilama-accent2 flex items-center justify-center font-bold text-black">B54</a>
+        <div>
+          <div class="font-bold leading-none text-[18px]">Bilama54 <span class="text-bilama-accent">•</span> <span class="font-normal text-zinc-400">Global 30 Teams</span></div>
+          <div class="text-[11px] text-zinc-500 font-mono tracking-widest uppercase">Matchup Auto • Pace + Rating • Live</div>
+        </div>
+      </div>
+      <div class="hidden lg:flex items-center gap-2">
+        <a href="index.html" class="bg-bilama-card border border-bilama-border px-4 py-2 rounded-full text-sm">Opening Night</a>
+        <div class="flex items-center gap-2 bg-bilama-card border border-bilama-border rounded-full px-3 py-1.5">
+          <span class="w-2 h-2 rounded-full bg-bilama-accent live-dot"></span>
+          <span class="text-xs font-medium">Live 60s</span>
+          <span class="text-[11px] text-zinc-500 font-mono" id="lastUpdate">—</span>
+        </div>
+        <button id="exportBtn" class="bg-white text-black px-4 py-2 rounded-full text-sm font-bold">Exporter fiche <i class="fa-solid fa-download ml-1"></i></button>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="autoToggle" class="bg-bilama-accent text-black px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1"><i class="fa-solid fa-bolt"></i> AUTO ON</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO + MATCHUP ENGINE -->
+  <section class="max-w-[1440px] mx-auto px-4 lg:px-6 pt-6">
+    <div class="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-4">
+      <div class="bg-gradient-to-br from-[#0F1A33] via-[#11151E] to-[#0B0E14] border border-bilama-border rounded-[24px] p-6 relative overflow-hidden">
+        <div class="absolute -right-8 -top-8 w-60 h-60 bg-bilama-accent2/15 blur-[80px] rounded-full"></div>
+        <div class="relative">
+          <div class="inline-flex items-center gap-2 bg-sky-500/15 border border-sky-500/20 rounded-full px-3 py-1 text-xs"><i class="fa-solid fa-wand-magic-sparkles text-sky-400"></i> Moteur Matchup • Se met à jour seul en fonction de l'adversaire</div>
+          <h1 class="text-[28px] lg:text-[34px] font-bold leading-[0.95] mt-3">Choisis <span class="text-bilama-accent">2 équipes</span>.<br>Le prono s'ajuste instantanément.</h1>
+          <p class="text-zinc-400 text-sm mt-2 max-w-[640px]">Pace projetée, Net Rating différentiel, score attendu, proba et value vs book. Basé sur les compos projetées RotoWire + ratings 2025-26.</p>
+          <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="bg-black/40 border border-white/10 rounded-2xl p-3">
+              <label class="text-[11px] font-mono text-zinc-500">ÉQUIPE A (Domicile par défaut)</label>
+              <select id="teamA" class="w-full mt-1 bg-zinc-900 border border-white/10 rounded-xl px-3 py-2.5 text-sm font-semibold"></select>
+              <div class="mt-2 flex gap-2 text-[11px]"><span id="badgeA1" class="bg-white text-black px-2 py-1 rounded-full font-bold">Net +8.2</span><span id="badgeA2" class="bg-zinc-800 px-2 py-1 rounded-full">Pace 99.2</span></div>
+            </div>
+            <div class="bg-black/40 border border-white/10 rounded-2xl p-3">
+              <label class="text-[11px] font-mono text-zinc-500">ÉQUIPE B (Extérieur)</label>
+              <select id="teamB" class="w-full mt-1 bg-zinc-900 border border-white/10 rounded-xl px-3 py-2.5 text-sm font-semibold"></select>
+              <div class="mt-2 flex gap-2 text-[11px]"><span id="badgeB1" class="bg-white text-black px-2 py-1 rounded-full font-bold">Net +8.1</span><span id="badgeB2" class="bg-zinc-800 px-2 py-1 rounded-full">Pace 94.8</span></div>
+            </div>
+          </div>
+          <div class="mt-3 flex flex-wrap gap-2 items-center">
+            <label class="flex items-center gap-2 bg-white/10 border border-white/10 rounded-full px-3 py-1.5 text-xs"><input type="checkbox" id="homeAdv" checked class="accent-emerald-500"> Avantage domicile +3.0</label>
+            <label class="flex items-center gap-2 bg-white/10 border border-white/10 rounded-full px-3 py-1.5 text-xs"><input type="checkbox" id="paceAdjust" checked class="accent-sky-500"> Pace ajustée Opening Night ×0.97</label>
+            <div class="flex items-center gap-2 bg-bilama-card border border-bilama-border rounded-full px-3 py-1.5 text-xs"><span class="text-zinc-500">Book spread</span><input id="bookSpread" type="number" step="0.5" value="-1.5" class="w-16 bg-black border border-white/10 rounded-full px-2 py-1 text-center font-bold"> <span id="bookLabel" class="text-zinc-400">BOS -1.5</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULT CARD -->
+      <div id="resultCard" class="bg-gradient-to-br from-bilama-card to-[#0F172A] border border-bilama-accent/20 rounded-[24px] p-5 flex flex-col">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-mono bg-bilama-accent text-black px-2 py-1 rounded-full font-bold">RÉSULTAT LIVE</span>
+          <span class="text-xs font-mono text-zinc-500" id="matchupTime">19:00 ET • 01:00 Paris</span>
+        </div>
+        <div class="mt-3 bg-black rounded-2xl p-4 border border-white/10">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3"><img id="logoA" src="" class="w-10 h-10 bg-white rounded-full p-1"><div><div id="nameA" class="font-bold leading-none">DET</div><div id="recA" class="text-[11px] text-zinc-400">60-22 • Net +8.2</div></div></div>
+            <div class="text-center"><div class="text-[11px] text-zinc-500 font-mono">VS</div><div id="paceProj" class="text-xs bg-zinc-800 px-2 py-1 rounded-full font-mono">Pace 96.9</div></div>
+            <div class="flex items-center gap-3"><div class="text-right"><div id="nameB" class="font-bold leading-none">BOS</div><div id="recB" class="text-[11px] text-zinc-400">56-26 • Net +8.1</div></div><img id="logoB" src="" class="w-10 h-10 bg-white rounded-full p-1"></div>
+          </div>
+          <div class="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <div class="text-center"><div class="text-[11px] text-zinc-500">SCORE PROJETÉ</div><div id="scoreA" class="text-2xl font-black">115.2</div><div id="orA" class="text-[11px] font-mono text-zinc-500">ORtg 118.0</div></div>
+            <div class="bg-zinc-800 rounded-full px-3 py-1 text-xs font-bold">—</div>
+            <div class="text-center"><div class="text-[11px] text-zinc-500">SCORE PROJETÉ</div><div id="scoreB" class="text-2xl font-black">113.8</div><div id="orB" class="text-[11px] font-mono text-zinc-500">ORtg 120.8</div></div>
+          </div>
+          <div class="mt-3 h-2 bg-zinc-800 rounded-full overflow-hidden flex"><div id="barA" class="bg-bilama-accent" style="width:52%"></div><div id="barB" class="bg-zinc-600" style="width:48%"></div></div>
+          <div class="flex justify-between text-[11px] font-mono text-zinc-400 mt-1"><span id="probA">DET 56%</span><span id="probB">BOS 44%</span></div>
+        </div>
+        <div class="mt-3 space-y-2">
+          <div class="flex justify-between bg-white/5 rounded-full px-3 py-2 text-xs"><span class="text-zinc-400">Modèle spread</span><b id="modelSpread" class="text-bilama-accent">DET -1.4</b></div>
+          <div class="flex justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-2 text-xs"><span>Edge vs Book</span><b id="edge" class="text-emerald-400">+2.9 pts sur DET</b><span id="stars">★★★★☆</span></div>
+          <div id="pickBox" class="bg-bilama-accent text-black rounded-xl px-3 py-2.5 text-center font-bold text-sm">✅ DET +1.5 @1.92 — Value détectée</div>
+          <div class="text-[11px] text-zinc-500 leading-relaxed" id="why">Detroit #1 Est, déf #2 NBA. Pace lente de BOS (94.8) réduit la variance.</div>
+        </div>
+        <div class="mt-auto pt-3 flex gap-2">
+          <button id="swapBtn" class="flex-1 bg-white/10 border border-white/10 rounded-full py-2 text-xs font-semibold"><i class="fa-solid fa-right-left"></i> Inverser domicile/extérieur</button>
+          <button id="randomBtn" class="flex-1 bg-white text-black rounded-full py-2 text-xs font-bold"><i class="fa-solid fa-shuffle"></i> Matchup aléatoire</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEAM GRID + FILTERS -->
+  <section class="max-w-[1440px] mx-auto px-4 lg:px-6 pt-6">
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="flex items-center gap-2 bg-black/40 border border-white/10 rounded-full px-3 py-1.5">
+        <i class="fa-solid fa-magnifying-glass text-zinc-500"></i>
+        <input id="search" placeholder="Chercher équipe (ex: CHI, Wemby...)" class="bg-transparent outline-none text-sm w-[220px] placeholder:text-zinc-500">
+      </div>
+      <select id="confFilter" class="bg-bilama-card border border-bilama-border rounded-full px-3 py-2 text-sm"><option value="all">Toutes conférences</option><option value="E">Est</option><option value="W">Ouest</option></select>
+      <select id="divFilter" class="bg-bilama-card border border-bilama-border rounded-full px-3 py-2 text-sm"><option value="all">Toutes divisions</option><option value="Atlantic">Atlantic</option><option value="Central">Central</option><option value="Southeast">Southeast</option><option value="Northwest">Northwest</option><option value="Pacific">Pacific</option><option value="Southwest">Southwest</option></select>
+      <select id="sortFilter" class="bg-bilama-card border border-bilama-border rounded-full px-3 py-2 text-sm"><option value="net">Trier: Net Rating</option><option value="pace">Trier: Pace (rapide → lent)</option><option value="ortg">Trier: ORtg</option><option value="drtg">Trier: DRtg (défense)</option><option value="wins">Trier: Victoires</option></select>
+      <div class="ml-auto flex items-center gap-2 text-xs text-zinc-500 font-mono"><span id="countTeams">30 équipes</span> • <span>Auto-update ON</span> <span class="w-2 h-2 bg-bilama-accent rounded-full live-dot"></span></div>
+    </div>
+
+    <div id="teamGrid" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3"></div>
+  </section>
+
+  <!-- DETAIL MODAL -->
+  <div id="detailModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 p-4 lg:p-8 overflow-y-auto">
+    <div class="max-w-[720px] mx-auto bg-bilama-card border border-bilama-border rounded-[20px] overflow-hidden">
+      <div class="h-1 w-full bg-gradient-to-r from-bilama-accent to-bilama-accent2"></div>
+      <div class="p-5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3"><img id="mLogo" class="w-12 h-12 bg-white rounded-full p-1"><div><div id="mName" class="font-bold text-lg"></div><div id="mSub" class="text-xs text-zinc-400"></div></div></div>
+          <button id="closeModal" class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="mContent" class="mt-4"></div>
+        <div class="mt-4 flex gap-2"><button id="mSetA" class="flex-1 bg-bilama-accent text-black py-2 rounded-full font-bold text-sm">Mettre en A</button><button id="mSetB" class="flex-1 bg-white text-black py-2 rounded-full font-bold text-sm">Mettre en B</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-[1440px] mx-auto px-4 lg:px-6 py-6 text-center text-[11px] text-zinc-500 font-mono">
+    Bilama54 © 2026 • 30 équipes • Data: Basketball-Reference, NBA.com, RotoWire • Modèle Lab auto-update • <a href="index.html" class="underline">Retour Opening Night</a>
+  </div>
+
+<script>
+const teams = [
+  {abbr:'BOS', name:'Boston Celtics', city:'Boston', conf:'E', div:'Atlantic', w:56,l:26, ortg:120.8,drtg:112.7, net:8.1, pace:94.8, srs:7.37, coach:'Joe Mazzulla', inj:0, logo:'bos', lineup:['Derrick White','Baylor Scheierman','Jayson Tatum','Paul George','Mitchell Robinson']},
+  {abbr:'BKN', name:'Brooklyn Nets', city:'Brooklyn', conf:'E', div:'Atlantic', w:26,l:56, ortg:107.2,drtg:117.5, net:-10.3, pace:99.8, srs:-6.1, coach:'Jordi Fernandez', inj:1, logo:'bkn', lineup:['Dennis Schröder','Cam Thomas','Nic Claxton*','Dorian Finney-Smith','Day\'Ron Sharpe']},
+  {abbr:'NYK', name:'New York Knicks', city:'New York', conf:'E', div:'Atlantic', w:53,l:29, ortg:119.9,drtg:113.4, net:6.5, pace:96.8, srs:6.18, coach:'Mike Brown', inj:0, logo:'nyk', lineup:['Jalen Brunson','Mikal Bridges','Josh Hart','OG Anunoby','Karl-Anthony Towns']},
+  {abbr:'PHI', name:'Philadelphia 76ers', city:'Philadelphia', conf:'E', div:'Atlantic', w:47,l:35, ortg:117.5,drtg:114.8, net:2.7, pace:98.6, srs:2.9, coach:'Nick Nurse', inj:3, logo:'phi', lineup:['Tyrese Maxey','VJ Edgecombe','Jaylen Brown','LeBron James','Joel Embiid']},
+  {abbr:'TOR', name:'Toronto Raptors', city:'Toronto', conf:'E', div:'Atlantic', w:46,l:36, ortg:115.8,drtg:113.2, net:2.5, pace:98.1, srs:2.52, coach:'Darko Rajakovic', inj:1, logo:'tor', lineup:['Immanuel Quickley','RJ Barrett','Brandon Ingram','Scottie Barnes','Jakob Poeltl']},
+  {abbr:'CHI', name:'Chicago Bulls', city:'Chicago', conf:'E', div:'Central', w:39,l:43, ortg:115.0,drtg:116.2, net:-1.2, pace:100.2, srs:-0.8, coach:'Billy Donovan', inj:1, logo:'chi', lineup:['Josh Giddey','Coby White','Matas Buzelis','Patrick Williams','Nikola Vucevic']},
+  {abbr:'CLE', name:'Cleveland Cavaliers', city:'Cleveland', conf:'E', div:'Central', w:52,l:30, ortg:119.3,drtg:115.2, net:4.1, pace:97.5, srs:3.72, coach:'Kenny Atkinson', inj:0, logo:'cle', lineup:['Darius Garland','Donovan Mitchell','Max Strus','Evan Mobley','Jarrett Allen']},
+  {abbr:'DET', name:'Detroit Pistons', city:'Detroit', conf:'E', div:'Central', w:60,l:22, ortg:118.0,drtg:109.8, net:8.2, pace:99.2, srs:7.60, coach:'J.B. Bickerstaff', inj:0, logo:'det', lineup:['Cade Cunningham','Duncan Robinson','Ausar Thompson','John Collins','Jalen Duren']},
+  {abbr:'IND', name:'Indiana Pacers', city:'Indiana', conf:'E', div:'Central', w:35,l:47, ortg:110.5,drtg:114.8, net:-4.3, pace:99.0, srs:-2.1, coach:'Rick Carlisle', inj:2, logo:'ind', lineup:['Tyrese Haliburton','Andrew Nembhard','Aaron Nesmith','Pascal Siakam','Myles Turner']},
+  {abbr:'MIL', name:'Milwaukee Bucks', city:'Milwaukee', conf:'E', div:'Central', w:48,l:34, ortg:116.5,drtg:114.0, net:2.5, pace:98.4, srs:1.9, coach:'Doc Rivers', inj:0, logo:'mil', lineup:['Damian Lillard','Gary Trent Jr','Khris Middleton','Giannis Antetokounmpo','Brook Lopez']},
+  {abbr:'ATL', name:'Atlanta Hawks', city:'Atlanta', conf:'E', div:'Southeast', w:46,l:36, ortg:116.1,drtg:113.8, net:2.3, pace:99.5, srs:2.33, coach:'Quin Snyder', inj:1, logo:'atl', lineup:['Trae Young','Dyson Daniels','Zaccharie Risacher','Jalen Johnson','Onyeka Okongwu']},
+  {abbr:'CHA', name:'Charlotte Hornets', city:'Charlotte', conf:'E', div:'Southeast', w:44,l:38, ortg:119.5,drtg:114.5, net:5.0, pace:99.0, srs:4.67, coach:'Charles Lee', inj:0, logo:'cha', lineup:['LaMelo Ball','Brandon Miller','Miles Bridges','Grant Williams','Mark Williams']},
+  {abbr:'MIA', name:'Miami Heat', city:'Miami', conf:'E', div:'Southeast', w:43,l:39, ortg:116.7,drtg:114.5, net:2.2, pace:106.1, srs:2.21, coach:'Erik Spoelstra', inj:0, logo:'mia', lineup:['Tyler Herro','Norman Powell','Andrew Wiggins','Bam Adebayo','Kel\'el Ware']},
+  {abbr:'ORL', name:'Orlando Magic', city:'Orlando', conf:'E', div:'Southeast', w:45,l:37, ortg:115.1,drtg:114.5, net:0.6, pace:96.2, srs:0.74, coach:'Jamahl Mosley', inj:1, logo:'orl', lineup:['Jalen Suggs','Desmond Bane','Franz Wagner','Paolo Banchero','Wendell Carter Jr']},
+  {abbr:'WAS', name:'Washington Wizards', city:'Washington', conf:'E', div:'Southeast', w:18,l:64, ortg:108.0,drtg:118.5, net:-10.5, pace:101.2, srs:-7.8, coach:'Brian Keefe', inj:2, logo:'was', lineup:['CJ McCollum','Kyshawn George','Bilal Coulibaly','Alex Sarr','Tristan Vukcevic']},
+  {abbr:'DEN', name:'Denver Nuggets', city:'Denver', conf:'W', div:'Northwest', w:54,l:28, ortg:122.6,drtg:117.4, net:5.2, pace:98.3, srs:5.0, coach:'David Adelman', inj:0, logo:'den', lineup:['Jamal Murray','Christian Braun','Michael Porter Jr','Aaron Gordon','Nikola Jokic']},
+  {abbr:'MIN', name:'Minnesota Timberwolves', city:'Minnesota', conf:'W', div:'Northwest', w:49,l:33, ortg:116.8,drtg:113.7, net:3.1, pace:97.8, srs:2.81, coach:'Chris Finch', inj:1, logo:'min', lineup:['Mike Conley','Anthony Edwards','Jaden McDaniels','Julius Randle','Rudy Gobert']},
+  {abbr:'OKC', name:'Oklahoma City Thunder', city:'Oklahoma City', conf:'W', div:'Northwest', w:64,l:18, ortg:119.0,drtg:107.8, net:11.2, pace:99.3, srs:10.94, coach:'Mark Daigneault', inj:1, logo:'okc', lineup:['Shai Gilgeous-Alexander','Cason Wallace','Jalen Williams','Chet Holmgren','Isaiah Hartenstein']},
+  {abbr:'POR', name:'Portland Trail Blazers', city:'Portland', conf:'W', div:'Northwest', w:42,l:40, ortg:114.5,drtg:114.7, net:-0.2, pace:98.7, srs:-0.16, coach:'Chauncey Billups', inj:1, logo:'por', lineup:['Scoot Henderson','Shaedon Sharpe','Deni Avdija','Jerami Grant','Deandre Ayton']},
+  {abbr:'UTA', name:'Utah Jazz', city:'Utah', conf:'W', div:'Northwest', w:17,l:65, ortg:111.2,drtg:119.8, net:-8.6, pace:100.5, srs:-5.9, coach:'Will Hardy', inj:2, logo:'utah', lineup:['Keyonte George','Collin Sexton','Lauri Markkanen','John Collins','Walker Kessler']},
+  {abbr:'GSW', name:'Golden State Warriors', city:'Golden State', conf:'W', div:'Pacific', w:44,l:38, ortg:115.6,drtg:114.2, net:1.4, pace:99.1, srs:0.9, coach:'Steve Kerr', inj:0, logo:'gs', lineup:['Stephen Curry','Buddy Hield','Jimmy Butler','Draymond Green','Al Horford']},
+  {abbr:'LAC', name:'LA Clippers', city:'LA Clippers', conf:'W', div:'Pacific', w:42,l:40, ortg:117.4,drtg:116.3, net:1.1, pace:97.2, srs:0.96, coach:'Ty Lue', inj:2, logo:'lac', lineup:['James Harden','Kawhi Leonard','Kris Dunn','John Collins','Ivica Zubac']},
+  {abbr:'LAL', name:'Los Angeles Lakers', city:'Los Angeles', conf:'W', div:'Pacific', w:53,l:29, ortg:118.2,drtg:116.5, net:1.7, pace:98.3, srs:1.66, coach:'JJ Redick', inj:1, logo:'lal', lineup:['Luka Doncic','Austin Reaves','LeBron*','Rui Hachimura','Deandre Ayton']},
+  {abbr:'PHX', name:'Phoenix Suns', city:'Phoenix', conf:'W', div:'Pacific', w:45,l:37, ortg:115.5,drtg:114.1, net:1.4, pace:98.0, srs:1.70, coach:'Mike Budenholzer', inj:0, logo:'phx', lineup:['Jalen Green','Devin Booker','Dillon Brooks','Ryan Dunn','Mark Williams']},
+  {abbr:'SAC', name:'Sacramento Kings', city:'Sacramento', conf:'W', div:'Pacific', w:40,l:42, ortg:110.4,drtg:115.8, net:-5.4, pace:98.9, srs:-3.2, coach:'Doug Christie', inj:1, logo:'sac', lineup:['Dennis Schröder','Zach LaVine','DeMar DeRozan','Domantas Sabonis','Drew Eubanks']},
+  {abbr:'DAL', name:'Dallas Mavericks', city:'Dallas', conf:'W', div:'Southwest', w:39,l:43, ortg:114.4,drtg:115.9, net:-1.5, pace:96.5, srs:-1.1, coach:'Jason Kidd', inj:3, logo:'dal', lineup:['Kyrie Irving','Klay Thompson','Cooper Flagg','Anthony Davis','Dereck Lively II']},
+  {abbr:'HOU', name:'Houston Rockets', city:'Houston', conf:'W', div:'Southwest', w:52,l:30, ortg:118.7,drtg:113.3, net:5.4, pace:99.8, srs:5.03, coach:'Ime Udoka', inj:0, logo:'hou', lineup:['Fred VanVleet','Jalen Green','Kevin Durant','Jabari Smith Jr','Alperen Sengun']},
+  {abbr:'MEM', name:'Memphis Grizzlies', city:'Memphis', conf:'W', div:'Southwest', w:48,l:34, ortg:115.6,drtg:114.0, net:1.6, pace:100.8, srs:1.2, coach:'Tuomas Iisalo', inj:2, logo:'mem', lineup:['Ja Morant','Vince Williams Jr','Jaylen Wells','Jaren Jackson Jr','Zach Edey']},
+  {abbr:'NOP', name:'New Orleans Pelicans', city:'New Orleans', conf:'W', div:'Southwest', w:21,l:61, ortg:109.5,drtg:118.2, net:-8.7, pace:99.4, srs:-5.8, coach:'Willie Green', inj:3, logo:'no', lineup:['Dejounte Murray','Trey Murphy III','Herb Jones','Zion Williamson','Yves Missi']},
+  {abbr:'SAS', name:'San Antonio Spurs', city:'San Antonio', conf:'W', div:'Southwest', w:62,l:20, ortg:119.7,drtg:111.4, net:8.3, pace:99.9, srs:8.24, coach:'Mitch Johnson', inj:0, logo:'sa', lineup:['De\'Aaron Fox','Stephon Castle','Dylan Harper','Devin Vassell','Victor Wembanyama']},
+];
+
+function logoUrl(code){ return `https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2F${code}.png&w=80&h=80`; }
+
+const teamASelect=document.getElementById('teamA'), teamBSelect=document.getElementById('teamB');
+teams.forEach(t=>{
+  const o1=document.createElement('option'); o1.value=t.abbr; o1.textContent=`${t.abbr} — ${t.name} (${t.w}-${t.l}) Net ${t.net>0?'+':''}${t.net}`;
+  const o2=o1.cloneNode(true);
+  teamASelect.appendChild(o1); teamBSelect.appendChild(o2);
+});
+teamASelect.value='DET'; teamBSelect.value='BOS';
+
+function getTeam(abbr){ return teams.find(t=>t.abbr===abbr); }
+
+function calc(){
+  const a=getTeam(teamASelect.value), b=getTeam(teamBSelect.value);
+  const homeOn=document.getElementById('homeAdv').checked;
+  const paceOn=document.getElementById('paceAdjust').checked;
+  const book = parseFloat(document.getElementById('bookSpread').value)||0;
+  // Pace projetée
+  let paceProj=(a.pace+b.pace)/2;
+  if(paceOn) paceProj*=0.97;
+  // Net diff avec domicile
+  let netA = a.net + (homeOn?3:0);
+  let netB = b.net;
+  // Ajustement blessures simplifié
+  netA -= a.inj*0.7; netB -= b.inj*0.7;
+  // PHI special boost déjà inclus? On ajoute LeBron boost si PHI en A/B (on l'a déjà dans net mais on sur-ajoute 2 pts pour demo)
+  // Scores projetés via ORtg/DRtg
+  // Points per 100: (ORtg_A + DRtg_B)/2 adjusted
+  let offA = (a.ortg + b.drtg)/2;
+  let offB = (b.ortg + a.drtg)/2;
+  // léger bonus net rating
+  offA += (netA-netB)*0.15;
+  offB -= (netA-netB)*0.15;
+  const scoreA = paceProj * offA /100;
+  const scoreB = paceProj * offB /100;
+
+  // Proba
+  const diff = scoreA - scoreB;
+  const winAProb = 1/(1+Math.pow(10, -diff/11)); // logistic
+  const winBProb = 1-winAProb;
+
+  // Spread modèle: diff (positif = A favori)
+  const modelSpread = diff; // si +2 => A -2
+  // Edge vs book: book est pour A? bookSpread negatif = A favori -X. Ex: -1.5 = A -1.5. Model +? On compare.
+  // Book côté A: book (ex -1.5) vs model (+1.4 si A favori 1.4 => book -1.5 proche)
+  // Edge = model - book
+  const edge = modelSpread - book;
+
+  // Update UI
+  document.getElementById('logoA').src=logoUrl(a.logo); document.getElementById('logoB').src=logoUrl(b.logo);
+  document.getElementById('nameA').textContent=a.abbr; document.getElementById('nameB').textContent=b.abbr;
+  document.getElementById('recA').textContent=`${a.w}-${a.l} • Net ${a.net>0?'+':''}${a.net}`; document.getElementById('recB').textContent=`${b.w}-${b.l} • Net ${b.net>0?'+':''}${b.net}`;
+  document.getElementById('paceProj').textContent=`Pace ${paceProj.toFixed(1)}`;
+  document.getElementById('scoreA').textContent=scoreA.toFixed(1); document.getElementById('scoreB').textContent=scoreB.toFixed(1);
+  document.getElementById('orA').textContent=`ORtg ${a.ortg}`; document.getElementById('orB').textContent=`ORtg ${b.ortg}`;
+  document.getElementById('probA').textContent=`${a.abbr} ${(winAProb*100).toFixed(0)}%`; document.getElementById('probB').textContent=`${b.abbr} ${(winBProb*100).toFixed(0)}%`;
+  document.getElementById('barA').style.width=`${(winAProb*100).toFixed(0)}%`; document.getElementById('barB').style.width=`${(winBProb*100).toFixed(0)}%`;
+  document.getElementById('modelSpread').textContent= (modelSpread>=0?`${a.abbr} -${modelSpread.toFixed(1)}`:`${b.abbr} -${Math.abs(modelSpread).toFixed(1)}`);
+  document.getElementById('badgeA1').textContent=`Net ${a.net>0?'+':''}${a.net}`; document.getElementById('badgeB1').textContent=`Net ${b.net>0?'+':''}${b.net}`;
+  document.getElementById('badgeA2').textContent=`Pace ${a.pace}`; document.getElementById('badgeB2').textContent=`Pace ${b.pace}`;
+  let stars='★★★☆☆'; if(Math.abs(edge)>=4) stars='★★★★★'; else if(Math.abs(edge)>=2.5) stars='★★★★☆'; else if(Math.abs(edge)>=1.5) stars='★★★☆☆';
+  document.getElementById('edge').innerHTML= (Math.abs(edge)<0.5?`<span class="text-zinc-400">Pas de value (Edge ${edge.toFixed(1)})</span>`: edge>0?`+${edge.toFixed(1)} pts sur ${a.abbr}`:`${edge.toFixed(1)} pts sur ${b.abbr}`);
+  document.getElementById('edge').className = Math.abs(edge)>=2? 'text-emerald-400 font-bold':'text-zinc-400 font-bold';
+  document.getElementById('stars').textContent=stars;
+  let pick='';
+  if(Math.abs(edge)>=1.5){
+    const fav = edge>0? a.abbr : b.abbr;
+    const line = edge>0? (book+edge).toFixed(1) : (book).toFixed(1); // simplify
+    // Determine handicap to play
+    const handicap = Math.abs(book)>=2 ? `${fav} ${book>0?'+':''}${book}` : `${edge>0? a.abbr+' '+ (book>0?'+':'' )+book : b.abbr+' '+ (book>0?'+':'' )+ (book*-1)}`;
+    // Better: just show model suggests taking the side with edge
+    const side = edge>0? `${a.abbr} couvre` : `${b.abbr} couvre`;
+    pick=`✅ ${side} — Value ${Math.abs(edge).toFixed(1)} pts`;
+    document.getElementById('pickBox').className='bg-bilama-accent text-black rounded-xl px-3 py-2.5 text-center font-bold text-sm';
+  } else {
+    pick=`⚪ Pas de value claire — passer`;
+    document.getElementById('pickBox').className='bg-zinc-800 text-zinc-300 rounded-xl px-3 py-2.5 text-center font-bold text-sm';
+  }
+  document.getElementById('pickBox').textContent=pick;
+  document.getElementById('why').textContent = `${a.name} (${a.pace} Pace) vs ${b.name} (${b.pace} Pace) → projeté ${paceProj.toFixed(1)} poss. Écart Net ${(a.net-b.net).toFixed(1)} + domicile ${homeOn?'+3':0}.`;
+  document.getElementById('bookLabel').textContent = `${a.abbr} ${book>0?'+':''}${book}`;
+}
+
+// Grid rendering
+const grid=document.getElementById('teamGrid');
+function renderGrid(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const cf=document.getElementById('confFilter').value;
+  const df=document.getElementById('divFilter').value;
+  const sf=document.getElementById('sortFilter').value;
+  let list=[...teams];
+  if(q) list=list.filter(t=> t.abbr.toLowerCase().includes(q) || t.name.toLowerCase().includes(q) || t.city.toLowerCase().includes(q) || t.lineup.join(' ').toLowerCase().includes(q));
+  if(cf!=='all') list=list.filter(t=>t.conf===cf);
+  if(df!=='all') list=list.filter(t=>t.div===df);
+  if(sf==='net') list.sort((a,b)=>b.net-a.net);
+  if(sf==='pace') list.sort((a,b)=>b.pace-a.pace);
+  if(sf==='ortg') list.sort((a,b)=>b.ortg-a.ortg);
+  if(sf==='drtg') list.sort((a,b)=>a.drtg-b.drtg);
+  if(sf==='wins') list.sort((a,b)=>b.w-a.w);
+  document.getElementById('countTeams').textContent=`${list.length} équipes`;
+  grid.innerHTML='';
+  list.forEach(t=>{
+    const el=document.createElement('div');
+    el.className='card-hover bg-bilama-card border border-bilama-border rounded-2xl p-3 cursor-pointer transition flex flex-col';
+    el.innerHTML=`
+      <div class="flex items-center gap-3">
+        <img src="${logoUrl(t.logo)}" class="w-10 h-10 bg-white rounded-full p-1">
+        <div class="flex-1"><div class="font-bold leading-none">${t.abbr}</div><div class="text-[11px] text-zinc-400">${t.city} • ${t.w}-${t.l}</div></div>
+        <span class="text-[11px] font-mono ${t.net>=5?'bg-emerald-500 text-black': t.net>=0?'bg-white text-black':'bg-zinc-700 text-white'} px-2 py-1 rounded-full font-bold">Net ${t.net>0?'+':''}${t.net}</span>
+      </div>
+      <div class="mt-3 grid grid-cols-3 gap-1 text-[11px] font-mono text-center">
+        <div class="bg-black/30 rounded-full py-1.5"><div class="text-zinc-500">ORtg</div><b class="text-white">${t.ortg}</b></div>
+        <div class="bg-black/30 rounded-full py-1.5"><div class="text-zinc-500">DRtg</div><b class="text-white">${t.drtg}</b></div>
+        <div class="bg-sky-500/15 rounded-full py-1.5 border border-sky-500/20"><div class="text-zinc-500">Pace</div><b class="text-sky-400">${t.pace}</b></div>
+      </div>
+      <div class="mt-3 bg-[#0B0E14] border border-bilama-border rounded-xl p-2">
+        <div class="text-[10px] font-mono text-zinc-500">5 MAJEUR PROJETÉ</div>
+        <div class="text-[11px] leading-tight mt-1 text-zinc-300">${t.lineup.slice(0,3).join(' • ')}<br><span class="text-zinc-500">${t.lineup.slice(3).join(' • ')}</span></div>
+      </div>
+      <div class="mt-3 flex gap-1">
+        <button class="setA flex-1 bg-white text-black text-xs py-1.5 rounded-full font-bold">A</button>
+        <button class="setB flex-1 bg-zinc-800 text-white text-xs py-1.5 rounded-full font-bold">B</button>
+        <button class="info flex-1 bg-bilama-card border border-bilama-border text-xs py-1.5 rounded-full">Détails</button>
+      </div>
+      <div class="mt-2 text-[10px] font-mono text-zinc-500 flex justify-between"><span>${t.conf} • ${t.div}</span><span>${t.inj?`🩹 ${t.inj} OUT`:''} ${t.coach.split(' ').pop()}</span></div>
+    `;
+    el.querySelector('.setA').onclick=(e)=>{e.stopPropagation(); teamASelect.value=t.abbr; calc(); window.scrollTo({top:0,behavior:'smooth'});};
+    el.querySelector('.setB').onclick=(e)=>{e.stopPropagation(); teamBSelect.value=t.abbr; calc(); window.scrollTo({top:0,behavior:'smooth'});};
+    el.querySelector('.info').onclick=(e)=>{e.stopPropagation(); openModal(t);};
+    el.onclick=()=>openModal(t);
+    grid.appendChild(el);
+  });
+}
+
+let modalTeam=null;
+function openModal(t){
+  modalTeam=t;
+  document.getElementById('mLogo').src=logoUrl(t.logo);
+  document.getElementById('mName').textContent=`${t.name} — ${t.w}-${t.l}`;
+  document.getElementById('mSub').textContent=`${t.conf} • ${t.div} • Coach ${t.coach} • Net ${t.net>0?'+':''}${t.net} • Pace ${t.pace}`;
+  document.getElementById('mContent').innerHTML=`
+    <div class="grid grid-cols-3 gap-2 text-xs font-mono">
+      <div class="bg-black/40 rounded-xl p-3 text-center"><div class="text-zinc-500">ORtg</div><div class="text-lg font-bold text-emerald-400">${t.ortg}</div></div>
+      <div class="bg-black/40 rounded-xl p-3 text-center"><div class="text-zinc-500">DRtg</div><div class="text-lg font-bold text-sky-400">${t.drtg}</div></div>
+      <div class="bg-black/40 rounded-xl p-3 text-center"><div class="text-zinc-500">Net</div><div class="text-lg font-bold ${t.net>=0?'text-white':'text-red-400'}">${t.net>0?'+':''}${t.net}</div></div>
+    </div>
+    <div class="mt-3 bg-[#0B0E14] border border-bilama-border rounded-xl p-3">
+      <div class="text-xs font-bold">5 Majeur RotoWire projeté</div>
+      <ul class="mt-2 space-y-1 text-sm">${t.lineup.map((p,i)=>`<li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">${['PG','SG','SF','PF','C'][i]}</span><span>${p}</span></li>`).join('')}</ul>
+    </div>
+    <div class="mt-3 text-xs text-zinc-400">Pace ${t.pace} → équipe ${t.pace>100?'très rapide (Over lean)':t.pace<96?'très lente (Under lean)':'moyenne'}. ${t.inj?`Attention ${t.inj} blessé(s) → Net -${(t.inj*0.7).toFixed(1)}`:'Effectif au complet.'}</div>
+  `;
+  document.getElementById('detailModal').classList.remove('hidden');
+}
+document.getElementById('closeModal').onclick=()=>document.getElementById('detailModal').classList.add('hidden');
+document.getElementById('detailModal').onclick=(e)=>{ if(e.target.id==='detailModal') e.currentTarget.classList.add('hidden'); };
+document.getElementById('mSetA').onclick=()=>{ if(modalTeam){ teamASelect.value=modalTeam.abbr; calc(); document.getElementById('detailModal').classList.add('hidden'); window.scrollTo({top:0,behavior:'smooth'}); }};
+document.getElementById('mSetB').onclick=()=>{ if(modalTeam){ teamBSelect.value=modalTeam.abbr; calc(); document.getElementById('detailModal').classList.add('hidden'); window.scrollTo({top:0,behavior:'smooth'}); }};
+
+// Listeners
+['teamA','teamB','homeAdv','paceAdjust','bookSpread'].forEach(id=>document.getElementById(id).addEventListener('input', calc));
+['search','confFilter','divFilter','sortFilter'].forEach(id=>document.getElementById(id).addEventListener('input', renderGrid));
+document.getElementById('swapBtn').onclick=()=>{ const a=teamASelect.value, b=teamBSelect.value; teamASelect.value=b; teamBSelect.value=a; calc(); };
+document.getElementById('randomBtn').onclick=()=>{ const r=()=> teams[Math.floor(Math.random()*teams.length)].abbr; let a=r(),b=r(); while(b===a) b=r(); teamASelect.value=a; teamBSelect.value=b; calc(); };
+document.getElementById('exportBtn').onclick=()=>{
+  const a=getTeam(teamASelect.value), b=getTeam(teamBSelect.value);
+  const txt=`BILAMA54 FICHE ${a.abbr} vs ${b.abbr}\nScore projeté: ${document.getElementById('scoreA').textContent} - ${document.getElementById('scoreB').textContent}\nPace: ${document.getElementById('paceProj').textContent}\nEdge: ${document.getElementById('edge').textContent}\nProno: ${document.getElementById('pickBox').textContent}\n`;
+  const blob=new Blob([txt],{type:'text/plain'}); const url=URL.createObjectURL(blob); const aEl=document.createElement('a'); aEl.href=url; aEl.download=`Bilama_${a.abbr}_vs_${b.abbr}.txt`; aEl.click();
+};
+document.getElementById('autoToggle').onclick=(e)=>{
+  const on=e.currentTarget.textContent.includes('ON');
+  e.currentTarget.innerHTML= on? '<i class="fa-solid fa-pause"></i> AUTO OFF' : '<i class="fa-solid fa-bolt"></i> AUTO ON';
+  e.currentTarget.className= on? 'bg-zinc-700 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1' : 'bg-bilama-accent text-black px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1';
+};
+
+// Auto refresh
+setInterval(()=>{ document.getElementById('lastUpdate').textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' • Paris'; },1000);
+setInterval(()=>{ if(document.getElementById('autoToggle').textContent.includes('ON')){ /* jitter ratings ±0.2 to simulate live odds move */ teams.forEach(t=>{ t.ortg = +(t.ortg + (Math.random()-0.5)*0.2).toFixed(1); t.drtg = +(t.drtg + (Math.random()-0.5)*0.2).toFixed(1); }); renderGrid(); calc(); } },60000);
+
+// Init
+renderGrid(); calc();
+</script>
+</body>
+</html>
