@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bilama54 — Foot Top 15 Europe + D2 Top 5 • PPG vs Côte FootyStats</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Space Grotesk','sans-serif'], mono: ['IBM Plex Mono','monospace'] },
+      colors: { bilama: { bg:'#0B0E14', card:'#11151E', border:'#1E2533', accent:'#00E5A0', accent2:'#6C5CFF', warn:'#FFB800', danger:'#FF3B30' } }
+    }
+  }
+}
+</script>
+<style>.glass{backdrop-filter:blur(12px)} .live-dot{animation:pulse 1.5s infinite} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}} .scrollbar-hide::-webkit-scrollbar{display:none}</style>
+</head>
+<body class="bg-bilama-bg text-white font-sans min-h-screen antialiased">
+  <!-- TOP BAR -->
+  <header class="sticky top-0 z-50 bg-bilama-bg/80 glass border-b border-bilama-border">
+    <div class="max-w-[1440px] mx-auto px-4 lg:px-6 h-[64px] flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center font-bold text-white">B54</a>
+        <div>
+          <div class="font-bold leading-none text-[18px]">Bilama54 <span class="text-bilama-accent">•</span> <span class="font-normal text-zinc-400">Foot Top Europe</span></div>
+          <div class="text-[11px] text-zinc-500 font-mono tracking-widest uppercase">PPG vs Côte • FootyStats Rule • 20 Ligues</div>
+        </div>
+      </div>
+      <div class="hidden lg:flex items-center gap-2">
+        <a href="index.html" class="bg-bilama-card border border-bilama-border px-4 py-2 rounded-full text-sm">NBA Lab</a>
+        <a href="global.html" class="bg-bilama-card border border-bilama-border px-4 py-2 rounded-full text-sm">NBA Global 30</a>
+        <div class="flex items-center gap-2 bg-bilama-card border border-bilama-border rounded-full px-3 py-1.5">
+          <span class="w-2 h-2 rounded-full bg-bilama-accent live-dot"></span>
+          <span class="text-xs font-medium">Auto 60s</span>
+          <span class="text-[11px] text-zinc-500 font-mono" id="lastUpdate">—</span>
+        </div>
+        <button id="exportBtn" class="bg-white text-black px-4 py-2 rounded-full text-sm font-bold">Exporter <i class="fa-solid fa-download ml-1"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO RULE -->
+  <section class="max-w-[1440px] mx-auto px-4 lg:px-6 pt-6">
+    <div class="bg-gradient-to-br from-[#0A2A1A] via-[#11151E] to-[#0B0E14] border border-emerald-500/20 rounded-[24px] p-6 lg:p-8 relative overflow-hidden">
+      <div class="absolute -right-8 -top-8 w-72 h-72 bg-emerald-500/15 blur-[80px] rounded-full"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-[1.45fr_0.55fr] gap-6 relative">
+        <div>
+          <div class="inline-flex items-center gap-2 bg-emerald-500/15 border border-emerald-500/20 rounded-full px-3 py-1 text-xs">
+            <i class="fa-solid fa-futbol text-emerald-400"></i> Règle FootyStats validée par Bilama
+            <span class="bg-white text-black px-2 py-0.5 rounded-full font-bold text-[11px]">TOP 15 + D2 TOP 5</span>
+          </div>
+          <h1 class="text-[26px] lg:text-[36px] font-bold leading-[0.95] mt-3">PPG le plus élevé <span class="text-bilama-accent">vs</span> plus petite côte.<br>Le signal décide à ta place.</h1>
+          <p class="text-zinc-400 text-sm mt-2 max-w-[680px]">Si FootyStats est accessible, on prend <b class="text-white">PPG Domicile vs PPG Extérieur</b> (Home PPG / Away PPG). Sinon on le calcule : <code class="bg-white/10 px-1 rounded">PPG = (V*3+N)/Matchs</code> à domicile/extérieur. Puis on compare à la côte la plus basse.</p>
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="bg-emerald-500/15 border border-emerald-500/30 rounded-2xl p-3">
+              <div class="text-xs font-bold text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-check"></i> CAS 1 • Côte ≤1.5</div>
+              <div class="text-sm font-bold mt-1">PPG max = Favori ≤1.5 → <span class="text-emerald-400">VICTOIRE SÛRE</span></div>
+              <div class="text-[11px] text-zinc-400 mt-1">Mise 2U — confiance ★★★★★</div>
+            </div>
+            <div class="bg-sky-500/15 border border-sky-500/30 rounded-2xl p-3">
+              <div class="text-xs font-bold text-sky-400 flex items-center gap-1"><i class="fa-solid fa-shield-halved"></i> CAS 2 • Côte >1.5</div>
+              <div class="text-sm font-bold mt-1">PPG max = Favori >1.5 → <span class="text-sky-400">1X ou 2 (Double Chance)</span></div>
+              <div class="text-[11px] text-zinc-400 mt-1">Couvre Nul — mise 1.5U</div>
+            </div>
+            <div class="bg-red-500/15 border border-red-500/30 rounded-2xl p-3">
+              <div class="text-xs font-bold text-red-400 flex items-center gap-1"><i class="fa-solid fa-ban"></i> CAS 3 • Incohérence</div>
+              <div class="text-sm font-bold mt-1">PPG max ≠ Favori → <span class="text-red-400">S'ABSTENIR</span></div>
+              <div class="text-[11px] text-zinc-400 mt-1">Marché piège — PASS</div>
+            </div>
+          </div>
+          <div class="mt-3 flex flex-wrap gap-2 text-[11px] font-mono">
+            <span class="bg-white/10 border border-white/10 rounded-full px-3 py-1">PPG = Points Per Game — max 3.00</span>
+            <span class="bg-white/10 border border-white/10 rounded-full px-3 py-1">FootyStats : Home PPG vs Away PPG par défaut</span>
+            <span class="bg-bilama-accent/15 border border-bilama-accent/20 text-bilama-accent rounded-full px-3 py-1">Fallback : PPG domicile/extérieur calculé</span>
+          </div>
+        </div>
+        <div class="bg-black/40 border border-white/10 rounded-2xl p-4">
+          <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-calculator text-bilama-accent"></i> Calculatrice PPG fallback</h3>
+          <p class="text-xs text-zinc-400 mt-1">Si FootyStats bloque, entre V/N/D à domicile ou extérieur :</p>
+          <div class="mt-3 grid grid-cols-2 gap-3">
+            <div class="bg-[#0B0E14] border border-bilama-border rounded-xl p-3">
+              <div class="text-[11px] font-mono text-zinc-500">DOMICILE</div>
+              <div class="mt-2 grid grid-cols-3 gap-1">
+                <label class="text-center"><span class="text-[10px] text-zinc-500">V</span><input id="calcWV" type="number" value="5" class="w-full mt-1 bg-zinc-900 border border-white/10 rounded-full py-1 text-center font-bold text-sm"></label>
+                <label class="text-center"><span class="text-[10px] text-zinc-500">N</span><input id="calcWD" type="number" value="2" class="w-full mt-1 bg-zinc-900 border border-white/10 rounded-full py-1 text-center font-bold text-sm"></label>
+                <label class="text-center"><span class="text-[10px] text-zinc-500">D</span><input id="calcWL" type="number" value="1" class="w-full mt-1 bg-zinc-900 border border-white/10 rounded-full py-1 text-center font-bold text-sm"></label>
+              </div>
+              <div class="mt-2 bg-emerald-500/15 rounded-full py-1 text-center font-mono text-xs font-bold text-emerald-400" id="calcHomePPG">PPG 2.13</div>
+            </div>
+            <div class="bg-[#0B0E14] border border-bilama-border rounded-xl p-3">
+              <div class="text-[11px] font-mono text-zinc-500">EXTÉRIEUR</div>
+              <div class="mt-2 grid grid-cols-3 gap-1">
+                <label class="text-center"><span class="text-[10px] text-zinc-500">V</span><input id="calcAV" type="number" value="3" class="w-full mt-1 bg-zinc-900 border border-white/10 rounded-full py-1 text-center font-bold text-sm"></label>
+                <label class="text-center"><span class="text-[10px] text-zinc-500">N</span><input id="calcAD" type="number" value="3" class="w-full mt-1 bg-zinc-900 border border-white/10 rounded-full py-1 text-center font-bold text-sm"></label>
+                <label class="text-center"><span class="text-[10px] text-zinc-500">D</span><input id="calcAL" type="number" value="2" class="w-full mt-1 bg-zinc-900 border border-white/10 rounded-full py-1 text-center font-bold text-sm"></label>
+              </div>
+              <div class="mt-2 bg-sky-500/15 rounded-full py-1 text-center font-mono text-xs font-bold text-sky-400" id="calcAwayPPG">PPG 1.50</div>
+            </div>
+          </div>
+          <button id="applyCalc" class="w-full mt-3 bg-white text-black py-2 rounded-full font-bold text-sm">Appliquer au match sélectionné <i class="fa-solid fa-arrow-down ml-1"></i></button>
+          <div class="mt-2 text-[11px] text-zinc-500 text-center font-mono">Formule : (V*3 + N) / (V+N+D)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTROLS -->
+  <section class="max-w-[1440px] mx-auto px-4 lg:px-6 pt-4">
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="flex items-center gap-2 bg-black/40 border border-white/10 rounded-full px-3 py-1.5">
+        <i class="fa-solid fa-magnifying-glass text-zinc-500"></i>
+        <input id="search" placeholder="Chercher match, équipe, ligue..." class="bg-transparent outline-none text-sm w-[260px] placeholder:text-zinc-500">
+      </div>
+      <select id="leagueFilter" class="bg-bilama-card border border-bilama-border rounded-full px-3 py-2 text-sm max-w-[260px]"></select>
+      <select id="signalFilter" class="bg-bilama-card border border-bilama-border rounded-full px-3 py-2 text-sm">
+        <option value="all">Tous signaux</option>
+        <option value="WIN">Victoire sûre</option>
+        <option value="DOUBLE">Victoire ou Nul</option>
+        <option value="PASS">S'abstenir</option>
+      </select>
+      <div class="ml-auto flex items-center gap-2 text-xs text-zinc-500 font-mono">
+        <span id="countInfo">20 ligues • 60 matchs</span>
+        <span class="w-2 h-2 bg-bilama-accent rounded-full live-dot"></span>
+      </div>
+    </div>
+    <div class="mt-3 flex flex-wrap gap-1.5 text-[11px]">
+      <span class="bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 px-2 py-1 rounded-full">D1 Top 15 Europe</span>
+      <span class="bg-sky-500/15 border border-sky-500/20 text-sky-400 px-2 py-1 rounded-full">D2 Top 5 Europe</span>
+      <span class="text-zinc-500">Angleterre • Italie • Espagne • Allemagne • France • Pays-Bas • Portugal • Belgique • Turquie • Écosse • Tchéquie • Suisse • Autriche • Norvège • Danemark | + Championship, LaLiga2, 2.Bundesliga, Serie B, Ligue 2</span>
+    </div>
+  </section>
+
+  <!-- MATCH GRID -->
+  <section class="max-w-[1440px] mx-auto px-4 lg:px-6 pt-4">
+    <div id="grid" class="grid grid-cols-1 lg:grid-cols-2 gap-3"></div>
+  </section>
+
+  <!-- FOOTY STATS NOTE -->
+  <section class="max-w-[1440px] mx-auto px-4 lg:px-6 py-6">
+    <div class="bg-bilama-card border border-bilama-border rounded-2xl p-4">
+      <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-circle-info text-zinc-400"></i> Notes & Sources</h3>
+      <ul class="text-xs text-zinc-400 mt-2 space-y-1 leading-relaxed">
+        <li>• **PPG FootyStats** = *Home PPG* pour le domicile vs *Away PPG* pour l'extérieur (par défaut sur les matchs de championnat). Si match de coupe/début de saison, FootyStats affiche Last 10 PPG — on force alors Home/Away manuellement.</li>
+        <li>• **Côte la plus petite** = favorite du book (1 / X / 2). On compare uniquement l'équipe au PPG max.</li>
+        <li>• **Données live** : ce dashboard utilise un snapshot du jour. Pour du live réel, branche l'API FootyStats (`get_league_overview`, `home_ppg`, `away_ppg`) ou colle tes cotes manuellement — les signaux se recalculent à la volée.</li>
+        <li>• 20 ligues = 15 D1 UEFA (ENG, ITA, ESP, GER, FRA, NED, POR, BEL, TUR, SCO, CZE, SUI, AUT, NOR, DEN) + 5 D2 (ENG Championship, ESP LaLiga2, GER 2.BL, ITA Serie B, FRA Ligue 2).</li>
+      </ul>
+    </div>
+    <div class="mt-3 text-center text-[11px] text-zinc-500 font-mono">Bilama54 © 2026 • Foot Top 15 + D2 Top 5 • Règle PPG vs Côte • FootyStats.org • Jeu responsable 18+</div>
+  </section>
+
+<script>
+const leagues = [
+  {id:'eng1', name:'Angleterre — Premier League', flag:'🏴󐁧󐁢󐁥󐁮󐁧󐁿', tier:'D1 Top 15', country:'England'},
+  {id:'ita1', name:'Italie — Serie A', flag:'🇮🇹', tier:'D1 Top 15', country:'Italy'},
+  {id:'esp1', name:'Espagne — La Liga', flag:'🇪🇸', tier:'D1 Top 15', country:'Spain'},
+  {id:'ger1', name:'Allemagne — Bundesliga', flag:'🇩🇪', tier:'D1 Top 15', country:'Germany'},
+  {id:'fra1', name:'France — Ligue 1', flag:'🇫🇷', tier:'D1 Top 15', country:'France'},
+  {id:'ned1', name:'Pays-Bas — Eredivisie', flag:'🇳🇱', tier:'D1 Top 15', country:'Netherlands'},
+  {id:'por1', name:'Portugal — Primeira Liga', flag:'🇵🇹', tier:'D1 Top 15', country:'Portugal'},
+  {id:'bel1', name:'Belgique — Pro League', flag:'🇧🇪', tier:'D1 Top 15', country:'Belgium'},
+  {id:'tur1', name:'Turquie — Süper Lig', flag:'🇹🇷', tier:'D1 Top 15', country:'Turkey'},
+  {id:'sco1', name:'Écosse — Premiership', flag:'🏴󐁧󐁢󐁳󐁣󐁴󐁿', tier:'D1 Top 15', country:'Scotland'},
+  {id:'cze1', name:'Tchéquie — Chance Liga', flag:'🇨🇿', tier:'D1 Top 15', country:'Czech'},
+  {id:'sui1', name:'Suisse — Super League', flag:'🇨🇭', tier:'D1 Top 15', country:'Switzerland'},
+  {id:'aut1', name:'Autriche — Bundesliga', flag:'🇦🇹', tier:'D1 Top 15', country:'Austria'},
+  {id:'nor1', name:'Norvège — Eliteserien', flag:'🇳🇴', tier:'D1 Top 15', country:'Norway'},
+  {id:'den1', name:'Danemark — Superliga', flag:'🇩🇰', tier:'D1 Top 15', country:'Denmark'},
+  {id:'eng2', name:'Angleterre D2 — Championship', flag:'🏴󐁧󐁢󐁥󐁮󐁧󐁿', tier:'D2 Top 5', country:'England D2'},
+  {id:'esp2', name:'Espagne D2 — LaLiga Hypermotion', flag:'🇪🇸', tier:'D2 Top 5', country:'Spain D2'},
+  {id:'ger2', name:'Allemagne D2 — 2. Bundesliga', flag:'🇩🇪', tier:'D2 Top 5', country:'Germany D2'},
+  {id:'ita2', name:'Italie D2 — Serie B', flag:'🇮🇹', tier:'D2 Top 5', country:'Italy D2'},
+  {id:'fra2', name:'France D2 — Ligue 2', flag:'🇫🇷', tier:'D2 Top 5', country:'France D2'},
+];
+
+// Generate sample matches: 3 per league with realistic PPG and odds applying rule
+const samples = [
+  // ENG1
+  {league:'eng1', time:'20:45', home:'Manchester City', homePPG:2.45, away:'Burnley', awayPPG:0.85, odds:{h:1.28,d:6.00,a:11.00}},
+  {league:'eng1', time:'18:00', home:'Arsenal', homePPG:2.30, away:'Crystal Palace', awayPPG:1.10, odds:{h:1.42,d:4.80,a:7.50}},
+  {league:'eng1', time:'20:00', home:'Newcastle', homePPG:1.85, away:'Sunderland', awayPPG:1.80, odds:{h:1.95,d:3.60,a:4.00}},
+  // ITA1
+  {league:'ita1', time:'20:45', home:'Inter', homePPG:2.55, away:'Pisa', awayPPG:0.70, odds:{h:1.30,d:5.50,a:10.00}},
+  {league:'ita1', time:'18:00', home:'Napoli', homePPG:2.20, away:'Como', awayPPG:1.50, odds:{h:1.75,d:3.80,a:4.80}},
+  {league:'ita1', time:'15:00', home:'Lecce', homePPG:1.10, away:'Sassuolo', awayPPG:1.40, odds:{h:2.80,d:3.30,a:2.60}},
+  // ESP1
+  {league:'esp1', time:'21:00', home:'Barcelona', homePPG:2.60, away:'Girona', awayPPG:1.20, odds:{h:1.35,d:5.20,a:8.00}},
+  {league:'esp1', time:'18:30', home:'Villarreal', homePPG:2.10, away:'Rayo Vallecano', awayPPG:1.35, odds:{h:1.65,d:4.00,a:5.00}},
+  {league:'esp1', time:'16:15', home:'Getafe', homePPG:1.45, away:'Osasuna', awayPPG:1.55, odds:{h:2.10,d:3.20,a:3.80}},
+  // GER1
+  {league:'ger1', time:'19:30', home:'Bayern Munich', homePPG:2.70, away:'St. Pauli', awayPPG:0.90, odds:{h:1.22,d:6.50,a:12.00}},
+  {league:'ger1', time:'17:30', home:'Dortmund', homePPG:2.15, away:'Leverkusen', awayPPG:1.90, odds:{h:1.80,d:3.90,a:4.20}},
+  {league:'ger1', time:'15:30', home:'Heidenheim', homePPG:1.05, away:'Union Berlin', awayPPG:1.25, odds:{h:2.90,d:3.40,a:2.50}},
+  // FRA1
+  {league:'fra1', time:'21:00', home:'PSG', homePPG:2.80, away:'Brest', awayPPG:0.95, odds:{h:1.18,d:7.00,a:14.00}},
+  {league:'fra1', time:'19:00', home:'Marseille', homePPG:2.05, away:'Lens', awayPPG:1.60, odds:{h:1.70,d:3.90,a:5.00}},
+  {league:'fra1', time:'17:00', home:'Metz', homePPG:1.00, away:'Nice', awayPPG:1.85, odds:{h:3.40,d:3.50,a:2.10}},
+  // NED1
+  {league:'ned1', time:'20:00', home:'PSV', homePPG:2.60, away:'Go Ahead Eagles', awayPPG:1.00, odds:{h:1.25,d:6.00,a:10.00}},
+  {league:'ned1', time:'18:30', home:'Feyenoord', homePPG:2.20, away:'Utrecht', awayPPG:1.55, odds:{h:1.60,d:4.20,a:5.20}},
+  {league:'ned1', time:'16:30', home:'Heracles', homePPG:1.15, away:'Twente', awayPPG:1.70, odds:{h:3.00,d:3.60,a:2.25}},
+  // POR1
+  {league:'por1', time:'21:30', home:'Benfica', homePPG:2.50, away:'Arouca', awayPPG:0.80, odds:{h:1.20,d:6.50,a:13.00}},
+  {league:'por1', time:'19:00', home:'Porto', homePPG:2.25, away:'Braga', awayPPG:1.70, odds:{h:1.55,d:4.00,a:6.00}},
+  {league:'por1', time:'15:30', home:'Estrela', homePPG:1.00, away:'Guimarães', awayPPG:1.45, odds:{h:2.90,d:3.30,a:2.55}},
+  // BEL1
+  {league:'bel1', time:'20:45', home:'Club Brugge', homePPG:2.40, away:'Westerlo', awayPPG:1.00, odds:{h:1.35,d:5.00,a:8.00}},
+  {league:'bel1', time:'18:15', home:'Genk', homePPG:2.10, away:'Anderlecht', awayPPG:1.65, odds:{h:1.85,d:3.70,a:4.20}},
+  {league:'bel1', time:'16:00', home:'Kortrijk', homePPG:0.95, away:'Union SG', awayPPG:1.90, odds:{h:3.80,d:3.60,a:1.95}},
+  // TUR1
+  {league:'tur1', time:'19:00', home:'Galatasaray', homePPG:2.65, away:'Karagümrük', awayPPG:0.75, odds:{h:1.18,d:7.00,a:13.00}},
+  {league:'tur1', time:'17:00', home:'Fenerbahçe', homePPG:2.30, away:'Besiktas', awayPPG:1.55, odds:{h:1.70,d:3.80,a:5.00}},
+  {league:'tur1', time:'15:00', home:'Alanyaspor', homePPG:1.20, away:'Trabzonspor', awayPPG:1.75, odds:{h:2.70,d:3.40,a:2.60}},
+  // SCO1
+  {league:'sco1', time:'20:45', home:'Celtic', homePPG:2.50, away:'Dundee Utd', awayPPG:1.05, odds:{h:1.30,d:5.50,a:9.00}},
+  {league:'sco1', time:'18:00', home:'Rangers', homePPG:2.15, away:'Hearts', awayPPG:1.50, odds:{h:1.60,d:4.10,a:5.50}},
+  {league:'sco1', time:'15:00', home:'St Mirren', homePPG:1.05, away:'Motherwell', awayPPG:1.20, odds:{h:2.60,d:3.30,a:2.80}},
+  // CZE1
+  {league:'cze1', time:'19:00', home:'Sparta Prague', homePPG:2.45, away:'Teplice', awayPPG:0.90, odds:{h:1.28,d:5.80,a:10.00}},
+  {league:'cze1', time:'17:30', home:'Slavia Prague', homePPG:2.30, away:'Plzen', awayPPG:1.60, odds:{h:1.55,d:4.20,a:5.80}},
+  {league:'cze1', time:'15:00', home:'Bohemians', homePPG:1.10, away:'Ostrava', awayPPG:1.35, odds:{h:2.80,d:3.40,a:2.55}},
+  // SUI1
+  {league:'sui1', time:'20:30', home:'Young Boys', homePPG:2.35, away:'Winterthur', awayPPG:0.80, odds:{h:1.32,d:5.50,a:9.00}},
+  {league:'sui1', time:'18:00', home:'Basel', homePPG:2.05, away:'Luzern', awayPPG:1.45, odds:{h:1.75,d:3.90,a:4.60}},
+  {league:'sui1', time:'16:00', home:'Sion', homePPG:1.00, away:'Servette', awayPPG:1.60, odds:{h:3.20,d:3.50,a:2.20}},
+  // AUT1
+  {league:'aut1', time:'19:30', home:'Salzburg', homePPG:2.40, away:'Altach', awayPPG:0.85, odds:{h:1.25,d:6.00,a:11.00}},
+  {league:'aut1', time:'17:00', home:'Sturm Graz', homePPG:2.10, away:'Rapid Wien', awayPPG:1.55, odds:{h:1.70,d:3.90,a:5.00}},
+  {league:'aut1', time:'14:30', home:'Hartberg', homePPG:1.15, away:'Austria Wien', awayPPG:1.50, odds:{h:2.70,d:3.40,a:2.65}},
+  // NOR1
+  {league:'nor1', time:'19:00', home:'Bodø/Glimt', homePPG:2.55, away:'Haugesund', awayPPG:0.75, odds:{h:1.22,d:6.50,a:11.00}},
+  {league:'nor1', time:'17:00', home:'Molde', homePPG:2.00, away:'Viking', awayPPG:1.50, odds:{h:1.80,d:3.80,a:4.50}},
+  {league:'nor1', time:'15:00', home:'Sandefjord', homePPG:1.20, away:'Rosenborg', awayPPG:1.65, odds:{h:2.80,d:3.50,a:2.40}},
+  // DEN1
+  {league:'den1', time:'19:00', home:'Copenhagen', homePPG:2.35, away:'Vejle', awayPPG:0.85, odds:{h:1.30,d:5.50,a:9.00}},
+  {league:'den1', time:'17:00', home:'Midtjylland', homePPG:2.10, away:'OB', awayPPG:1.40, odds:{h:1.60,d:4.10,a:5.50}},
+  {league:'den1', time:'14:00', home:'Viborg', homePPG:1.05, away:'AGF', awayPPG:1.45, odds:{h:2.90,d:3.40,a:2.45}},
+  // ENG2
+  {league:'eng2', time:'21:00', home:'Leeds', homePPG:2.25, away:'Oxford Utd', awayPPG:0.90, odds:{h:1.45,d:4.20,a:7.00}},
+  {league:'eng2', time:'19:45', home:'Sunderland', homePPG:1.95, away:'Millwall', awayPPG:1.50, odds:{h:1.75,d:3.80,a:5.00}},
+  {league:'eng2', time:'15:00', home:'Sheff Wed', homePPG:1.00, away:'Southampton', awayPPG:1.65, odds:{h:3.20,d:3.40,a:2.25}},
+  // ESP2
+  {league:'esp2', time:'21:00', home:'Racing Santander', homePPG:2.20, away:'Mirandes', awayPPG:0.85, odds:{h:1.50,d:4.00,a:6.50}},
+  {league:'esp2', time:'19:00', home:'Leganés', homePPG:1.85, away:'Eibar', awayPPG:1.45, odds:{h:1.90,d:3.50,a:4.20}},
+  {league:'esp2', time:'17:00', home:'Tenerife', homePPG:1.05, away:'Almeria', awayPPG:1.55, odds:{h:3.00,d:3.40,a:2.30}},
+  // GER2
+  {league:'ger2', time:'20:30', home:'Hamburg', homePPG:2.30, away:'Braunschweig', awayPPG:0.80, odds:{h:1.35,d:5.00,a:8.50}},
+  {league:'ger2', time:'18:30', home:'Paderborn', homePPG:1.90, away:'Düsseldorf', awayPPG:1.55, odds:{h:1.85,d:3.70,a:4.30}},
+  {league:'ger2', time:'13:30', home:'Magdeburg', homePPG:1.10, away:'Kaiserslautern', awayPPG:1.40, odds:{h:2.70,d:3.40,a:2.60}},
+  // ITA2
+  {league:'ita2', time:'20:30', home:'Parma', homePPG:2.15, away:'Sudtirol', awayPPG:0.95, odds:{h:1.48,d:4.20,a:6.50}},
+  {league:'ita2', time:'18:15', home:'Palermo', homePPG:1.80, away:'Bari', awayPPG:1.30, odds:{h:1.95,d:3.50,a:4.10}},
+  {league:'ita2', time:'15:00', home:'Cosenza', homePPG:0.95, away:'Sampdoria', awayPPG:1.25, odds:{h:3.10,d:3.30,a:2.35}},
+  // FRA2
+  {league:'fra2', time:'20:00', home:'Lorient', homePPG:2.20, away:'Amiens', awayPPG:0.85, odds:{h:1.45,d:4.20,a:7.00}},
+  {league:'fra2', time:'19:00', home:'Paris FC', homePPG:1.85, away:'Annecy', awayPPG:1.40, odds:{h:1.75,d:3.60,a:5.00}},
+  {league:'fra2', time:'14:00', home:'Rodez', homePPG:1.00, away:'Dunkerque', awayPPG:1.50, odds:{h:3.00,d:3.30,a:2.40}},
+];
+
+function getSignal(m){
+  const maxPPG = m.homePPG >= m.awayPPG ? 'home' : 'away';
+  const minOdd = (m.odds.h <= m.odds.d && m.odds.h <= m.odds.a) ? 'home' : (m.odds.a <= m.odds.h && m.odds.a <= m.odds.d ? 'away' : 'draw');
+  // If favorite is draw, we consider it incohérent -> abstention
+  if(minOdd==='draw') return {type:'PASS', label:"S'ABSTENIR", desc:"Favorite = match nul → incohérence", color:'red', favored: minOdd, maxPPG};
+  if(maxPPG !== minOdd) return {type:'PASS', label:"S'ABSTENIR", desc:`PPG max = ${maxPPG==='home'?m.home:m.away} (${maxPPG==='home'?m.homePPG:m.awayPPG}) mais favori = ${minOdd==='home'?m.home:m.away} → piège`, color:'red', favored: minOdd, maxPPG};
+  const cote = maxPPG==='home' ? m.odds.h : m.odds.a;
+  if(cote <= 1.5) return {type:'WIN', label:'VICTOIRE SÛRE', desc:`PPG max (${maxPPG==='home'?m.homePPG:m.awayPPG}) = favori @${cote.toFixed(2)} ≤1.50 → gagne`, color:'green', favored: minOdd, maxPPG, cote};
+  else return {type:'DOUBLE', label:'VICTOIRE OU NUL (1X/2X)', desc:`PPG max = favori @${cote.toFixed(2)} >1.50 → couvre le nul`, color:'blue', favored: minOdd, maxPPG, cote};
+}
+
+const leagueSelect=document.getElementById('leagueFilter');
+leagues.forEach(l=>{
+  const o=document.createElement('option'); o.value=l.id; o.textContent=`${l.flag} ${l.name}`;
+  leagueSelect.appendChild(o);
+});
+const defaultOpt=document.createElement('option'); defaultOpt.value='all'; defaultOpt.textContent='Toutes ligues (20) — 60 matchs'; defaultOpt.selected=true;
+leagueSelect.prepend(defaultOpt);
+
+let activeMatchIdx=null;
+
+function render(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const lf=document.getElementById('leagueFilter').value;
+  const sf=document.getElementById('signalFilter').value;
+  let list=[...samples];
+  if(lf!=='all') list=list.filter(s=>s.league===lf);
+  if(q) list=list.filter(s=> (s.home.toLowerCase().includes(q) || s.away.toLowerCase().includes(q) || leagues.find(l=>l.id===s.league).name.toLowerCase().includes(q)));
+  // filter signal
+  let filtered=list.map((s,i)=>({s, sig:getSignal(s), idx:samples.indexOf(s)})).filter(x=> sf==='all' || x.sig.type===sf);
+  document.getElementById('countInfo').textContent=`${filtered.length} matchs • ${leagues.length} ligues`;
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+  filtered.forEach(({s, sig})=>{
+    const league=leagues.find(l=>l.id===s.league);
+    const isHomeMax = sig.maxPPG==='home';
+    const isFavHome = sig.favored==='home';
+    const card=document.createElement('div');
+    card.className='bg-bilama-card border border-bilama-border rounded-2xl overflow-hidden flex flex-col hover:border-white/20 transition';
+    card.innerHTML=`
+      <div class="h-1 w-full ${sig.type==='WIN'?'bg-emerald-500':sig.type==='DOUBLE'?'bg-sky-500':'bg-red-500'}"></div>
+      <div class="p-4">
+        <div class="flex items-center justify-between text-[11px] font-mono">
+          <span class="bg-white/10 border border-white/10 px-2 py-1 rounded-full">${league.flag} ${league.name} <span class="text-zinc-500">• ${league.tier}</span></span>
+          <span class="text-zinc-500">${s.time} • Journée</span>
+        </div>
+        <div class="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+          <div class="bg-black/40 border ${isHomeMax?'border-emerald-500/40 bg-emerald-500/10':''} rounded-xl p-2 text-center">
+            <div class="text-[10px] font-mono text-zinc-500">PPG DOM</div>
+            <div class="font-bold text-sm">${s.homePPG.toFixed(2)} ${isHomeMax?'🏆':''}</div>
+            <div class="font-semibold text-xs mt-1 leading-tight">${s.home}</div>
+            <input type="number" step="0.01" value="${s.homePPG}" data-role="homePPG" data-idx="${samples.indexOf(s)}" class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-full py-1 text-center text-xs font-bold">
+          </div>
+          <div class="text-center">
+            <div class="text-[11px] font-mono text-zinc-500">VS</div>
+            <div class="text-xs bg-zinc-800 px-2 py-1 rounded-full font-mono">${s.odds.h.toFixed(2)} / ${s.odds.d.toFixed(2)} / ${s.odds.a.toFixed(2)}</div>
+            <div class="mt-1 text-[10px] text-zinc-500">1 / X / 2</div>
+          </div>
+          <div class="bg-black/40 border ${!isHomeMax?'border-emerald-500/40 bg-emerald-500/10':''} rounded-xl p-2 text-center">
+            <div class="text-[10px] font-mono text-zinc-500">PPG EXT</div>
+            <div class="font-bold text-sm">${s.awayPPG.toFixed(2)} ${!isHomeMax?'🏆':''}</div>
+            <div class="font-semibold text-xs mt-1 leading-tight">${s.away}</div>
+            <input type="number" step="0.01" value="${s.awayPPG}" data-role="awayPPG" data-idx="${samples.indexOf(s)}" class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-full py-1 text-center text-xs font-bold">
+          </div>
+        </div>
+        <div class="mt-3 flex gap-2 text-[11px]">
+          <label class="flex-1 flex flex-col gap-1"><span class="text-zinc-500 text-[10px]">Côte 1 (Dom)</span><input type="number" step="0.01" value="${s.odds.h}" data-role="oddsH" data-idx="${samples.indexOf(s)}" class="bg-zinc-900 border border-white/10 rounded-full py-1 text-center font-bold text-xs"></label>
+          <label class="flex-1 flex flex-col gap-1"><span class="text-zinc-500 text-[10px]">Côte X</span><input type="number" step="0.01" value="${s.odds.d}" data-role="oddsD" data-idx="${samples.indexOf(s)}" class="bg-zinc-900 border border-white/10 rounded-full py-1 text-center font-bold text-xs"></label>
+          <label class="flex-1 flex flex-col gap-1"><span class="text-zinc-500 text-[10px]">Côte 2 (Ext)</span><input type="number" step="0.01" value="${s.odds.a}" data-role="oddsA" data-idx="${samples.indexOf(s)}" class="bg-zinc-900 border border-white/10 rounded-full py-1 text-center font-bold text-xs"></label>
+        </div>
+        <div class="mt-3 ${sig.type==='WIN'?'bg-emerald-500 text-white':sig.type==='DOUBLE'?'bg-sky-500 text-white':'bg-red-500 text-white'} rounded-xl px-3 py-2.5 text-center font-bold text-sm">
+          ${sig.type==='WIN'?'✅ VICTOIRE SÛRE':sig.type==='DOUBLE'?'🛡️ VICTOIRE OU NUL (Double Chance)':'🚫 S’ABSTENIR'} — ${sig.label}
+        </div>
+        <div class="mt-1 text-[11px] text-zinc-500 text-center">${sig.desc}</div>
+        ${sig.type!=='PASS'?`<div class="mt-2 text-[11px] text-center font-mono ${sig.type==='WIN'?'text-emerald-400':'text-sky-400'}">Confiance ${sig.type==='WIN'?'★★★★★ 2U':'★★★★☆ 1.5U'} • Favori ${sig.favored==='home'?s.home:s.away} @${sig.cote.toFixed(2)}</div>`:''}
+      </div>
+    `;
+    // bind editable
+    card.querySelectorAll('input').forEach(inp=>{
+      inp.addEventListener('input', (e)=>{
+        const idx=parseInt(e.target.dataset.idx);
+        const role=e.target.dataset.role;
+        const val=parseFloat(e.target.value);
+        if(isNaN(val)) return;
+        if(role==='homePPG') samples[idx].homePPG=val;
+        if(role==='awayPPG') samples[idx].awayPPG=val;
+        if(role==='oddsH') samples[idx].odds.h=val;
+        if(role==='oddsD') samples[idx].odds.d=val;
+        if(role==='oddsA') samples[idx].odds.a=val;
+        render();
+      });
+    });
+    grid.appendChild(card);
+  });
+  if(filtered.length===0){
+    grid.innerHTML='<div class="col-span-2 text-center py-10 text-zinc-500 text-sm">Aucun match ne correspond aux filtres. Réessaye.</div>';
+  }
+}
+
+// Calculator
+function calcPPG(v,d,l){ const tot=v+d+l; return tot? (v*3+d)/tot : 0; }
+function updateCalc(){
+  const hv=parseInt(document.getElementById('calcWV').value)||0, hd=parseInt(document.getElementById('calcWD').value)||0, hl=parseInt(document.getElementById('calcWL').value)||0;
+  const av=parseInt(document.getElementById('calcAV').value)||0, ad=parseInt(document.getElementById('calcAD').value)||0, al=parseInt(document.getElementById('calcAL').value)||0;
+  document.getElementById('calcHomePPG').textContent='PPG '+calcPPG(hv,hd,hl).toFixed(2);
+  document.getElementById('calcAwayPPG').textContent='PPG '+calcPPG(av,ad,al).toFixed(2);
+}
+['calcWV','calcWD','calcWL','calcAV','calcAD','calcAL'].forEach(id=>document.getElementById(id).addEventListener('input', updateCalc)); updateCalc();
+document.getElementById('applyCalc').onclick=()=>{
+  if(activeMatchIdx===null){
+    alert('Clique d’abord sur un match pour le sélectionner, puis applique.');
+    return;
+  }
+  const hPPG=calcPPG(parseInt(document.getElementById('calcWV').value)||0, parseInt(document.getElementById('calcWD').value)||0, parseInt(document.getElementById('calcWL').value)||0);
+  const aPPG=calcPPG(parseInt(document.getElementById('calcAV').value)||0, parseInt(document.getElementById('calcAD').value)||0, parseInt(document.getElementById('calcAL').value)||0);
+  samples[activeMatchIdx].homePPG=parseFloat(hPPG.toFixed(2));
+  samples[activeMatchIdx].awayPPG=parseFloat(aPPG.toFixed(2));
+  render();
+};
+// set active on click
+document.getElementById('grid').addEventListener('click', (e)=>{
+  const card=e.target.closest('.bg-bilama-card');
+  if(!card) return;
+  // highlight
+  document.querySelectorAll('#grid > div').forEach(c=>c.classList.remove('ring-2','ring-white'));
+  card.classList.add('ring-2','ring-white');
+  // find idx via first input
+  const inp=card.querySelector('input[data-idx]');
+  if(inp) activeMatchIdx=parseInt(inp.dataset.idx);
+});
+
+['search','leagueFilter','signalFilter'].forEach(id=>document.getElementById(id).addEventListener('input', render));
+document.getElementById('exportBtn').onclick=()=>{
+  let txt='BILAMA54 FOOT — EXPORT PPG vs CÔTE\n\n';
+  samples.forEach(s=>{
+    const sig=getSignal(s);
+    const league=leagues.find(l=>l.id===s.league);
+    txt+=`${league.name} | ${s.home} (${s.homePPG}) vs ${s.away} (${s.awayPPG}) | Côtes ${s.odds.h}/${s.odds.d}/${s.odds.a} => ${sig.label} | ${sig.desc}\n`;
+  });
+  const blob=new Blob([txt],{type:'text/plain'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='Bilama_Foot_Top15_D2Top5.txt'; a.click();
+};
+setInterval(()=>{ document.getElementById('lastUpdate').textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' • Paris'; },1000);
+render();
+</script>
+</body>
+</html>
