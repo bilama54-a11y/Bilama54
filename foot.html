@@ -4,7 +4,117 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Bilama54 — Foot Top 15 Europe + D2 Top 5 • PPG vs Côte FootyStats</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com">
+// === Live FootyStats map & helpers ===
+const leaguePPGUrl = {
+  eng1:{label:'Premier League', url:'https://footystats.org/england/premier-league'},
+  ita1:{label:'Serie A', url:'https://footystats.org/italy/serie-a'},
+  esp1:{label:'La Liga', url:'https://footystats.org/spain/la-liga'},
+  ger1:{label:'Bundesliga', url:'https://footystats.org/germany/bundesliga'},
+  fra1:{label:'Ligue 1', url:'https://footystats.org/france/ligue-1'},
+  ned1:{label:'Eredivisie', url:'https://footystats.org/netherlands/eredivisie'},
+  por1:{label:'Primeira Liga', url:'https://footystats.org/portugal/primeira-liga'},
+  bel1:{label:'Belgian Pro League', url:'https://footystats.org/belgium/belgian-pro-league'},
+  tur1:{label:'Super Lig', url:'https://footystats.org/turkey/super-lig'},
+  sco1:{label:'Premiership', url:'https://footystats.org/scotland/premiership'},
+  eng2:{label:'Championship', url:'https://footystats.org/england/championship'},
+  esp2:{label:'LaLiga2', url:'https://footystats.org/spain/la-liga2'},
+  ger2:{label:'2. Bundesliga', url:'https://footystats.org/germany/2-bundesliga'},
+  ita2:{label:'Serie B', url:'https://footystats.org/italy/serie-b'},
+  fra2:{label:'Ligue 2', url:'https://footystats.org/france/ligue-2'},
+};
+function fillPasteLeague(){
+  const sel=document.getElementById('pasteLeague');
+  if(!sel) return;
+  sel.innerHTML='';
+  leagues.forEach(l=>{
+    const o=document.createElement('option'); o.value=l.id; o.textContent=l.flag+' '+l.name;
+    sel.appendChild(o);
+  });
+  sel.value=document.getElementById('leagueFilter')?.value || 'eng1';
+}
+async function fetchFootyStatsLive(){
+  const league=document.getElementById('pasteLeague')?.value || document.getElementById('leagueFilter')?.value || 'eng1';
+  const info=leaguePPGUrl[league];
+  if(!info){ alert('Ligue non mappée'); return; }
+  const url=info.url;
+  const proxies=['https://corsproxy.io/?','https://api.allorigins.win/raw?url='];
+  let html='';
+  document.getElementById('countInfo').textContent='⏳ Récupération '+info.label+'…';
+  for(const base of proxies){
+    try{
+      const r=await fetch(base+encodeURIComponent(url));
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      html=await r.text();
+      if(html && html.length>5000) break;
+    }catch(e){ html=''; }
+  }
+  if(!html || html.length<2000){
+    alert('FootyStats bloque le fetch direct (403/CORS) — c’est normal en local.\n\nSolution : ouvre '+url+' → copie la colonne PPG (Home PPG / Away PPG) → colle dans la zone ci-dessous → Appliquer.');
+    document.getElementById('countInfo').textContent='⚠ FootyStats bloque — utilise Coller PPG';
+    document.getElementById('pasteBox')?.focus();
+    return;
+  }
+  try{
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const text=doc.body.innerText || '';
+    let upd=0;
+    const teams=fullTeams[league]||[];
+    teams.forEach(t=>{
+      const name=t[0];
+      const idx=text.indexOf(name);
+      if(idx>-1){
+        const slice=text.slice(Math.max(0,idx-200), idx+500);
+        const m=slice.match(/(\d\.\d{2})\s*PPG|PPG\s*(\d\.\d{2})/i) || slice.match(/(\d\.\d{2})/);
+        if(m){
+          const v=parseFloat(m[1]||m[2]||m[0]);
+          if(v>=0.3 && v<=3.0){ t[1]=Math.round(v*100)/100; upd++; }
+        }
+      }
+    });
+    if(upd>0){
+      // also update picker dropdowns
+      const curL=document.getElementById('pickHomeLeague')?.value;
+      if(curL===league) fillTeams(pickHomeTeam, league);
+      const curL2=document.getElementById('pickAwayLeague')?.value;
+      if(curL2===league) fillTeams(pickAwayTeam, league);
+      render();
+      alert('✅ '+upd+' PPG mis à jour pour '+info.label);
+    } else {
+      alert('Page récupérée ('+html.length+' car) mais parsing PPG échoué. Copie manuellement la table.');
+      document.getElementById('countInfo').textContent='Parsing échoué — colle manuellement';
+    }
+  }catch(e){ alert('Parsing échoué: '+e.message); }
+}
+function applyPastePPG(){
+  const txt=document.getElementById('pasteBox')?.value.trim();
+  if(!txt){ alert('Colle d’abord des lignes PPG'); return; }
+  const league=document.getElementById('pasteLeague')?.value || document.getElementById('leagueFilter')?.value || 'eng1';
+  const teams=fullTeams[league]||[];
+  const map=new Map(teams.map(t=>[t[0].toLowerCase(), t]));
+  let upd=0;
+  txt.split(/\r?\n/).forEach(line=>{
+    line=line.trim(); if(!line) return;
+    const m=line.match(/^(.+?)[,\t\s]+(\d\.\d{1,2})\s*$/);
+    if(!m) return;
+    let name=m[1].trim().toLowerCase(); let val=parseFloat(m[2]); if(isNaN(val)) return;
+    let entry=map.get(name);
+    if(!entry){ for(const [k,v] of map){ if(k.includes(name) || name.includes(k)){ entry=v; break; } } }
+    if(entry){ entry[1]=Math.round(val*100)/100; upd++; }
+  });
+  if(upd>0){
+    // refresh picker if needed
+    if(document.getElementById('pickHomeLeague')?.value===league) fillTeams(pickHomeTeam, league);
+    if(document.getElementById('pickAwayLeague')?.value===league) fillTeams(pickAwayTeam, league);
+    syncPickerFromTeams(); updatePickerSignal();
+    render();
+    alert('✅ '+upd+' PPG appliqués pour '+league);
+  } else alert('Aucune correspondance. Vérifie le format: "Equipe 1.23" par ligne et que la ligue sélectionnée correspond.');
+}
+setTimeout(fillPasteLeague, 300);
+document.getElementById('leagueFilter')?.addEventListener('change', ()=>{ const v=document.getElementById('leagueFilter').value; if(v!=='all') document.getElementById('pasteLeague').value=v; });
+
+</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script>
@@ -16,6 +126,116 @@ tailwind.config = {
     }
   }
 }
+
+// === Live FootyStats map & helpers ===
+const leaguePPGUrl = {
+  eng1:{label:'Premier League', url:'https://footystats.org/england/premier-league'},
+  ita1:{label:'Serie A', url:'https://footystats.org/italy/serie-a'},
+  esp1:{label:'La Liga', url:'https://footystats.org/spain/la-liga'},
+  ger1:{label:'Bundesliga', url:'https://footystats.org/germany/bundesliga'},
+  fra1:{label:'Ligue 1', url:'https://footystats.org/france/ligue-1'},
+  ned1:{label:'Eredivisie', url:'https://footystats.org/netherlands/eredivisie'},
+  por1:{label:'Primeira Liga', url:'https://footystats.org/portugal/primeira-liga'},
+  bel1:{label:'Belgian Pro League', url:'https://footystats.org/belgium/belgian-pro-league'},
+  tur1:{label:'Super Lig', url:'https://footystats.org/turkey/super-lig'},
+  sco1:{label:'Premiership', url:'https://footystats.org/scotland/premiership'},
+  eng2:{label:'Championship', url:'https://footystats.org/england/championship'},
+  esp2:{label:'LaLiga2', url:'https://footystats.org/spain/la-liga2'},
+  ger2:{label:'2. Bundesliga', url:'https://footystats.org/germany/2-bundesliga'},
+  ita2:{label:'Serie B', url:'https://footystats.org/italy/serie-b'},
+  fra2:{label:'Ligue 2', url:'https://footystats.org/france/ligue-2'},
+};
+function fillPasteLeague(){
+  const sel=document.getElementById('pasteLeague');
+  if(!sel) return;
+  sel.innerHTML='';
+  leagues.forEach(l=>{
+    const o=document.createElement('option'); o.value=l.id; o.textContent=l.flag+' '+l.name;
+    sel.appendChild(o);
+  });
+  sel.value=document.getElementById('leagueFilter')?.value || 'eng1';
+}
+async function fetchFootyStatsLive(){
+  const league=document.getElementById('pasteLeague')?.value || document.getElementById('leagueFilter')?.value || 'eng1';
+  const info=leaguePPGUrl[league];
+  if(!info){ alert('Ligue non mappée'); return; }
+  const url=info.url;
+  const proxies=['https://corsproxy.io/?','https://api.allorigins.win/raw?url='];
+  let html='';
+  document.getElementById('countInfo').textContent='⏳ Récupération '+info.label+'…';
+  for(const base of proxies){
+    try{
+      const r=await fetch(base+encodeURIComponent(url));
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      html=await r.text();
+      if(html && html.length>5000) break;
+    }catch(e){ html=''; }
+  }
+  if(!html || html.length<2000){
+    alert('FootyStats bloque le fetch direct (403/CORS) — c’est normal en local.\n\nSolution : ouvre '+url+' → copie la colonne PPG (Home PPG / Away PPG) → colle dans la zone ci-dessous → Appliquer.');
+    document.getElementById('countInfo').textContent='⚠ FootyStats bloque — utilise Coller PPG';
+    document.getElementById('pasteBox')?.focus();
+    return;
+  }
+  try{
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const text=doc.body.innerText || '';
+    let upd=0;
+    const teams=fullTeams[league]||[];
+    teams.forEach(t=>{
+      const name=t[0];
+      const idx=text.indexOf(name);
+      if(idx>-1){
+        const slice=text.slice(Math.max(0,idx-200), idx+500);
+        const m=slice.match(/(\d\.\d{2})\s*PPG|PPG\s*(\d\.\d{2})/i) || slice.match(/(\d\.\d{2})/);
+        if(m){
+          const v=parseFloat(m[1]||m[2]||m[0]);
+          if(v>=0.3 && v<=3.0){ t[1]=Math.round(v*100)/100; upd++; }
+        }
+      }
+    });
+    if(upd>0){
+      // also update picker dropdowns
+      const curL=document.getElementById('pickHomeLeague')?.value;
+      if(curL===league) fillTeams(pickHomeTeam, league);
+      const curL2=document.getElementById('pickAwayLeague')?.value;
+      if(curL2===league) fillTeams(pickAwayTeam, league);
+      render();
+      alert('✅ '+upd+' PPG mis à jour pour '+info.label);
+    } else {
+      alert('Page récupérée ('+html.length+' car) mais parsing PPG échoué. Copie manuellement la table.');
+      document.getElementById('countInfo').textContent='Parsing échoué — colle manuellement';
+    }
+  }catch(e){ alert('Parsing échoué: '+e.message); }
+}
+function applyPastePPG(){
+  const txt=document.getElementById('pasteBox')?.value.trim();
+  if(!txt){ alert('Colle d’abord des lignes PPG'); return; }
+  const league=document.getElementById('pasteLeague')?.value || document.getElementById('leagueFilter')?.value || 'eng1';
+  const teams=fullTeams[league]||[];
+  const map=new Map(teams.map(t=>[t[0].toLowerCase(), t]));
+  let upd=0;
+  txt.split(/\r?\n/).forEach(line=>{
+    line=line.trim(); if(!line) return;
+    const m=line.match(/^(.+?)[,\t\s]+(\d\.\d{1,2})\s*$/);
+    if(!m) return;
+    let name=m[1].trim().toLowerCase(); let val=parseFloat(m[2]); if(isNaN(val)) return;
+    let entry=map.get(name);
+    if(!entry){ for(const [k,v] of map){ if(k.includes(name) || name.includes(k)){ entry=v; break; } } }
+    if(entry){ entry[1]=Math.round(val*100)/100; upd++; }
+  });
+  if(upd>0){
+    // refresh picker if needed
+    if(document.getElementById('pickHomeLeague')?.value===league) fillTeams(pickHomeTeam, league);
+    if(document.getElementById('pickAwayLeague')?.value===league) fillTeams(pickAwayTeam, league);
+    syncPickerFromTeams(); updatePickerSignal();
+    render();
+    alert('✅ '+upd+' PPG appliqués pour '+league);
+  } else alert('Aucune correspondance. Vérifie le format: "Equipe 1.23" par ligne et que la ligue sélectionnée correspond.');
+}
+setTimeout(fillPasteLeague, 300);
+document.getElementById('leagueFilter')?.addEventListener('change', ()=>{ const v=document.getElementById('leagueFilter').value; if(v!=='all') document.getElementById('pasteLeague').value=v; });
+
 </script>
 <style>.glass{backdrop-filter:blur(12px)} .live-dot{animation:pulse 1.5s infinite} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}} .scrollbar-hide::-webkit-scrollbar{display:none}</style>
 </head>
@@ -27,7 +247,7 @@ tailwind.config = {
         <a href="index.html" class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center font-bold text-white">B54</a>
         <div>
           <div class="font-bold leading-none text-[18px]">Bilama54 <span class="text-bilama-accent">•</span> <span class="font-normal text-zinc-400">Foot Top Europe</span></div>
-          <div class="text-[11px] text-zinc-500 font-mono tracking-widest uppercase">PPG vs Côte • FootyStats Rule • 20 Ligues</div>
+          <div class="text-[11px] text-zinc-500 font-mono tracking-widest uppercase">PPG vs Côte • FootyStats Rule • 20 Ligues • MAJ 2026-27</div>
         </div>
       </div>
       <div class="hidden lg:flex items-center gap-2">
@@ -181,6 +401,36 @@ tailwind.config = {
     </div>
   </section>
 
+
+  <!-- LIVE FOOTYSTATS TOOLBAR -->
+  <section class="max-w-[1440px] mx-auto px-4 lg:px-6 pt-3">
+    <div class="bg-bilama-card border border-bilama-border rounded-2xl p-4 flex flex-wrap items-center gap-3">
+      <div class="flex items-center gap-2 text-sm font-bold"><span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span> Données live FootyStats</div>
+      <span class="text-xs text-zinc-500">Effectifs 2026-27 officiels (Coventry/Ipswich/Hull en PL, Venezia/Frosinone/Monza en Serie A, Racing/Deportivo/Málaga en Liga, Schalke/Elversberg/Paderborn en BL, Troyes/Le Mans en L1).</span>
+      <div class="ml-auto flex flex-wrap gap-2">
+        <button onclick="fetchFootyStatsLive()" class="bg-gradient-to-r from-emerald-500 to-sky-500 text-white px-4 py-2 rounded-full text-sm font-bold">🔄 Actualiser FootyStats (live PPG)</button>
+        <a href="https://footystats.org" target="_blank" class="bg-zinc-900 border border-white/10 px-4 py-2 rounded-full text-sm">Ouvrir FootyStats ↗</a>
+      </div>
+    </div>
+    <div class="mt-3 bg-black/40 border border-dashed border-white/15 rounded-2xl p-4">
+      <div class="text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-paste text-zinc-400"></i> Coller PPG (si FootyStats bloque le fetch) — format <code class="bg-white/10 px-1 rounded">Equipe TAB PPG</code> ou <code class="bg-white/10 px-1 rounded">Equipe,PPG</code> par ligne</div>
+      <div class="mt-2 grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-3">
+        <textarea id="pasteBox" rows="5" placeholder="Ex:
+Venezia 0.43
+Frosinone 1.86
+Monza 0.71
+Coventry City 1.32
+... ou colle la table FootyStats brute" class="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-sm font-mono"></textarea>
+        <div class="flex flex-col gap-2">
+          <select id="pasteLeague" class="bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm"></select>
+          <button onclick="applyPastePPG()" class="bg-white text-black px-4 py-2 rounded-full text-sm font-bold">Appliquer PPG collés</button>
+          <button onclick="document.getElementById('pasteBox').value=''" class="bg-zinc-900 border border-white/10 px-4 py-2 rounded-full text-sm">Effacer</button>
+          <div class="text-[11px] text-zinc-500">Astuce : filtre la ligue ci-dessus → colle la colonne PPG depuis FootyStats → Appliquer. Les valeurs remplacent les PPG du picker + fullTeams pour cette ligue.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- MATCH GRID -->
   <section class="max-w-[1440px] mx-auto px-4 lg:px-6 pt-4">
     <div id="grid" class="grid grid-cols-1 lg:grid-cols-2 gap-3"></div>
@@ -197,7 +447,7 @@ tailwind.config = {
         <li>• 20 ligues = 15 D1 UEFA (ENG, ITA, ESP, GER, FRA, NED, POR, BEL, TUR, SCO, CZE, SUI, AUT, NOR, DEN) + 5 D2 (ENG Championship, ESP LaLiga2, GER 2.BL, ITA Serie B, FRA Ligue 2).</li>
       </ul>
     </div>
-    <div class="mt-3 text-center text-[11px] text-zinc-500 font-mono">Bilama54 © 2026 • Foot Top 15 + D2 Top 5 • Règle PPG vs Côte • FootyStats.org • Jeu responsable 18+</div>
+    <div class="mt-3 text-center text-[11px] text-zinc-500 font-mono">Bilama54 © 2026 • Foot Top 15 + D2 Top 5 • Effectifs 2026-27 à jour • Règle PPG vs Côte • FootyStats.org • Jeu responsable 18+</div>
   </section>
 
 <script>
@@ -223,31 +473,31 @@ const leagues = [
   {id:'ita2', name:'Italie D2 — Serie B', flag:'🇮🇹', tier:'D2 Top 5', country:'Italy D2'},
   {id:'fra2', name:'France D2 — Ligue 2', flag:'🇫🇷', tier:'D2 Top 5', country:'France D2'},
 ];
-const fullTeams = {"eng1": [["Manchester City", 2.45], ["Arsenal", 2.3], ["Liverpool", 2.2], ["Chelsea", 1.95], ["Aston Villa", 1.85], ["Newcastle United", 1.8], ["Brighton", 1.75], ["Tottenham Hotspur", 1.6], ["Manchester United", 1.55], ["West Ham United", 1.4], ["Crystal Palace", 1.1], ["Fulham", 1.25], ["Wolverhampton Wanderers", 1.05], ["Everton", 1.0], ["Brentford", 1.15], ["Bournemouth", 1.3], ["Nottingham Forest", 1.2], ["Sunderland", 1.1], ["Leeds United", 0.9], ["Burnley", 0.85]], "ita1": [["Inter", 2.55], ["Napoli", 2.2], ["Juventus", 2.1], ["AC Milan", 1.95], ["Roma", 1.85], ["Atalanta", 1.8], ["Lazio", 1.75], ["Fiorentina", 1.6], ["Bologna", 1.55], ["Torino", 1.45], ["Udinese", 1.3], ["Sassuolo", 1.4], ["Como", 1.5], ["Lecce", 1.1], ["Pisa", 0.7], ["Genoa", 1.2], ["Empoli", 1.15], ["Hellas Verona", 1.0], ["Cremonese", 0.95], ["Parma", 1.25]], "esp1": [["Barcelona", 2.6], ["Real Madrid", 2.5], ["Atlético Madrid", 2.2], ["Athletic Club", 1.95], ["Villarreal", 2.1], ["Real Sociedad", 1.8], ["Real Betis", 1.75], ["Valencia", 1.6], ["Girona", 1.2], ["Rayo Vallecano", 1.35], ["Osasuna", 1.55], ["Getafe", 1.45], ["Celta Vigo", 1.5], ["Sevilla", 1.4], ["Mallorca", 1.3], ["Las Palmas", 1.1], ["Alavés", 1.25], ["Espanyol", 1.35], ["Leganés", 1.2], ["Valladolid", 0.85]], "ger1": [["Bayern Munich", 2.7], ["Bayer Leverkusen", 2.15], ["Borussia Dortmund", 2.15], ["RB Leipzig", 1.9], ["VfB Stuttgart", 1.85], ["Eintracht Frankfurt", 1.8], ["Werder Bremen", 1.6], ["Freiburg", 1.55], ["Hoffenheim", 1.45], ["Union Berlin", 1.25], ["Heidenheim", 1.05], ["St. Pauli", 0.9], ["Augsburg", 1.3], ["Mainz", 1.35], ["Wolfsburg", 1.4], ["Borussia Mönchengladbach", 1.5], ["Holstein Kiel", 0.8], ["Bochum", 0.75]], "fra1": [["PSG", 2.8], ["Marseille", 2.05], ["Monaco", 2.1], ["Lille", 1.95], ["Lyon", 1.85], ["Nice", 1.85], ["Lens", 1.6], ["Brest", 0.95], ["Rennes", 1.7], ["Strasbourg", 1.55], ["Toulouse", 1.45], ["Montpellier", 1.3], ["Nantes", 1.25], ["Reims", 1.4], ["Le Havre", 1.15], ["Auxerre", 1.2], ["Metz", 1.0], ["Angers", 1.1]], "ned1": [["PSV", 2.6], ["Ajax", 2.3], ["Feyenoord", 2.2], ["AZ Alkmaar", 1.95], ["Twente", 1.7], ["Utrecht", 1.55], ["Go Ahead Eagles", 1.0], ["Heracles", 1.15], ["Heerenveen", 1.35], ["Sparta Rotterdam", 1.25], ["NEC Nijmegen", 1.4], ["Groningen", 1.3], ["Fortuna Sittard", 1.2], ["Willem II", 1.1], ["PEC Zwolle", 1.05], ["NAC Breda", 0.95], ["Almere City", 0.8], ["RKC Waalwijk", 0.75]], "por1": [["Benfica", 2.5], ["Porto", 2.25], ["Sporting CP", 2.2], ["Braga", 1.7], ["Guimarães", 1.45], ["Estrela", 1.0], ["Arouca", 0.8], ["Boavista", 1.2], ["Farense", 1.1], ["Gil Vicente", 1.3], ["Moreirense", 1.35], ["Casa Pia", 1.15], ["Famalicão", 1.4], ["Estoril", 1.25], ["Rio Ave", 1.2], ["Nacional", 1.05], ["Chaves", 0.9], ["Vizela", 0.85]], "bel1": [["Club Brugge", 2.4], ["Genk", 2.1], ["Anderlecht", 1.65], ["Union SG", 1.9], ["Antwerp", 1.8], ["Gent", 1.7], ["Standard Liège", 1.5], ["Westerlo", 1.0], ["Kortrijk", 0.95], ["Charleroi", 1.3], ["Mechelen", 1.25], ["Sint-Truiden", 1.2], ["OH Leuven", 1.15], ["Cercle Brugge", 1.35], ["Eupen", 0.85], ["Dender", 1.05]], "tur1": [["Galatasaray", 2.65], ["Fenerbahçe", 2.3], ["Besiktas", 1.55], ["Trabzonspor", 1.75], ["Basaksehir", 1.6], ["Alanyaspor", 1.2], ["Karagümrük", 0.75], ["Antalyaspor", 1.3], ["Samsunspor", 1.4], ["Rizespor", 1.35], ["Konyaspor", 1.25], ["Sivasspor", 1.2], ["Gaziantep", 1.15], ["Hatayspor", 1.0], ["Adana Demirspor", 0.85], ["Kayserispor", 1.1], ["Kasimpasa", 1.05], ["Ankaragücü", 0.9], ["Alanyaspor", 1.2]], "sco1": [["Celtic", 2.5], ["Rangers", 2.15], ["Hearts", 1.5], ["Aberdeen", 1.6], ["Hibernian", 1.45], ["Motherwell", 1.2], ["St Mirren", 1.05], ["Dundee United", 1.05], ["Dundee", 1.0], ["Kilmarnock", 1.1], ["St Johnstone", 0.9], ["Ross County", 0.85]], "cze1": [["Sparta Prague", 2.45], ["Slavia Prague", 2.3], ["Plzen", 1.6], ["Banik Ostrava", 1.35], ["Bohemians", 1.1], ["Teplice", 0.9], ["Slovan Liberec", 1.4], ["Sigma Olomouc", 1.35], ["Mlada Boleslav", 1.25], ["Slovacko", 1.2], ["Pardubice", 1.0], ["Jablonec", 1.15], ["Karvina", 0.85], ["Hradec Kralove", 1.05], ["Ceske Budejovice", 0.8], ["Dukla Prague", 0.75]], "sui1": [["Young Boys", 2.35], ["Basel", 2.05], ["Servette", 1.6], ["Luzern", 1.45], ["St. Gallen", 1.7], ["Lugano", 1.55], ["Winterthur", 0.8], ["Sion", 1.0], ["Grasshopper", 1.1], ["Lausanne", 1.3], ["Yverdon", 1.2], ["Zurich", 1.4]], "aut1": [["Salzburg", 2.4], ["Sturm Graz", 2.1], ["Rapid Wien", 1.55], ["Austria Wien", 1.5], ["Hartberg", 1.15], ["Wolfsberger", 1.35], ["Altach", 0.85], ["LASK", 1.6], ["Austria Klagenfurt", 1.25], ["Tirol", 1.2], ["Blau-Weiß Linz", 1.1], ["Grazer AK", 0.9]], "nor1": [["Bodø/Glimt", 2.55], ["Molde", 2.0], ["Viking", 1.5], ["Rosenborg", 1.65], ["Brann", 1.8], ["Tromsø", 1.4], ["Sandefjord", 1.2], ["Haugesund", 0.75], ["HamKam", 1.1], ["Kristiansund", 1.25], ["Sarpsborg", 1.3], ["Fredrikstad", 1.15], ["Odd", 1.05], ["Strømsgodset", 1.0], ["Lillestrøm", 1.35], ["KFUM Oslo", 0.95]], "den1": [["Copenhagen", 2.35], ["Midtjylland", 2.1], ["OB", 1.4], ["AGF", 1.45], ["Viborg", 1.05], ["Vejle", 0.85], ["Randers", 1.6], ["Brøndby", 1.8], ["Nordsjælland", 1.65], ["Silkeborg", 1.35], ["Lyngby", 1.1], ["Hvidovre", 0.7]], "eng2": [["Leeds United", 2.25], ["Sunderland", 1.95], ["Southampton", 1.65], ["Millwall", 1.5], ["Sheffield United", 1.8], ["Middlesbrough", 1.7], ["Norwich", 1.6], ["Coventry", 1.55], ["West Brom", 1.45], ["Blackburn", 1.4], ["Hull City", 1.3], ["QPR", 1.25], ["Portsmouth", 1.2], ["Oxford United", 0.9], ["Sheffield Wednesday", 1.0], ["Watford", 1.35], ["Stoke", 1.2], ["Derby", 1.15], ["Swansea", 1.25], ["Bristol City", 1.4], ["Preston", 1.3], ["Cardiff", 1.1], ["Leeds United", 2.25], ["Luton Town", 1.35]], "esp2": [["Racing Santander", 2.2], ["Leganés", 1.85], ["Almeria", 1.55], ["Eibar", 1.45], ["Tenerife", 1.05], ["Mirandes", 0.85], ["Levante", 1.7], ["Burgos", 1.4], ["Elche", 1.6], ["Racing Ferrol", 1.3], ["Huesca", 1.5], ["Cartagena", 0.75], ["Sporting Gijón", 1.45], ["Oviedo", 1.55], ["Zaragoza", 1.35], ["Málaga", 1.25], ["Granada", 1.65], ["Valladolid", 1.75], ["Espanyol", 1.9], ["Albacete", 1.2], ["Castellón", 1.15], ["Córdoba", 1.1]], "ger2": [["Hamburg", 2.3], ["Paderborn", 1.9], ["Düsseldorf", 1.55], ["Magdeburg", 1.1], ["Kaiserslautern", 1.4], ["Hannover", 1.65], ["Elversberg", 1.5], ["Nürnberg", 1.45], ["Hertha Berlin", 1.6], ["Karlsruhe", 1.55], ["Köln", 1.8], ["Schalke", 1.7], ["Greuther Fürth", 1.35], ["Ulm", 1.2], ["Darmstadt", 1.5], ["Braunschweig", 0.8], ["Preußen Münster", 1.1], ["Jahn Regensburg", 0.85]], "ita2": [["Parma", 2.15], ["Palermo", 1.8], ["Cremonese", 1.7], ["Catanzaro", 1.6], ["Bari", 1.3], ["Sampdoria", 1.25], ["Südtirol", 0.95], ["Cosenza", 0.95], ["Brescia", 1.4], ["Modena", 1.35], ["Reggiana", 1.3], ["Cittadella", 1.2], ["Spezia", 1.55], ["Carrarese", 1.15], ["Mantova", 1.25], ["Juve Stabia", 1.1], ["Cesena", 1.5], ["Frosinone", 1.45], ["Salernitana", 1.0], ["Venezia", 1.65]], "fra2": [["Lorient", 2.2], ["Paris FC", 1.85], ["Dunkerque", 1.5], ["Annecy", 1.4], ["Amiens", 0.85], ["Rodez", 1.0], ["Metz", 1.75], ["Caen", 1.6], ["Guingamp", 1.55], ["Bastia", 1.45], ["Troyes", 1.35], ["Clermont", 1.3], ["Red Star", 1.25], ["Pau", 1.2], ["Grenoble", 1.15], ["Laval", 1.1], ["Martigues", 0.95], ["Ajaccio", 0.9]]};
+const fullTeams = {"eng1": [["Arsenal", 2.42], ["Manchester City", 2.15], ["Manchester United", 1.95], ["Aston Villa", 1.8], ["Liverpool", 1.75], ["Bournemouth", 1.6], ["Sunderland", 1.55], ["Brighton & Hove Albion", 1.5], ["Brentford", 1.45], ["Chelsea", 1.4], ["Fulham", 1.35], ["Everton", 1.3], ["Nottingham Forest", 1.25], ["Tottenham Hotspur", 1.2], ["Crystal Palace", 1.15], ["Newcastle United", 1.1], ["Leeds United", 1.05], ["Coventry City", 0.95], ["Ipswich Town", 1.0], ["Hull City", 0.85]], "ita1": [["Inter", 2.5], ["Napoli", 2.2], ["Roma", 2.1], ["Como", 1.9], ["AC Milan", 1.75], ["Juventus", 1.7], ["Atalanta", 1.6], ["Frosinone", 1.85], ["Bologna", 1.55], ["Cagliari", 1.5], ["Sassuolo", 1.45], ["Torino", 1.4], ["Udinese", 1.35], ["Lecce", 1.3], ["Parma", 1.25], ["Genoa", 1.2], ["Fiorentina", 1.15], ["Lazio", 1.1], ["Monza", 1.0], ["Venezia", 0.5]], "esp1": [["Barcelona", 2.45], ["Real Madrid", 2.3], ["Villarreal", 2.1], ["Atlético Madrid", 2.0], ["Real Betis", 1.85], ["Celta Vigo", 1.7], ["Getafe", 1.55], ["Real Sociedad", 1.5], ["Sevilla", 1.45], ["Valencia", 1.4], ["Athletic Club", 1.35], ["Osasuna", 1.3], ["Alavés", 1.25], ["Espanyol", 1.2], ["Levante", 1.15], ["Elche", 1.1], ["Rayo Vallecano", 1.05], ["Racing Santander", 0.95], ["Deportivo La Coruña", 0.9], ["Málaga", 0.6]], "ger1": [["Bayern Munich", 2.55], ["Bayer Leverkusen", 2.1], ["Borussia Dortmund", 2.0], ["RB Leipzig", 1.9], ["VfB Stuttgart", 1.85], ["Eintracht Frankfurt", 1.8], ["Hamburger SV", 1.1], ["1. FC Köln", 1.05], ["Schalke 04", 0.85], ["SV Elversberg", 1.65], ["SC Paderborn", 0.95], ["Augsburg", 1.3], ["Werder Bremen", 1.6], ["Mainz", 1.35], ["Freiburg", 1.55], ["Union Berlin", 1.25], ["Hoffenheim", 1.45], ["Wolfsburg", 1.4]], "fra1": [["Paris Saint-Germain", 2.4], ["Lens", 1.95], ["Lille", 1.85], ["Lyon", 1.75], ["Marseille", 1.7], ["Rennes", 1.65], ["Monaco", 1.55], ["Strasbourg", 1.5], ["Toulouse", 1.35], ["Brest", 1.25], ["Lorient", 1.45], ["Paris FC", 1.4], ["Angers", 1.15], ["Le Havre", 1.05], ["Auxerre", 1.0], ["Nice", 0.95], ["Troyes", 0.8], ["Le Mans", 0.75]], "ned1": [["PSV", 2.6], ["Ajax", 2.3], ["Feyenoord", 2.2], ["AZ Alkmaar", 1.95], ["Twente", 1.7], ["Utrecht", 1.55], ["Go Ahead Eagles", 1.0], ["Heracles", 1.15], ["Heerenveen", 1.35], ["Sparta Rotterdam", 1.25], ["NEC Nijmegen", 1.4], ["Groningen", 1.3], ["Fortuna Sittard", 1.2], ["Willem II", 1.1], ["PEC Zwolle", 1.05], ["NAC Breda", 0.95], ["Almere City", 0.8], ["RKC Waalwijk", 0.75]], "por1": [["Benfica", 2.5], ["Porto", 2.25], ["Sporting CP", 2.2], ["Braga", 1.7], ["Guimarães", 1.45], ["Estrela", 1.0], ["Arouca", 0.8], ["Boavista", 1.2], ["Farense", 1.1], ["Gil Vicente", 1.3], ["Moreirense", 1.35], ["Casa Pia", 1.15], ["Famalicão", 1.4], ["Estoril", 1.25], ["Rio Ave", 1.2], ["Nacional", 1.05], ["Chaves", 0.9], ["Vizela", 0.85]], "bel1": [["Club Brugge", 2.4], ["Genk", 2.1], ["Anderlecht", 1.65], ["Union SG", 1.9], ["Antwerp", 1.8], ["Gent", 1.7], ["Standard Liège", 1.5], ["Westerlo", 1.0], ["Kortrijk", 0.95], ["Charleroi", 1.3], ["Mechelen", 1.25], ["Sint-Truiden", 1.2], ["OH Leuven", 1.15], ["Cercle Brugge", 1.35], ["Eupen", 0.85], ["Dender", 1.05]], "tur1": [["Galatasaray", 2.65], ["Fenerbahçe", 2.3], ["Besiktas", 1.55], ["Trabzonspor", 1.75], ["Basaksehir", 1.6], ["Alanyaspor", 1.2], ["Karagümrük", 0.75], ["Antalyaspor", 1.3], ["Samsunspor", 1.4], ["Rizespor", 1.35], ["Konyaspor", 1.25], ["Sivasspor", 1.2], ["Gaziantep", 1.15], ["Hatayspor", 1.0], ["Adana Demirspor", 0.85], ["Kayserispor", 1.1], ["Kasimpasa", 1.05], ["Ankaragücü", 0.9], ["Alanyaspor", 1.2]], "sco1": [["Celtic", 2.5], ["Rangers", 2.15], ["Hearts", 1.5], ["Aberdeen", 1.6], ["Hibernian", 1.45], ["Motherwell", 1.2], ["St Mirren", 1.05], ["Dundee United", 1.05], ["Dundee", 1.0], ["Kilmarnock", 1.1], ["St Johnstone", 0.9], ["Ross County", 0.85]], "cze1": [["Sparta Prague", 2.45], ["Slavia Prague", 2.3], ["Plzen", 1.6], ["Banik Ostrava", 1.35], ["Bohemians", 1.1], ["Teplice", 0.9], ["Slovan Liberec", 1.4], ["Sigma Olomouc", 1.35], ["Mlada Boleslav", 1.25], ["Slovacko", 1.2], ["Pardubice", 1.0], ["Jablonec", 1.15], ["Karvina", 0.85], ["Hradec Kralove", 1.05], ["Ceske Budejovice", 0.8], ["Dukla Prague", 0.75]], "sui1": [["Young Boys", 2.35], ["Basel", 2.05], ["Servette", 1.6], ["Luzern", 1.45], ["St. Gallen", 1.7], ["Lugano", 1.55], ["Winterthur", 0.8], ["Sion", 1.0], ["Grasshopper", 1.1], ["Lausanne", 1.3], ["Yverdon", 1.2], ["Zurich", 1.4]], "aut1": [["Salzburg", 2.4], ["Sturm Graz", 2.1], ["Rapid Wien", 1.55], ["Austria Wien", 1.5], ["Hartberg", 1.15], ["Wolfsberger", 1.35], ["Altach", 0.85], ["LASK", 1.6], ["Austria Klagenfurt", 1.25], ["Tirol", 1.2], ["Blau-Weiß Linz", 1.1], ["Grazer AK", 0.9]], "nor1": [["Bodø/Glimt", 2.55], ["Molde", 2.0], ["Viking", 1.5], ["Rosenborg", 1.65], ["Brann", 1.8], ["Tromsø", 1.4], ["Sandefjord", 1.2], ["Haugesund", 0.75], ["HamKam", 1.1], ["Kristiansund", 1.25], ["Sarpsborg", 1.3], ["Fredrikstad", 1.15], ["Odd", 1.05], ["Strømsgodset", 1.0], ["Lillestrøm", 1.35], ["KFUM Oslo", 0.95]], "den1": [["Copenhagen", 2.35], ["Midtjylland", 2.1], ["OB", 1.4], ["AGF", 1.45], ["Viborg", 1.05], ["Vejle", 0.85], ["Randers", 1.6], ["Brøndby", 1.8], ["Nordsjælland", 1.65], ["Silkeborg", 1.35], ["Lyngby", 1.1], ["Hvidovre", 0.7]], "eng2": [["Leeds United", 2.25], ["Sunderland", 1.95], ["Southampton", 1.65], ["Millwall", 1.5], ["Sheffield United", 1.8], ["Middlesbrough", 1.7], ["Norwich", 1.6], ["Coventry", 1.55], ["West Brom", 1.45], ["Blackburn", 1.4], ["Hull City", 1.3], ["QPR", 1.25], ["Portsmouth", 1.2], ["Oxford United", 0.9], ["Sheffield Wednesday", 1.0], ["Watford", 1.35], ["Stoke", 1.2], ["Derby", 1.15], ["Swansea", 1.25], ["Bristol City", 1.4], ["Preston", 1.3], ["Cardiff", 1.1], ["Leeds United", 2.25], ["Luton Town", 1.35]], "esp2": [["Racing Santander", 2.2], ["Leganés", 1.85], ["Almeria", 1.55], ["Eibar", 1.45], ["Tenerife", 1.05], ["Mirandes", 0.85], ["Levante", 1.7], ["Burgos", 1.4], ["Elche", 1.6], ["Racing Ferrol", 1.3], ["Huesca", 1.5], ["Cartagena", 0.75], ["Sporting Gijón", 1.45], ["Málaga", 1.55], ["Zaragoza", 1.35], ["Málaga", 1.25], ["Granada", 1.65], ["Valladolid", 1.75], ["Espanyol", 1.9], ["Albacete", 1.2], ["Castellón", 1.15], ["Córdoba", 1.1]], "ger2": [["Hamburg", 2.3], ["Paderborn", 1.9], ["Düsseldorf", 1.55], ["Magdeburg", 1.1], ["Kaiserslautern", 1.4], ["Hannover", 1.65], ["Elversberg", 1.5], ["Nürnberg", 1.45], ["Hertha Berlin", 1.6], ["Karlsruhe", 1.55], ["Köln", 1.8], ["Schalke", 1.7], ["Greuther Fürth", 1.35], ["Ulm", 1.2], ["Darmstadt", 1.5], ["Braunschweig", 0.8], ["Preußen Münster", 1.1], ["Jahn Regensburg", 0.85]], "ita2": [["Parma", 2.15], ["Palermo", 1.8], ["Frosinone", 1.7], ["Catanzaro", 1.6], ["Bari", 1.3], ["Sampdoria", 1.25], ["Südtirol", 0.95], ["Cosenza", 0.95], ["Brescia", 1.4], ["Modena", 1.35], ["Reggiana", 1.3], ["Cittadella", 1.2], ["Spezia", 1.55], ["Carrarese", 1.15], ["Mantova", 1.25], ["Juve Stabia", 1.1], ["Cesena", 1.5], ["Frosinone", 1.45], ["Salernitana", 1.0], ["Venezia", 1.65]], "fra2": [["Lorient", 2.2], ["Paris FC", 1.85], ["Dunkerque", 1.5], ["Annecy", 1.4], ["Amiens", 0.85], ["Rodez", 1.0], ["Troyes", 1.75], ["Caen", 1.6], ["Guingamp", 1.55], ["Bastia", 1.45], ["Troyes", 1.35], ["Clermont", 1.3], ["Red Star", 1.25], ["Pau", 1.2], ["Grenoble", 1.15], ["Laval", 1.1], ["Martigues", 0.95], ["Ajaccio", 0.9]]};
 
 
 // Generate sample matches: 3 per league with realistic PPG and odds applying rule
 const samples = [
   // ENG1
-  {league:'eng1', time:'20:45', home:'Manchester City', homePPG:2.45, away:'Burnley', awayPPG:0.85, odds:{h:1.28,d:6.00,a:11.00}},
+  {league:'eng1', time:'20:45', home:'Manchester City', homePPG:2.45, away:'Coventry City', awayPPG:0.85, odds:{h:1.28,d:6.00,a:11.00}},
   {league:'eng1', time:'18:00', home:'Arsenal', homePPG:2.30, away:'Crystal Palace', awayPPG:1.10, odds:{h:1.42,d:4.80,a:7.50}},
   {league:'eng1', time:'20:00', home:'Newcastle', homePPG:1.85, away:'Sunderland', awayPPG:1.80, odds:{h:1.95,d:3.60,a:4.00}},
   // ITA1
-  {league:'ita1', time:'20:45', home:'Inter', homePPG:2.55, away:'Pisa', awayPPG:0.70, odds:{h:1.30,d:5.50,a:10.00}},
+  {league:'ita1', time:'20:45', home:'Inter', homePPG:2.55, away:'Venezia', awayPPG:0.70, odds:{h:1.30,d:5.50,a:10.00}},
   {league:'ita1', time:'18:00', home:'Napoli', homePPG:2.20, away:'Como', awayPPG:1.50, odds:{h:1.75,d:3.80,a:4.80}},
   {league:'ita1', time:'15:00', home:'Lecce', homePPG:1.10, away:'Sassuolo', awayPPG:1.40, odds:{h:2.80,d:3.30,a:2.60}},
   // ESP1
-  {league:'esp1', time:'21:00', home:'Barcelona', homePPG:2.60, away:'Girona', awayPPG:1.20, odds:{h:1.35,d:5.20,a:8.00}},
+  {league:'esp1', time:'21:00', home:'Barcelona', homePPG:2.60, away:'Deportivo La Coruña', awayPPG:1.20, odds:{h:1.35,d:5.20,a:8.00}},
   {league:'esp1', time:'18:30', home:'Villarreal', homePPG:2.10, away:'Rayo Vallecano', awayPPG:1.35, odds:{h:1.65,d:4.00,a:5.00}},
   {league:'esp1', time:'16:15', home:'Getafe', homePPG:1.45, away:'Osasuna', awayPPG:1.55, odds:{h:2.10,d:3.20,a:3.80}},
   // GER1
-  {league:'ger1', time:'19:30', home:'Bayern Munich', homePPG:2.70, away:'St. Pauli', awayPPG:0.90, odds:{h:1.22,d:6.50,a:12.00}},
+  {league:'ger1', time:'19:30', home:'Bayern Munich', homePPG:2.70, away:'SC Paderborn', awayPPG:0.90, odds:{h:1.22,d:6.50,a:12.00}},
   {league:'ger1', time:'17:30', home:'Dortmund', homePPG:2.15, away:'Leverkusen', awayPPG:1.90, odds:{h:1.80,d:3.90,a:4.20}},
   {league:'ger1', time:'15:30', home:'Heidenheim', homePPG:1.05, away:'Union Berlin', awayPPG:1.25, odds:{h:2.90,d:3.40,a:2.50}},
   // FRA1
   {league:'fra1', time:'21:00', home:'PSG', homePPG:2.80, away:'Brest', awayPPG:0.95, odds:{h:1.18,d:7.00,a:14.00}},
   {league:'fra1', time:'19:00', home:'Marseille', homePPG:2.05, away:'Lens', awayPPG:1.60, odds:{h:1.70,d:3.90,a:5.00}},
-  {league:'fra1', time:'17:00', home:'Metz', homePPG:1.00, away:'Nice', awayPPG:1.85, odds:{h:3.40,d:3.50,a:2.10}},
+  {league:'fra1', time:'17:00', home:'Troyes', homePPG:1.00, away:'Nice', awayPPG:1.85, odds:{h:3.40,d:3.50,a:2.10}},
   // NED1
   {league:'ned1', time:'20:00', home:'PSV', homePPG:2.60, away:'Go Ahead Eagles', awayPPG:1.00, odds:{h:1.25,d:6.00,a:10.00}},
   {league:'ned1', time:'18:30', home:'Feyenoord', homePPG:2.20, away:'Utrecht', awayPPG:1.55, odds:{h:1.60,d:4.20,a:5.20}},
@@ -484,7 +734,7 @@ function fillTeams(selectEl, leagueId){
   });
 }
 fillTeams(pickHomeTeam,'eng1'); fillTeams(pickAwayTeam,'eng1');
-pickHomeTeam.value='Manchester City'; pickAwayTeam.value='Burnley';
+pickHomeTeam.value='Manchester City'; pickAwayTeam.value='Coventry City';
 // auto-fill PPG/cotes when team changes
 function syncPickerFromTeams(){
   const hInfo=teamPPG(pickHomeTeam.value);
@@ -555,6 +805,116 @@ document.getElementById('search').addEventListener('input', ()=>{
 syncPickerFromTeams(); updatePickerSignal();
 setInterval(()=>{ document.getElementById('lastUpdate').textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' • Paris'; },1000);
 render();
+
+// === Live FootyStats map & helpers ===
+const leaguePPGUrl = {
+  eng1:{label:'Premier League', url:'https://footystats.org/england/premier-league'},
+  ita1:{label:'Serie A', url:'https://footystats.org/italy/serie-a'},
+  esp1:{label:'La Liga', url:'https://footystats.org/spain/la-liga'},
+  ger1:{label:'Bundesliga', url:'https://footystats.org/germany/bundesliga'},
+  fra1:{label:'Ligue 1', url:'https://footystats.org/france/ligue-1'},
+  ned1:{label:'Eredivisie', url:'https://footystats.org/netherlands/eredivisie'},
+  por1:{label:'Primeira Liga', url:'https://footystats.org/portugal/primeira-liga'},
+  bel1:{label:'Belgian Pro League', url:'https://footystats.org/belgium/belgian-pro-league'},
+  tur1:{label:'Super Lig', url:'https://footystats.org/turkey/super-lig'},
+  sco1:{label:'Premiership', url:'https://footystats.org/scotland/premiership'},
+  eng2:{label:'Championship', url:'https://footystats.org/england/championship'},
+  esp2:{label:'LaLiga2', url:'https://footystats.org/spain/la-liga2'},
+  ger2:{label:'2. Bundesliga', url:'https://footystats.org/germany/2-bundesliga'},
+  ita2:{label:'Serie B', url:'https://footystats.org/italy/serie-b'},
+  fra2:{label:'Ligue 2', url:'https://footystats.org/france/ligue-2'},
+};
+function fillPasteLeague(){
+  const sel=document.getElementById('pasteLeague');
+  if(!sel) return;
+  sel.innerHTML='';
+  leagues.forEach(l=>{
+    const o=document.createElement('option'); o.value=l.id; o.textContent=l.flag+' '+l.name;
+    sel.appendChild(o);
+  });
+  sel.value=document.getElementById('leagueFilter')?.value || 'eng1';
+}
+async function fetchFootyStatsLive(){
+  const league=document.getElementById('pasteLeague')?.value || document.getElementById('leagueFilter')?.value || 'eng1';
+  const info=leaguePPGUrl[league];
+  if(!info){ alert('Ligue non mappée'); return; }
+  const url=info.url;
+  const proxies=['https://corsproxy.io/?','https://api.allorigins.win/raw?url='];
+  let html='';
+  document.getElementById('countInfo').textContent='⏳ Récupération '+info.label+'…';
+  for(const base of proxies){
+    try{
+      const r=await fetch(base+encodeURIComponent(url));
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      html=await r.text();
+      if(html && html.length>5000) break;
+    }catch(e){ html=''; }
+  }
+  if(!html || html.length<2000){
+    alert('FootyStats bloque le fetch direct (403/CORS) — c’est normal en local.\n\nSolution : ouvre '+url+' → copie la colonne PPG (Home PPG / Away PPG) → colle dans la zone ci-dessous → Appliquer.');
+    document.getElementById('countInfo').textContent='⚠ FootyStats bloque — utilise Coller PPG';
+    document.getElementById('pasteBox')?.focus();
+    return;
+  }
+  try{
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const text=doc.body.innerText || '';
+    let upd=0;
+    const teams=fullTeams[league]||[];
+    teams.forEach(t=>{
+      const name=t[0];
+      const idx=text.indexOf(name);
+      if(idx>-1){
+        const slice=text.slice(Math.max(0,idx-200), idx+500);
+        const m=slice.match(/(\d\.\d{2})\s*PPG|PPG\s*(\d\.\d{2})/i) || slice.match(/(\d\.\d{2})/);
+        if(m){
+          const v=parseFloat(m[1]||m[2]||m[0]);
+          if(v>=0.3 && v<=3.0){ t[1]=Math.round(v*100)/100; upd++; }
+        }
+      }
+    });
+    if(upd>0){
+      // also update picker dropdowns
+      const curL=document.getElementById('pickHomeLeague')?.value;
+      if(curL===league) fillTeams(pickHomeTeam, league);
+      const curL2=document.getElementById('pickAwayLeague')?.value;
+      if(curL2===league) fillTeams(pickAwayTeam, league);
+      render();
+      alert('✅ '+upd+' PPG mis à jour pour '+info.label);
+    } else {
+      alert('Page récupérée ('+html.length+' car) mais parsing PPG échoué. Copie manuellement la table.');
+      document.getElementById('countInfo').textContent='Parsing échoué — colle manuellement';
+    }
+  }catch(e){ alert('Parsing échoué: '+e.message); }
+}
+function applyPastePPG(){
+  const txt=document.getElementById('pasteBox')?.value.trim();
+  if(!txt){ alert('Colle d’abord des lignes PPG'); return; }
+  const league=document.getElementById('pasteLeague')?.value || document.getElementById('leagueFilter')?.value || 'eng1';
+  const teams=fullTeams[league]||[];
+  const map=new Map(teams.map(t=>[t[0].toLowerCase(), t]));
+  let upd=0;
+  txt.split(/\r?\n/).forEach(line=>{
+    line=line.trim(); if(!line) return;
+    const m=line.match(/^(.+?)[,\t\s]+(\d\.\d{1,2})\s*$/);
+    if(!m) return;
+    let name=m[1].trim().toLowerCase(); let val=parseFloat(m[2]); if(isNaN(val)) return;
+    let entry=map.get(name);
+    if(!entry){ for(const [k,v] of map){ if(k.includes(name) || name.includes(k)){ entry=v; break; } } }
+    if(entry){ entry[1]=Math.round(val*100)/100; upd++; }
+  });
+  if(upd>0){
+    // refresh picker if needed
+    if(document.getElementById('pickHomeLeague')?.value===league) fillTeams(pickHomeTeam, league);
+    if(document.getElementById('pickAwayLeague')?.value===league) fillTeams(pickAwayTeam, league);
+    syncPickerFromTeams(); updatePickerSignal();
+    render();
+    alert('✅ '+upd+' PPG appliqués pour '+league);
+  } else alert('Aucune correspondance. Vérifie le format: "Equipe 1.23" par ligne et que la ligue sélectionnée correspond.');
+}
+setTimeout(fillPasteLeague, 300);
+document.getElementById('leagueFilter')?.addEventListener('change', ()=>{ const v=document.getElementById('leagueFilter').value; if(v!=='all') document.getElementById('pasteLeague').value=v; });
+
 </script>
 </body>
 </html>
