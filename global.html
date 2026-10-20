@@ -70,6 +70,7 @@ tailwind.config = {
             <label class="flex items-center gap-2 bg-white/10 border border-white/10 rounded-full px-3 py-1.5 text-xs"><input type="checkbox" id="homeAdv" checked class="accent-emerald-500"> Avantage domicile +3.0</label>
             <label class="flex items-center gap-2 bg-white/10 border border-white/10 rounded-full px-3 py-1.5 text-xs"><input type="checkbox" id="paceAdjust" checked class="accent-sky-500"> Pace ajustée Opening Night ×0.97</label>
             <div class="flex items-center gap-2 bg-bilama-card border border-bilama-border rounded-full px-3 py-1.5 text-xs"><span class="text-zinc-500">Book spread</span><input id="bookSpread" type="number" step="0.5" value="-1.5" class="w-16 bg-black border border-white/10 rounded-full px-2 py-1 text-center font-bold"> <span id="bookLabel" class="text-zinc-400">BOS -1.5</span></div>
+            <div class="flex items-center gap-2 bg-bilama-card border border-bilama-border rounded-full px-3 py-1.5 text-xs"><span class="text-zinc-500">Book O/U</span><input id="bookTotal" type="number" step="0.5" value="222.5" class="w-16 bg-black border border-white/10 rounded-full px-2 py-1 text-center font-bold"> <span id="bookTotalLabel" class="text-zinc-400">222.5</span></div>
           </div>
         </div>
       </div>
@@ -98,6 +99,17 @@ tailwind.config = {
           <div class="flex justify-between bg-white/5 rounded-full px-3 py-2 text-xs"><span class="text-zinc-400">Modèle spread</span><b id="modelSpread" class="text-bilama-accent">DET -1.4</b></div>
           <div class="flex justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-2 text-xs"><span>Edge vs Book</span><b id="edge" class="text-emerald-400">+2.9 pts sur DET</b><span id="stars">★★★★☆</span></div>
           <div id="pickBox" class="bg-bilama-accent text-black rounded-xl px-3 py-2.5 text-center font-bold text-sm">✅ DET +1.5 @1.92 — Value détectée</div>
+          <!-- OVER/UNDER SIGNAL -->
+          <div class="bg-black border border-white/10 rounded-xl p-3">
+            <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500"><span>TOTAL POINTS — OVER / UNDER</span><span id="ouSignal" class="bg-zinc-800 px-2 py-1 rounded-full font-bold text-white">—</span></div>
+            <div class="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
+              <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Modèle</span> <b id="modelTotal" class="text-white">229.0</b></div>
+              <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Book</span> <b id="bookTotalDisplay">222.5</b></div>
+              <div class="bg-sky-500/15 rounded-full py-1.5 border border-sky-500/20"><span class="text-zinc-400">Edge</span> <b id="edgeTotal" class="text-sky-400">+6.5</b></div>
+            </div>
+            <div id="ouBox" class="mt-2 bg-sky-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm">🔼 OVER 222.5 — Signal fort</div>
+            <div class="mt-1 text-[11px] text-zinc-500 text-center" id="ouWhy">Pace 96.9 + deux attaques top10 → points attendus au-dessus du marché</div>
+          </div>
           <div class="text-[11px] text-zinc-500 leading-relaxed" id="why">Detroit #1 Est, déf #2 NBA. Pace lente de BOS (94.8) réduit la variance.</div>
         </div>
         <div class="mt-auto pt-3 flex gap-2">
@@ -194,6 +206,7 @@ function calc(){
   const homeOn=document.getElementById('homeAdv').checked;
   const paceOn=document.getElementById('paceAdjust').checked;
   const book = parseFloat(document.getElementById('bookSpread').value)||0;
+  const bookTotal = parseFloat(document.getElementById('bookTotal').value)||222.5;
   // Pace projetée
   let paceProj=(a.pace+b.pace)/2;
   if(paceOn) paceProj*=0.97;
@@ -258,6 +271,24 @@ function calc(){
   document.getElementById('pickBox').textContent=pick;
   document.getElementById('why').textContent = `${a.name} (${a.pace} Pace) vs ${b.name} (${b.pace} Pace) → projeté ${paceProj.toFixed(1)} poss. Écart Net ${(a.net-b.net).toFixed(1)} + domicile ${homeOn?'+3':0}.`;
   document.getElementById('bookLabel').textContent = `${a.abbr} ${book>0?'+':''}${book}`;
+  // --- OVER/UNDER LOGIC ---
+  const modelTotal = scoreA + scoreB;
+  const edgeTotal = modelTotal - bookTotal;
+  document.getElementById('modelTotal').textContent = modelTotal.toFixed(1);
+  document.getElementById('bookTotalDisplay').textContent = bookTotal.toFixed(1);
+  document.getElementById('bookTotalLabel').textContent = bookTotal.toFixed(1);
+  document.getElementById('edgeTotal').textContent = (edgeTotal>0?'+':'')+edgeTotal.toFixed(1);
+  document.getElementById('edgeTotal').className = Math.abs(edgeTotal)>=5? 'text-emerald-400 font-bold' : Math.abs(edgeTotal)>=3? 'text-sky-400 font-bold' : 'text-zinc-400 font-bold';
+  let ouSignal='', ouBoxText='', ouWhy='', ouClass='';
+  if(edgeTotal >= 5){ ouSignal='🔼 OVER FORT'; ouBoxText=`🔼 OVER ${bookTotal.toFixed(1)} — Signal très fort (+${edgeTotal.toFixed(1)})`; ouClass='bg-emerald-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm'; ouWhy=`Modèle ${modelTotal.toFixed(1)} vs Book ${bookTotal.toFixed(1)} → ${edgeTotal.toFixed(1)} pts au-dessus. Pace ${paceProj.toFixed(1)} rapide + ORtg élevés.`; }
+  else if(edgeTotal >= 2.5){ ouSignal='🔼 OVER'; ouBoxText=`🔼 OVER ${bookTotal.toFixed(1)} — Value`; ouClass='bg-sky-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm'; ouWhy=`Léger Over : ${edgeTotal.toFixed(1)} pts au-dessus du marché.`; }
+  else if(edgeTotal <= -5){ ouSignal='🔽 UNDER FORT'; ouBoxText=`🔽 UNDER ${bookTotal.toFixed(1)} — Signal très fort (${edgeTotal.toFixed(1)})`; ouClass='bg-red-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm'; ouWhy=`Modèle ${modelTotal.toFixed(1)} vs Book ${bookTotal.toFixed(1)} → ${Math.abs(edgeTotal).toFixed(1)} pts en-dessous. Pace lente + déf elite.`; }
+  else if(edgeTotal <= -2.5){ ouSignal='🔽 UNDER'; ouBoxText=`🔽 UNDER ${bookTotal.toFixed(1)} — Value`; ouClass='bg-orange-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm'; ouWhy=`Léger Under : ${Math.abs(edgeTotal).toFixed(1)} pts sous le marché.`; }
+  else { ouSignal='⚪ PASS'; ouBoxText=`⚪ PASS — Pas de value O/U (Edge ${edgeTotal.toFixed(1)})`; ouClass='bg-zinc-800 text-zinc-300 rounded-xl px-3 py-2 text-center font-bold text-sm'; ouWhy=`Modèle ${modelTotal.toFixed(1)} proche du Book ${bookTotal.toFixed(1)} → pas de signal.`; }
+  document.getElementById('ouSignal').textContent=ouSignal;
+  document.getElementById('ouBox').textContent=ouBoxText;
+  document.getElementById('ouBox').className=ouClass;
+  document.getElementById('ouWhy').textContent=ouWhy;
 }
 
 // Grid rendering
@@ -337,13 +368,13 @@ document.getElementById('mSetA').onclick=()=>{ if(modalTeam){ teamASelect.value=
 document.getElementById('mSetB').onclick=()=>{ if(modalTeam){ teamBSelect.value=modalTeam.abbr; calc(); document.getElementById('detailModal').classList.add('hidden'); window.scrollTo({top:0,behavior:'smooth'}); }};
 
 // Listeners
-['teamA','teamB','homeAdv','paceAdjust','bookSpread'].forEach(id=>document.getElementById(id).addEventListener('input', calc));
+['teamA','teamB','homeAdv','paceAdjust','bookSpread','bookTotal'].forEach(id=>document.getElementById(id).addEventListener('input', calc));
 ['search','confFilter','divFilter','sortFilter'].forEach(id=>document.getElementById(id).addEventListener('input', renderGrid));
 document.getElementById('swapBtn').onclick=()=>{ const a=teamASelect.value, b=teamBSelect.value; teamASelect.value=b; teamBSelect.value=a; calc(); };
 document.getElementById('randomBtn').onclick=()=>{ const r=()=> teams[Math.floor(Math.random()*teams.length)].abbr; let a=r(),b=r(); while(b===a) b=r(); teamASelect.value=a; teamBSelect.value=b; calc(); };
 document.getElementById('exportBtn').onclick=()=>{
   const a=getTeam(teamASelect.value), b=getTeam(teamBSelect.value);
-  const txt=`BILAMA54 FICHE ${a.abbr} vs ${b.abbr}\nScore projeté: ${document.getElementById('scoreA').textContent} - ${document.getElementById('scoreB').textContent}\nPace: ${document.getElementById('paceProj').textContent}\nEdge: ${document.getElementById('edge').textContent}\nProno: ${document.getElementById('pickBox').textContent}\n`;
+  const txt=`BILAMA54 FICHE ${a.abbr} vs ${b.abbr}\nScore projeté: ${document.getElementById('scoreA').textContent} - ${document.getElementById('scoreB').textContent} (Total ${document.getElementById('modelTotal').textContent})\nPace: ${document.getElementById('paceProj').textContent}\nSpread Edge: ${document.getElementById('edge').textContent}\nO/U: ${document.getElementById('ouSignal').textContent} ${document.getElementById('edgeTotal').textContent} → ${document.getElementById('ouBox').textContent}\nProno vainqueur: ${document.getElementById('pickBox').textContent}\n`;
   const blob=new Blob([txt],{type:'text/plain'}); const url=URL.createObjectURL(blob); const aEl=document.createElement('a'); aEl.href=url; aEl.download=`Bilama_${a.abbr}_vs_${b.abbr}.txt`; aEl.click();
 };
 document.getElementById('autoToggle').onclick=(e)=>{
