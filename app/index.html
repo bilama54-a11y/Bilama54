@@ -2,7 +2,16 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PPG Lab">
+<meta name="description" content="Calculateur de PPG façon FootyStats, heatmap 5 couleurs et filtre valeur. Fonctionne hors-ligne.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>PPG Lab — autonome de FootyStats</title>
 <style>
   :root{
@@ -86,6 +95,47 @@
   .status.err{color:#ff9ba0}
   .hidden{display:none!important}
   .pill-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+
+  /* ---------- Android / téléphone ---------- */
+  @media (max-width: 640px){
+    body{
+      font-size:15px;
+      padding-bottom:calc(28px + env(safe-area-inset-bottom));
+    }
+    header{padding:10px 12px 0;padding-top:calc(10px + env(safe-area-inset-top))}
+    h1{font-size:17px}
+    .sub{font-size:11.5px;margin-bottom:8px}
+    nav{
+      gap:5px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px;
+      scrollbar-width:none;-webkit-overflow-scrolling:touch
+    }
+    nav::-webkit-scrollbar{display:none}
+    nav button{flex:0 0 auto;min-height:38px;padding:7px 10px;font-size:12.5px;background:var(--panel2)}
+    main{padding:10px 12px}
+    .card{padding:11px;border-radius:10px}
+    .card h2{font-size:12.5px}
+    .grid.g-in{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .grid.g-2{grid-template-columns:1fr}
+    input,select,textarea{font-size:16px;padding:10px 9px;min-height:42px}  /* 16px = pas de zoom auto */
+    textarea{min-height:96px;font-size:13px}
+    button.act,button.ghost{min-height:42px}
+    label{font-size:11px}
+    .tblwrap{border-radius:8px}
+    table{font-size:12px;min-width:520px}
+    th,td{padding:6px 7px}
+    th{font-size:10px}
+    td.name{max-width:132px}
+    .chip{min-width:42px;padding:3px 5px;font-size:12px}
+    .kv{font-size:12.5px}
+    .legend div{font-size:11.5px}
+    ul.tight li{font-size:12.5px}
+  }
+  @media (max-width: 380px){
+    .grid.g-in{grid-template-columns:1fr}
+    td.name{max-width:112px}
+  }
+  /* utilitaire : masquer visuellement mais rester accessible */
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
 <body>
@@ -353,6 +403,21 @@
       <li>Ce que fait cette app : mêmes 5 niveaux, mêmes conventions, mais <b>les bornes sont les tiennes</b> — c'est ce qui te rend autonome plutôt que dépendant d'une grille opaque.</li>
     </ul>
     <p class="hint">Les bornes livrées par défaut sont un calage raisonné (PPG : 2,00 / 1,60 / 1,20 / 0,80 · % : 70 / 60 / 50 / 40 · cotes : 1,30 / 1,60 / 2,00 / 2,60), pas une copie officielle.</p>
+  </div>
+
+  <div class="card" id="card-install">
+    <h2>Installer sur Android</h2>
+    <ul class="tight">
+      <li><b>Chrome / Edge / Samsung Internet</b> : menu ⋮ → <b>« Ajouter à l'écran d'accueil »</b> ou « Installer l'application ». L'icône PPG Lab apparaît avec tes autres apps, en plein écran sans barre d'adresse.</li>
+      <li><b>Hors-ligne</b> : une fois ouverte en ligne, l'app est mise en cache et démarre sans connexion.</li>
+      <li><b>Fichier local</b> : le simple `index.html` copié sur le téléphone fonctionne aussi (double-tap dans le gestionnaire de fichiers), mais sans installation ni cache PWA.</li>
+      <li><b>Tes données</b> restent sur l'appareil. Pour changer de téléphone : <i>Réglages → Exporter (JSON)</i> puis <i>Importer JSON</i> sur le nouveau.</li>
+      <li>⚠️ Effacer les données du navigateur / « Effacer le cache » supprime les résultats : exporte avant.</li>
+    </ul>
+    <div class="row" style="margin-top:10px">
+      <button class="act hidden" id="btn-install">Installer l'application</button>
+      <span class="small muted" id="install-hint">Le bouton d'installation apparaît si Chrome le propose sur cet appareil.</span>
+    </div>
   </div>
 
   <div class="card">
@@ -955,6 +1020,41 @@ $('m-date').value = todayISO();
 $('x-date').value = todayISO();
 wire();
 renderAll();
+
+/* ---------- PWA : installation Android + hors-ligne ---------- */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* ignoré : l'app marche quand même */ });
+  });
+}
+
+let deferredPrompt = null;
+const btnInstall = $('btn-install');
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (btnInstall) {
+    btnInstall.classList.remove('hidden');
+    const hint = $('install-hint');
+    if (hint) hint.textContent = 'Chrome propose l\'installation sur cet appareil.';
+  }
+});
+if (btnInstall) {
+  btnInstall.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try { await deferredPrompt.userChoice; } catch (err) { /* ignoré */ }
+    deferredPrompt = null;
+    btnInstall.classList.add('hidden');
+    const hint = $('install-hint');
+    if (hint) hint.textContent = 'Si rien ne s\'est passé : menu ⋮ → « Ajouter à l\'écran d\'accueil ».';
+  });
+}
+window.addEventListener('appinstalled', () => {
+  if (btnInstall) btnInstall.classList.add('hidden');
+  const hint = $('install-hint');
+  if (hint) hint.textContent = 'Application installée ✓';
+});
 </script>
 </body>
 </html>

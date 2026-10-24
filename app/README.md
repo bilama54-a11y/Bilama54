@@ -7,6 +7,20 @@ Mini-application **hors-ligne** (un seul fichier `index.html`, aucune dépendanc
 3. rejoue ton **filtre valeur** (« PPG ≥ 3 et cote < 1,70 ») sur les matchs à venir ;
 4. stocke tout dans ton navigateur (localStorage) avec export / import JSON et CSV.
 
+## 0. Installation sur Android (PWA)
+
+L'app est une **PWA** : elle s'installe comme une vraie application, avec icône, plein écran et démarrage hors-ligne.
+
+1. Ouvre l'URL de l'app dans **Chrome** (ou Samsung Internet / Edge) sur le téléphone.
+2. Menu **⋮ → « Ajouter à l'écran d'accueil »** (ou « Installer l'application », ou le bouton *Installer l'application* dans l'onglet *Méthode*).
+3. L'icône **PPG Lab** apparaît avec tes autres apps ; elle s'ouvre sans barre d'adresse.
+
+Détails techniques : `manifest.webmanifest` (icônes 192/512 + maskable, `display: standalone`, thème sombre) et `sw.js` (service worker cache-first) assurent l'installation et le mode avion. Interface adaptée au tactile : navigation à défilement horizontal, champs en 16 px (pas de zoom automatique), cibles ≥ 42 px, prise en compte des encoches (`safe-area`), tableaux à défilement horizontal.
+
+⚠️ L'installation PWA exige **HTTPS** (ou `localhost`). Sur un simple fichier `file://`, l'app fonctionne mais sans installation ni cache.
+
+⚠️ « Effacer les données du navigateur » supprime tes résultats : **exporte en JSON** avant (Réglages → Exporter).
+
 ## Lancer l'app
 
 - Double-clique sur `app/index.html` (fonctionne sans serveur), ou
