@@ -23,8 +23,8 @@ Détails techniques : `manifest.webmanifest` (icônes 192/512 + maskable, `displ
 
 ## Lancer l'app
 
-- Double-clique sur `app/index.html` (fonctionne sans serveur), ou
-- `python3 -m http.server 8000 --directory app` puis <http://localhost:8000>.
+- Double-clique sur `index.html` (fonctionne sans serveur), ou
+- `python3 -m http.server 8000` puis <http://localhost:8000>.
 
 Sur mobile : ouvre le fichier dans le navigateur, puis « Ajouter à l'écran d'accueil ».
 
