@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PPG Lab">
+<meta name="description" content="Calculateur de PPG façon FootyStats, heatmap 5 couleurs et filtre valeur. Fonctionne hors-ligne.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>PPG Lab — autonome de FootyStats</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161d27; --panel2:#1d2634; --line:#2a3646;
+    --txt:#e8eef6; --muted:#8d9db3; --accent:#3fb950;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--txt);
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:15px; line-height:1.45; padding-bottom:60px;
+  }
+  header{padding:14px 16px 0;max-width:1180px;margin:0 auto}
+  h1{font-size:19px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:12.5px;margin:0 0 12px}
+  nav{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px}
+  nav button{
+    background:transparent;border:1px solid transparent;color:var(--muted);
+    padding:7px 11px;border-radius:8px;cursor:pointer;font-size:13.5px;font-weight:600
+  }
+  nav button:hover{background:var(--panel2);color:var(--txt)}
+  nav button.on{background:var(--panel2);color:var(--txt);border-color:var(--line)}
+  main{max-width:1180px;margin:0 auto;padding:16px}
+  section{display:none}
+  section.on{display:block}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 14px}
+  .card h2{font-size:14px;margin:0 0 4px;letter-spacing:.2px;text-transform:uppercase;color:var(--muted)}
+  .card p.hint{color:var(--muted);font-size:12.5px;margin:4px 0 12px}
+  .grid{display:grid;gap:10px}
+  .g-in{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+  .g-2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+  input,select,textarea,button{font:inherit;color:var(--txt)}
+  input,select,textarea{
+    width:100%;background:#0b1119;border:1px solid var(--line);border-radius:8px;padding:8px 9px
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid #1f6feb55;border-color:#1f6feb}
+  textarea{min-height:110px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+  button.act{
+    background:var(--accent);color:#04140a;border:0;border-radius:8px;padding:9px 14px;
+    font-weight:700;cursor:pointer
+  }
+  button.act:hover{filter:brightness(1.08)}
+  button.ghost{
+    background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:600;font-size:13px
+  }
+  button.ghost:hover{border-color:#3c4a5e}
+  button.danger{color:#ff8a8f;border-color:#5b2a2d}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .spacer{flex:1}
+  .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px}
+  table{border-collapse:collapse;width:100%;font-size:13px;min-width:560px}
+  th,td{padding:7px 9px;text-align:right;white-space:nowrap;border-bottom:1px solid #212c3a}
+  th{background:#131b25;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;position:sticky;top:0}
+  th:first-child,td:first-child{text-align:left}
+  td.name{text-align:left;font-weight:600;max-width:190px;overflow:hidden;text-overflow:ellipsis}
+  tbody tr:hover{background:#1a2431}
+  .num{font-variant-numeric:tabular-nums}
+  .chip{display:inline-block;min-width:46px;padding:3px 7px;border-radius:6px;font-weight:700;font-size:12.5px;text-align:center;font-variant-numeric:tabular-nums}
+  .c-dg{background:#0f7a3d;color:#fff}
+  .c-lg{background:#8fd88f;color:#0c2b16}
+  .c-ye{background:#f2d33f;color:#3a2b00}
+  .c-or{background:#f59f3c;color:#3a1f00}
+  .c-rd{background:#e5484d;color:#fff}
+  .c-na{background:#243040;color:#7f8fa6}
+  .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .legend div{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+  .pill{font-size:11px;padding:2px 7px;border-radius:99px;border:1px solid var(--line);color:var(--muted);font-weight:600}
+  .pill.ok{background:#0f7a3d22;border-color:#0f7a3d;color:#5ee08a}
+  .pill.no{background:#e5484d1f;border-color:#5b2a2d;color:#ff9ba0}
+  .kv{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:4px 0;border-bottom:1px dashed #223043}
+  .kv:last-child{border-bottom:0}
+  .muted{color:var(--muted)}
+  .small{font-size:12px}
+  ul.tight{margin:6px 0 0 18px;padding:0}
+  ul.tight li{margin:3px 0;font-size:13px}
+  code{background:#0b1119;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12px}
+  .status{font-size:12.5px;color:#5ee08a;min-height:18px}
+  .status.err{color:#ff9ba0}
+  .hidden{display:none!important}
+  .pill-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+
+  /* ---------- Android / téléphone ---------- */
+  @media (max-width: 640px){
+    body{
+      font-size:15px;
+      padding-bottom:calc(28px + env(safe-area-inset-bottom));
+    }
+    header{padding:10px 12px 0;padding-top:calc(10px + env(safe-area-inset-top))}
+    h1{font-size:17px}
+    .sub{font-size:11.5px;margin-bottom:8px}
+    nav{
+      gap:5px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px;
+      scrollbar-width:none;-webkit-overflow-scrolling:touch
+    }
+    nav::-webkit-scrollbar{display:none}
+    nav button{flex:0 0 auto;min-height:38px;padding:7px 10px;font-size:12.5px;background:var(--panel2)}
+    main{padding:10px 12px}
+    .card{padding:11px;border-radius:10px}
+    .card h2{font-size:12.5px}
+    .grid.g-in{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .grid.g-2{grid-template-columns:1fr}
+    input,select,textarea{font-size:16px;padding:10px 9px;min-height:42px}  /* 16px = pas de zoom auto */
+    textarea{min-height:96px;font-size:13px}
+    button.act,button.ghost{min-height:42px}
+    label{font-size:11px}
+    .tblwrap{border-radius:8px}
+    table{font-size:12px;min-width:520px}
+    th,td{padding:6px 7px}
+    th{font-size:10px}
+    td.name{max-width:132px}
+    .chip{min-width:42px;padding:3px 5px;font-size:12px}
+    .kv{font-size:12.5px}
+    .legend div{font-size:11.5px}
+    ul.tight li{font-size:12.5px}
+  }
+  @media (max-width: 380px){
+    .grid.g-in{grid-template-columns:1fr}
+    td.name{max-width:112px}
+  }
+  /* utilitaire : masquer visuellement mais rester accessible */
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚽ PPG Lab</h1>
+  <p class="sub">Calcul du PPG façon FootyStats + heatmap 5 couleurs + filtre valeur. 100 % hors-ligne, données stockées dans ton navigateur.</p>
+  <nav>
+    <button data-tab="saisie" class="on">1. Résultats</button>
+    <button data-tab="ppg">2. PPG &amp; stats</button>
+    <button data-tab="filtre">3. Filtre valeur</button>
+    <button data-tab="reglages">4. Réglages &amp; couleurs</button>
+    <button data-tab="aide">5. Méthode</button>
+  </nav>
+</header>
+
+<main>
+<!-- ================= 1. SAISIE ================= -->
+<section id="tab-saisie" class="on">
+  <div class="card">
+    <h2>Ajouter un résultat</h2>
+    <p class="hint">Entre les matchs déjà joués. Tout le reste (PPG domicile / extérieur / global, last 5-6-10, %) est calculé automatiquement.</p>
+    <form id="f-match" class="grid g-in">
+      <div><label>Date</label><input type="date" id="m-date" required></div>
+      <div><label>Compétition</label><input type="text" id="m-league" placeholder="Ligue 1" required></div>
+      <div><label>Division</label>
+        <select id="m-div">
+          <option value="1">D1</option>
+          <option value="2">D2</option>
+          <option value="3">D3</option>
+          <option value="C">Coupe / autre</option>
+        </select>
+      </div>
+      <div><label>Domicile</label><input type="text" id="m-home" placeholder="Équipe A" required></div>
+      <div><label>Extérieur</label><input type="text" id="m-away" placeholder="Équipe B" required></div>
+      <div><label>Buts dom.</label><input type="number" id="m-hg" min="0" max="20" step="1" required></div>
+      <div><label>Buts ext.</label><input type="number" id="m-ag" min="0" max="20" step="1" required></div>
+      <div style="display:flex;align-items:flex-end"><button class="act" type="submit">+ Ajouter</button></div>
+    </form>
+    <div class="status" id="s-saisie"></div>
+  </div>
+
+  <div class="card">
+    <h2>Matchs enregistrés (<span id="cnt-matches">0</span>)</h2>
+    <div class="row" style="margin-bottom:10px">
+      <button class="ghost" id="btn-demo">Charger un jeu de démonstration</button>
+      <button class="ghost danger" id="btn-clear-matches">Tout effacer</button>
+      <span class="spacer"></span>
+      <span class="small muted">Trié par date</span>
+    </div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Date</th><th>Compétition</th><th>Div.</th><th style="text-align:left">Match</th><th>Score</th><th></th></tr></thead>
+        <tbody id="tb-matches"><tr><td colspan="6" class="muted">Aucun match.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Import CSV / collage rapide</h2>
+    <p class="hint">Une ligne par match. Séparateur <code>;</code> <code>,</code> ou tabulation. Ordre : <code>date ; compétition ; division ; domicile ; extérieur ; buts_dom ; buts_ext</code>. L'en-tête est optionnel.</p>
+    <textarea id="csv-in" placeholder="2026-08-16;Ligue 1;1;Paris SG;Nantes;3;1&#10;2026-08-16;Ligue 1;1;Lyon;Lens;0;0"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="act" id="btn-csv">Importer</button>
+      <span class="status" id="s-csv"></span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 2. PPG ================= -->
+<section id="tab-ppg">
+  <div class="card">
+    <h2>Classement PPG calculé</h2>
+    <p class="hint">
+      PPGo = points ÷ matchs (global) · PPGd = domicile · PPGe = extérieur · L5/L10 = N derniers matchs, toutes compétitions.
+      Couleurs : vert foncé → rouge selon les seuils de l'onglet <b>Réglages</b>.
+    </p>
+    <div class="row" style="margin-bottom:10px">
+      <div style="max-width:230px">
+        <label>Filtre division</label>
+        <select id="ppg-divfilter">
+          <option value="all">Toutes</option>
+          <option value="12">D1 + D2 seulement</option>
+          <option value="1">D1 seulement</option>
+          <option value="2">D2 seulement</option>
+        </select>
+      </div>
+      <div style="max-width:230px">
+        <label>Trier par</label>
+        <select id="ppg-sort">
+          <option value="ppg">PPG global</option>
+          <option value="home">PPG domicile</option>
+          <option value="away">PPG extérieur</option>
+          <option value="l5">PPG last 5</option>
+          <option value="pts">Points</option>
+          <option value="name">Nom</option>
+        </select>
+      </div>
+      <span class="spacer"></span>
+      <span class="small muted" id="ppg-count"></span>
+    </div>
+    <div class="tblwrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Équipe</th><th>Div.</th><th>MJ</th><th>V</th><th>N</th><th>D</th><th>Pts</th>
+            <th>PPG global</th><th>PPG dom.</th><th>PPG ext.</th><th>L5</th><th>L10</th>
+            <th>1.5+</th><th>2.5+</th><th>BTTS</th><th>CS</th><th>Buts/m</th>
+          </tr>
+        </thead>
+        <tbody id="tb-ppg"><tr><td colspan="17" class="muted">Ajoute des résultats pour commencer.</td></tr></tbody>
+      </table>
+    </div>
+    <div class="legend" id="leg-ppg"></div>
+  </div>
+</section>
+
+<!-- ================= 3. FILTRE ================= -->
+<section id="tab-filtre">
+  <div class="card">
+    <h2>Ajouter un match à venir (+ cotes)</h2>
+    <p class="hint">Le filtre teste chaque équipe séparément : PPG de l'équipe <b>dans son contexte</b> (domicile pour le receveur, extérieur pour le visiteur) et sa cote 1X2.</p>
+    <form id="f-fix" class="grid g-in">
+      <div><label>Date</label><input type="date" id="x-date"></div>
+      <div><label>Compétition</label><input type="text" id="x-league" placeholder="Ligue 1"></div>
+      <div><label>Division</label>
+        <select id="x-div"><option value="1">D1</option><option value="2">D2</option><option value="3">D3</option><option value="C">Coupe</option></select>
+      </div>
+      <div><label>Domicile</label><input type="text" id="x-home" placeholder="Équipe A" required></div>
+      <div><label>Extérieur</label><input type="text" id="x-away" placeholder="Équipe B" required></div>
+      <div><label>Cote dom.</label><input type="number" id="x-oh" min="1" step="0.01" placeholder="1.44"></div>
+      <div><label>Cote nul</label><input type="number" id="x-od" min="1" step="0.01" placeholder="4.35"></div>
+      <div><label>Cote ext.</label><input type="number" id="x-oa" min="1" step="0.01" placeholder="7.00"></div>
+      <div style="display:flex;align-items:flex-end"><button class="act" type="submit">+ Ajouter</button></div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Résultat du filtre</h2>
+    <p class="hint" id="filt-desc"></p>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Date</th><th>Compétition</th><th style="text-align:left">Match</th><th style="text-align:left">Équipe</th><th>Côté</th><th>PPG</th><th>MJ éch.</th><th>Cote</th><th>Verdict</th></tr></thead>
+        <tbody id="tb-filt"><tr><td colspan="9" class="muted">Aucun match à venir.</td></tr></tbody>
+      </table>
+    </div>
+    <div class="status" id="s-filt"></div>
+  </div>
+
+  <div class="card">
+    <h2>Tous les matchs à venir</h2>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Date</th><th>Comp.</th><th style="text-align:left">Match</th><th>PPG dom.</th><th>Cote dom.</th><th>PPG ext.</th><th>Cote ext.</th><th></th></tr></thead>
+        <tbody id="tb-fixtures"><tr><td colspan="8" class="muted">Aucun match à venir.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 4. REGLAGES ================= -->
+<section id="tab-reglages">
+  <div class="card">
+    <h2>Seuils du filtre</h2>
+    <div class="grid g-in">
+      <div><label>PPG recherché (≥)</label><input type="number" id="cfg-minppg" step="0.01" min="0" max="3"></div>
+      <div><label>Tolérance PPG</label><input type="number" id="cfg-tol" step="0.005" min="0" max="0.5"></div>
+      <div><label>Cote maximale (&lt;)</label><input type="number" id="cfg-maxodd" step="0.01" min="1"></div>
+      <div><label>Matchs min. joués</label><input type="number" id="cfg-minn" step="1" min="0"></div>
+      <div style="display:flex;align-items:flex-end;gap:10px">
+        <label style="display:flex;gap:6px;align-items:center;text-transform:none;font-size:12.5px;color:var(--txt)">
+          <input type="checkbox" id="cfg-only12" style="width:auto"> D1/D2 uniquement
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Mode de calcul du PPG affiché</h2>
+    <div style="max-width:420px">
+      <select id="cfg-mode">
+        <option value="default">Défaut FootyStats (dom./ext., last 10 si coupe ou début de saison)</option>
+        <option value="homeAway">Toujours domicile / extérieur</option>
+        <option value="overall">Toujours global</option>
+        <option value="last5">Toujours 5 derniers</option>
+        <option value="last6">Toujours 6 derniers</option>
+        <option value="last10">Toujours 10 derniers</option>
+      </select>
+    </div>
+    <div class="grid g-in" style="margin-top:12px;max-width:420px">
+      <div><label>« Début de saison » = moins de</label><input type="number" id="cfg-early" min="0" step="1"></div>
+    </div>
+    <p class="hint">Formule vérifiée sur l'aide officielle : PPG = points ÷ matchs joués, maximum 3,00 (3 pts victoire / 1 nul / 0 défaite).</p>
+  </div>
+
+  <div class="card">
+    <h2>Seuils de couleurs</h2>
+    <p class="hint">
+      FootyStats n'a jamais publié la grille chiffrée : elle est ajustable ici. Entre 4 bornes décroissantes par famille de statistique.
+      Le vert foncé est toujours le meilleur niveau pour le pari visé, le rouge le pire.
+    </p>
+    <div class="grid g-2">
+      <div>
+        <label>PPG — bornes (vert foncé, vert clair, jaune, orange)</label>
+        <div class="grid" style="grid-template-columns:repeat(4,1fr);gap:6px">
+          <input type="number" id="th-p0" step="0.05"><input type="number" id="th-p1" step="0.05">
+          <input type="number" id="th-p2" step="0.05"><input type="number" id="th-p3" step="0.05">
+        </div>
+      </div>
+      <div>
+        <label>Pourcentages (%) — bornes</label>
+        <div class="grid" style="grid-template-columns:repeat(4,1fr);gap:6px">
+          <input type="number" id="th-q0" step="1"><input type="number" id="th-q1" step="1">
+          <input type="number" id="th-q2" step="1"><input type="number" id="th-q3" step="1">
+        </div>
+      </div>
+      <div>
+        <label>Cotes — bornes (inversé : court = fort)</label>
+        <div class="grid" style="grid-template-columns:repeat(4,1fr);gap:6px">
+          <input type="number" id="th-o0" step="0.05"><input type="number" id="th-o1" step="0.05">
+          <input type="number" id="th-o2" step="0.05"><input type="number" id="th-o3" step="0.05">
+        </div>
+      </div>
+    </div>
+    <div class="legend" id="leg-th" style="margin-top:14px"></div>
+    <p class="hint" style="margin-top:12px">
+      <b>Calibrer en 30 s :</b> ouvre une page FootyStats, repère 5 valeurs (une de chaque couleur), puis ajuste les bornes jusqu'à ce que la même valeur tombe dans la même couleur chez toi.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>Sauvegarde</h2>
+    <div class="row">
+      <button class="ghost" id="btn-export">Exporter (JSON)</button>
+      <button class="ghost" id="btn-export-csv">Exporter résultats (CSV)</button>
+      <label class="ghost" style="display:inline-block;margin:0;cursor:pointer;text-transform:none;letter-spacing:0;font-size:13px;color:var(--txt)">
+        Importer JSON<input type="file" id="file-json" accept=".json" style="display:none">
+      </label>
+      <span class="spacer"></span>
+      <button class="ghost danger" id="btn-reset">Réinitialiser l'app</button>
+    </div>
+    <div class="status" id="s-cfg"></div>
+  </div>
+</section>
+
+<!-- ================= 5. METHODE ================= -->
+<section id="tab-aide">
+  <div class="card">
+    <h2>Comment FootyStats calcule le PPG (vérifié)</h2>
+    <ul class="tight">
+      <li><b>PPG = points ÷ matchs joués</b>, plafonné à 3,00 (3 pts victoire, 1 nul, 0 défaite). Source : glossaire officiel FootyStats.</li>
+      <li><b>Par défaut</b>, la case à côté d'une équipe affiche son PPG <b>dans son contexte</b> : PPG domicile pour l'équipe qui reçoit, PPG extérieur pour celle qui se déplace.</li>
+      <li><b>Exception « début de saison »</b> : sur un match de coupe, de barrage, international, ou en tout début de saison, FootyStats bascule sur le <b>PPG des 10 derniers matchs</b> (toutes compétitions).</li>
+      <li><b>Modes disponibles</b> : défaut · domicile/extérieur · global · last 5 · last 6 · last 10 (le last N peut mélanger plusieurs compétitions et saisons en cours).</li>
+      <li>Un PPG de 3,00 signifie donc <b>100 % de victoires</b> dans le contexte affiché — souvent sur 3 à 9 matchs seulement : la valeur est fragile.</li>
+    </ul>
+    <p class="hint">Vérifications faites le 24/10/2026 : Arsenal 3,00 (3 matchs à domicile, 3 victoires) ; Real Madrid 1,50 (4 déplacements, 2 V 2 D) ; valeurs en 0,11 / 0,33 / 0,67 = échantillons de 9 / 3 / 3 matchs.</p>
+  </div>
+
+  <div class="card">
+    <h2>La logique des couleurs</h2>
+    <ul class="tight">
+      <li>FootyStats applique une <b>échelle de 5 niveaux</b> à chaque cellule de statistique : vert foncé, vert clair, jaune, orangé, rouge. « Chaque stat est colorée pour votre confort » (Academy) — mais <b>aucun seuil chiffré n'est publié</b>.</li>
+      <li>Le sens est <b>« fort / faible pour le pari visé »</b> : pour un marché « plus de buts » ou un PPG, le vert = valeur élevée ; pour une stat où un chiffre haut est un mauvais signe, l'échelle s'inverse (ex. la Goal Heatmap du site : « rouge = fort taux de buts, vert = faible »).</li>
+      <li>Les seuils sont <b>propres à chaque statistique</b> : 60 % n'a pas la même couleur en BTTS et en clean sheets.</li>
+      <li>Ce que fait cette app : mêmes 5 niveaux, mêmes conventions, mais <b>les bornes sont les tiennes</b> — c'est ce qui te rend autonome plutôt que dépendant d'une grille opaque.</li>
+    </ul>
+    <p class="hint">Les bornes livrées par défaut sont un calage raisonné (PPG : 2,00 / 1,60 / 1,20 / 0,80 · % : 70 / 60 / 50 / 40 · cotes : 1,30 / 1,60 / 2,00 / 2,60), pas une copie officielle.</p>
+  </div>
+
+  <div class="card" id="card-install">
+    <h2>Installer sur Android</h2>
+    <ul class="tight">
+      <li><b>Chrome / Edge / Samsung Internet</b> : menu ⋮ → <b>« Ajouter à l'écran d'accueil »</b> ou « Installer l'application ». L'icône PPG Lab apparaît avec tes autres apps, en plein écran sans barre d'adresse.</li>
+      <li><b>Hors-ligne</b> : une fois ouverte en ligne, l'app est mise en cache et démarre sans connexion.</li>
+      <li><b>Fichier local</b> : le simple `index.html` copié sur le téléphone fonctionne aussi (double-tap dans le gestionnaire de fichiers), mais sans installation ni cache PWA.</li>
+      <li><b>Tes données</b> restent sur l'appareil. Pour changer de téléphone : <i>Réglages → Exporter (JSON)</i> puis <i>Importer JSON</i> sur le nouveau.</li>
+      <li>⚠️ Effacer les données du navigateur / « Effacer le cache » supprime les résultats : exporte avant.</li>
+    </ul>
+    <div class="row" style="margin-top:10px">
+      <button class="act hidden" id="btn-install">Installer l'application</button>
+      <span class="small muted" id="install-hint">Le bouton d'installation apparaît si Chrome le propose sur cet appareil.</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Pourquoi c'est mieux que de refaire du FootyStats</h2>
+    <ul class="tight">
+      <li>FootyStats bride son filtre (25 résultats) et réserve une partie des données au Premium. Ici : aucune limite.</li>
+      <li>Ton filtre « PPG 3 + cote &lt; 1,70 » était une lecture manuelle de dizaines de pages. Ici c'est une règle rejouable en un clic, sur des données que tu contrôles.</li>
+      <li>Tout reste dans ton navigateur (localStorage) : exporte en JSON pour changer d'appareil.</li>
+    </ul>
+  </div>
+</section>
+</main>
+
+<script>
+/* =========================================================
+   PPG Lab — moteur
+   ========================================================= */
+const KEY = 'ppglab.v1';
+
+const DEFAULT_CFG = {
+  mode: 'default',
+  earlyN: 5,
+  minN: 1,
+  filt: { minPpg: 3.00, tol: 0.005, maxOdd: 1.70, only12: true },
+  th: {
+    ppg: [2.00, 1.60, 1.20, 0.80],
+    pct: [70, 60, 50, 40],
+    odd: [1.30, 1.60, 2.00, 2.60]
+  }
+};
+
+const S = { matches: [], fixtures: [], cfg: clone(DEFAULT_CFG) };
+let seq = 1;
+
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function deepCfg(saved){
+  const c = clone(DEFAULT_CFG);
+  if (!saved) return c;
+  c.mode = saved.mode || c.mode;
+  c.earlyN = Number.isFinite(saved.earlyN) ? saved.earlyN : c.earlyN;
+  c.minN = Number.isFinite(saved.minN) ? saved.minN : c.minN;
+  if (saved.filt) Object.assign(c.filt, saved.filt);
+  if (saved.th) {
+    ['ppg','pct','odd'].forEach(k => { if (Array.isArray(saved.th[k]) && saved.th[k].length === 4) c.th[k] = saved.th[k].map(Number); });
+  }
+  return c;
+}
+
+/* ---------- persistance ---------- */
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify({ matches: S.matches, fixtures: S.fixtures, cfg: S.cfg })); }
+  catch(e){ /* stockage indisponible */ }
+}
+function load(){
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    S.matches = Array.isArray(d.matches) ? d.matches : [];
+    S.fixtures = Array.isArray(d.fixtures) ? d.fixtures : [];
+    S.cfg = deepCfg(d.cfg);
+    const maxId = Math.max(0, ...S.matches.map(m=>m.id||0), ...S.fixtures.map(f=>f.id||0));
+    seq = maxId + 1;
+  } catch(e){ /* ignore */ }
+}
+
+/* ---------- utilitaires ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const r2 = v => Math.round(v * 100) / 100;
+const fmt2 = v => (v == null || !isFinite(v)) ? '—' : v.toFixed(2);
+const fmtPct = v => (v == null || !isFinite(v)) ? '—' : Math.round(v) + '%';
+const todayISO = () => new Date().toISOString().slice(0,10);
+
+function setStatus(el, msg, isErr){
+  el.textContent = msg || '';
+  el.className = 'status' + (isErr ? ' err' : '');
+  if (msg) setTimeout(()=>{ if (el.textContent === msg) el.textContent=''; }, 4500);
+}
+
+/* ---------- moteur PPG ---------- */
+function computeStats(){
+  const teams = new Map();
+  function bucket(){
+    return { n:0, pts:0, gf:0, ga:0, v:0, d:0, l:0, btts:0, o25:0, o15:0, cs:0, seq:[] };
+  }
+  function ensure(name){
+    if (!teams.has(name)) {
+      teams.set(name, { name, divs:new Set(), leagues:new Set(), all:bucket(), home:bucket(), away:bucket() });
+    }
+    return teams.get(name);
+  }
+  function push(b, pts, gf, ga, res){
+    b.n++; b.pts += pts; b.gf += gf; b.ga += ga;
+    if (res === 'V') b.v++; else if (res === 'N') b.d++; else b.l++;
+    if (gf > 0 && ga > 0) b.btts++;
+    if (gf + ga > 2.5) b.o25++;
+    if (gf + ga > 1.5) b.o15++;
+    if (ga === 0) b.cs++;
+    b.seq.push({ pts, gf, ga, res });
+  }
+
+  const ms = [...S.matches].sort((a,b)=> (a.date||'').localeCompare(b.date||'') || (a.id||0)-(b.id||0));
+  for (const m of ms){
+    const hg = Number(m.hg), ag = Number(m.ag);
+    if (!isFinite(hg) || !isFinite(ag)) continue;
+    const H = ensure(m.home), A = ensure(m.away);
+    if (m.div) { H.divs.add(m.div); A.divs.add(m.div); }
+    if (m.league) { H.leagues.add(m.league); A.leagues.add(m.league); }
+    const rh = hg > ag ? 'V' : hg === ag ? 'N' : 'D';
+    const ra = ag > hg ? 'V' : ag === hg ? 'N' : 'D';
+    push(H.all, rh==='V'?3:rh==='N'?1:0, hg, ag, rh);
+    push(A.all, ra==='V'?3:ra==='N'?1:0, ag, hg, ra);
+    push(H.home, rh==='V'?3:rh==='N'?1:0, hg, ag, rh);
+    push(A.away, ra==='V'?3:ra==='N'?1:0, ag, hg, ra);
+  }
+
+  for (const t of teams.values()){
+    t.ppgAll = t.all.n ? t.all.pts / t.all.n : null;
+    t.ppgHome = t.home.n ? t.home.pts / t.home.n : null;
+    t.ppgAway = t.away.n ? t.away.pts / t.away.n : null;
+    [5,6,10].forEach(n => {
+      const sl = t.all.seq.slice(-n);
+      t['ppgL' + n] = sl.length ? sl.reduce((s,x)=>s+x.pts,0) / sl.length : null;
+      t['nL' + n] = sl.length;
+    });
+    t.form = t.all.seq.slice(-5).reverse();
+  }
+  return teams;
+}
+
+/* PPG « contextuel » : que vaut cette équipe pour ce match ? */
+function ppgFor(team, context, teams){
+  const t = teams.get(team);
+  if (!t) return { ppg:null, n:0, label:'—' };
+  const mode = S.cfg.mode;
+  if (mode === 'overall')  return { ppg:t.ppgAll,  n:t.all.n,  label:'global' };
+  if (mode === 'homeAway') return context === 'home' ? { ppg:t.ppgHome, n:t.home.n, label:'dom.' } : { ppg:t.ppgAway, n:t.away.n, label:'ext.' };
+  if (mode === 'last5')    return { ppg:t.ppgL5,   n:t.nL5,    label:'L5' };
+  if (mode === 'last6')    return { ppg:t.ppgL6,   n:t.nL6,    label:'L6' };
+  if (mode === 'last10')   return { ppg:t.ppgL10,  n:t.nL10,   label:'L10' };
+  // mode "default" : early season / coupe -> last 10
+  const ctxBucket = context === 'home' ? t.home : t.away;
+  if (ctxBucket.n < S.cfg.earlyN) return { ppg:t.ppgL10, n:t.nL10, label:'L10 (début de saison)' };
+  return context === 'home'
+    ? { ppg:t.ppgHome, n:t.home.n, label:'dom.' }
+    : { ppg:t.ppgAway, n:t.away.n, label:'ext.' };
+}
+
+/* ---------- couleurs ---------- */
+function tier(value, bounds){
+  if (value == null || !isFinite(value)) return 'na';
+  if (value >= bounds[0]) return 'dg';
+  if (value >= bounds[1]) return 'lg';
+  if (value >= bounds[2]) return 'ye';
+  if (value >= bounds[3]) return 'or';
+  return 'rd';
+}
+function tierOdd(odd, bounds){
+  if (odd == null || !isFinite(odd)) return 'na';
+  if (odd <= bounds[0]) return 'dg';
+  if (odd <= bounds[1]) return 'lg';
+  if (odd <= bounds[2]) return 'ye';
+  if (odd <= bounds[3]) return 'or';
+  return 'rd';
+}
+function chip(val, bounds, formatter){
+  const cls = tier(val, bounds);
+  const txt = formatter ? formatter(val) : (val == null ? '—' : val);
+  return `<span class="chip c-${cls}">${txt}</span>`;
+}
+function chipOdd(val){
+  const cls = tierOdd(val, S.cfg.th.odd);
+  return `<span class="chip c-${cls}">${val == null ? '—' : Number(val).toFixed(2)}</span>`;
+}
+const TIER_LABELS = { dg:'vert foncé', lg:'vert clair', ye:'jaune', or:'orangé', rd:'rouge' };
+
+/* ---------- rendu : matchs ---------- */
+function renderMatches(){
+  const tb = $('tb-matches');
+  $('cnt-matches').textContent = S.matches.length;
+  if (!S.matches.length){
+    tb.innerHTML = '<tr><td colspan="6" class="muted">Aucun match.</td></tr>';
+    return;
+  }
+  const ms = [...S.matches].sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.id||0)-(a.id||0));
+  tb.innerHTML = ms.map(m => `
+    <tr>
+      <td class="muted small">${esc(m.date||'')}</td>
+      <td class="small">${esc(m.league||'')}</td>
+      <td class="small">${esc(divLabel(m.div))}</td>
+      <td class="name">${esc(m.home)} <span class="muted">–</span> ${esc(m.away)}</td>
+      <td class="num"><b>${m.hg} – ${m.ag}</b></td>
+      <td><button class="ghost danger small" data-del-match="${m.id}">✕</button></td>
+    </tr>`).join('');
+}
+function divLabel(d){
+  if (d === '1') return 'D1';
+  if (d === '2') return 'D2';
+  if (d === '3') return 'D3';
+  if (d === 'C') return 'Coupe';
+  return d || '—';
+}
+
+/* ---------- rendu : PPG ---------- */
+function renderPPG(){
+  const teams = computeStats();
+  const filt = $('ppg-divfilter').value;
+  const sortBy = $('ppg-sort').value;
+
+  let rows = [...teams.values()];
+  if (filt !== 'all'){
+    const ok = filt === '12' ? ['1','2'] : [filt];
+    rows = rows.filter(t => [...t.divs].some(d => ok.includes(d)));
+  }
+  const key = { ppg:'ppgAll', home:'ppgHome', away:'ppgAway', l5:'ppgL5', pts:null, name:null }[sortBy];
+  rows.sort((a,b)=>{
+    if (sortBy === 'name') return a.name.localeCompare(b.name);
+    if (sortBy === 'pts') return b.all.pts - a.all.pts;
+    return (b[key] || -1) - (a[key] || -1);
+  });
+
+  $('ppg-count').textContent = rows.length + ' équipe(s)';
+  const tb = $('tb-ppg');
+  if (!rows.length){
+    tb.innerHTML = '<tr><td colspan="17" class="muted">Ajoute des résultats pour commencer.</td></tr>';
+    renderLegend();
+    return;
+  }
+
+  tb.innerHTML = rows.map(t => {
+    const a = t.all;
+    const pct = (num, den) => den ? (100 * num / den) : null;
+    return `<tr>
+      <td class="name" title="${esc(t.name)}">${esc(t.name)}</td>
+      <td class="small muted">${[...t.divs].map(divLabel).join(' ') || '—'}</td>
+      <td class="num">${a.n}</td>
+      <td class="num">${a.v}</td>
+      <td class="num">${a.d}</td>
+      <td class="num">${a.l}</td>
+      <td class="num"><b>${a.pts}</b></td>
+      <td>${chip(t.ppgAll, S.cfg.th.ppg, fmt2)}</td>
+      <td>${chip(t.ppgHome, S.cfg.th.ppg, fmt2)}</td>
+      <td>${chip(t.ppgAway, S.cfg.th.ppg, fmt2)}</td>
+      <td>${chip(t.ppgL5, S.cfg.th.ppg, fmt2)}</td>
+      <td>${chip(t.ppgL10, S.cfg.th.ppg, fmt2)}</td>
+      <td>${chip(pct(a.o15, a.n), S.cfg.th.pct, fmtPct)}</td>
+      <td>${chip(pct(a.o25, a.n), S.cfg.th.pct, fmtPct)}</td>
+      <td>${chip(pct(a.btts, a.n), S.cfg.th.pct, fmtPct)}</td>
+      <td>${chip(pct(a.cs, a.n), S.cfg.th.pct, fmtPct)}</td>
+      <td class="num">${a.n ? ((a.gf + a.ga) / a.n).toFixed(2) : '—'}</td>
+    </tr>`;
+  }).join('');
+
+  renderLegend();
+}
+
+function renderLegend(){
+  const p = S.cfg.th.ppg;
+  const el = $('leg-ppg');
+  if (!el) return;
+  el.innerHTML = `
+    <div><span class="chip c-dg">≥ ${p[0].toFixed(2)}</span> excellent</div>
+    <div><span class="chip c-lg">${p[1].toFixed(2)}–${p[0].toFixed(2)}</span> bon</div>
+    <div><span class="chip c-ye">${p[2].toFixed(2)}–${p[1].toFixed(2)}</span> moyen</div>
+    <div><span class="chip c-or">${p[3].toFixed(2)}–${p[2].toFixed(2)}</span> faible</div>
+    <div><span class="chip c-rd">&lt; ${p[3].toFixed(2)}</span> mauvais</div>
+    <div class="muted">(seuils PPG — modifiables dans Réglages)</div>`;
+}
+
+/* ---------- rendu : filtre ---------- */
+function evaluateFixtures(){
+  const teams = computeStats();
+  const { minPpg, tol, maxOdd, only12 } = S.cfg.filt;
+  const out = [];
+  for (const f of S.fixtures){
+    const allowedDiv = !only12 || ['1','2'].includes(String(f.div));
+    const sides = [
+      { side:'home', team:f.home, odd:numOrNull(f.oh), other:f.away, ctx:'home' },
+      { side:'away', team:f.away, odd:numOrNull(f.oa), other:f.home, ctx:'away' }
+    ];
+    for (const s of sides){
+      const p = ppgFor(s.team, s.ctx, teams);
+      const ppgOk = p.ppg != null && p.ppg >= (minPpg - tol) && p.ppg <= 3.0001;
+      const oddOk = s.odd != null && s.odd < maxOdd;
+      const nOk = p.n >= S.cfg.minN;
+      const pass = allowedDiv && ppgOk && oddOk && nOk;
+      const reasons = [];
+      if (!allowedDiv) reasons.push('division hors D1/D2');
+      if (!ppgOk) reasons.push(p.ppg == null ? 'aucun match joué' : 'PPG ' + p.ppg.toFixed(2));
+      if (!oddOk) reasons.push(s.odd == null ? 'cote absente' : 'cote ' + s.odd.toFixed(2));
+      if (!nOk) reasons.push('échantillon < ' + S.cfg.minN);
+      out.push({ f, ...s, ppg:p.ppg, n:p.n, label:p.label, pass, reasons });
+    }
+  }
+  out.sort((a,b)=> (b.pass - a.pass) || ((a.ppg||0) === (b.ppg||0) ? (a.odd||9)-(b.odd||9) : (b.ppg||0)-(a.ppg||0)));
+  return out;
+}
+
+function renderFiltre(){
+  const { minPpg, tol, maxOdd, only12 } = S.cfg.filt;
+  $('filt-desc').innerHTML =
+    `Règle active : une équipe dont le PPG (contexte domicile/extérieur) est <b>≥ ${minPpg.toFixed(2)}</b> et la cote <b>&lt; ${maxOdd.toFixed(2)}</b>`
+    + (only12 ? ' — uniquement D1/D2.' : ' — toutes divisions.');
+
+  const rows = evaluateFixtures();
+  const tb = $('tb-filt');
+  if (!rows.length){
+    tb.innerHTML = '<tr><td colspan="9" class="muted">Aucun match à venir. Ajoute-en un ci-dessus.</td></tr>';
+  } else {
+    tb.innerHTML = rows.map(r => `
+      <tr>
+        <td class="muted small">${esc(r.f.date || '')}</td>
+        <td class="small">${esc(r.f.league || '')} <span class="muted">${esc(divLabel(r.f.div))}</span></td>
+        <td class="name">${esc(r.f.home)} <span class="muted">–</span> ${esc(r.f.away)}</td>
+        <td class="name">${esc(r.team)} <span class="muted small">(${r.label})</span></td>
+        <td class="num small muted">${r.side === 'home' ? 'dom.' : 'ext.'}</td>
+        <td>${chip(r.ppg, S.cfg.th.ppg, fmt2)}</td>
+        <td class="num">${r.n}</td>
+        <td>${chipOdd(r.odd)}</td>
+        <td>${r.pass
+          ? '<span class="pill ok">✓ retenu</span>'
+          : '<span class="pill no">✕ ' + esc(r.reasons.join(', ')) + '</span>'}</td>
+      </tr>`).join('');
+  }
+
+  const nb = rows.filter(r => r.pass).length;
+  setStatus($('s-filt'), nb ? `${nb} ligne(s) retenue(s).` : 'Aucune ligne ne passe le filtre avec ces réglages.');
+
+  const tf = $('tb-fixtures');
+  if (!S.fixtures.length){
+    tf.innerHTML = '<tr><td colspan="8" class="muted">Aucun match à venir.</td></tr>';
+    return;
+  }
+  const teams = computeStats();
+  const fs = [...S.fixtures].sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+  tf.innerHTML = fs.map(f => {
+    const ph = ppgFor(f.home, 'home', teams);
+    const pa = ppgFor(f.away, 'away', teams);
+    return `<tr>
+      <td class="muted small">${esc(f.date||'')}</td>
+      <td class="small">${esc(f.league||'')} <span class="muted">${esc(divLabel(f.div))}</span></td>
+      <td class="name">${esc(f.home)} <span class="muted">–</span> ${esc(f.away)}</td>
+      <td>${chip(ph.ppg, S.cfg.th.ppg, fmt2)}</td>
+      <td>${chipOdd(numOrNull(f.oh))}</td>
+      <td>${chip(pa.ppg, S.cfg.th.ppg, fmt2)}</td>
+      <td>${chipOdd(numOrNull(f.oa))}</td>
+      <td><button class="ghost danger small" data-del-fix="${f.id}">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+function numOrNull(v){ const n = Number(v); return (v === '' || v === null || v === undefined || !isFinite(n)) ? null : n; }
+
+/* ---------- rendu : réglages ---------- */
+function fillReglages(){
+  const c = S.cfg;
+  $('cfg-minppg').value = c.filt.minPpg;
+  $('cfg-tol').value = c.filt.tol;
+  $('cfg-maxodd').value = c.filt.maxOdd;
+  $('cfg-minn').value = c.minN;
+  $('cfg-only12').checked = !!c.filt.only12;
+  $('cfg-mode').value = c.mode;
+  $('cfg-early').value = c.earlyN;
+  ['p','q','o'].forEach((k,i)=>{
+    const arr = i === 0 ? c.th.ppg : i === 1 ? c.th.pct : c.th.odd;
+    arr.forEach((v,j)=> { const el = $('th-' + k + j); if (el) el.value = v; });
+  });
+  renderThresholdLegend();
+}
+function renderThresholdLegend(){
+  const { ppg, pct, odd } = S.cfg.th;
+  const el = $('leg-th');
+  if (!el) return;
+  const f2 = v => Number(v).toFixed(2);
+  const f0 = v => Math.round(v);
+  const classes = ['dg','lg','ye','or','rd'];
+
+  // Sens croissant (PPG, %) : borne haute = meilleur
+  const asc = (arr, fmt, suffix) => arr.map((v,i)=>{
+    const hi = i === 0 ? null : arr[i-1];
+    const txt = i === 0 ? `≥ ${fmt(v)}${suffix}` : `${fmt(v)}–${fmt(hi)}${suffix}`;
+    return `<div><span class="chip c-${classes[i]}">${txt}</span>${i===0?' meilleur':''}</div>`;
+  }).concat([`<div><span class="chip c-rd">&lt; ${fmt(arr[3])}${suffix}</span> pire</div>`]).join('');
+
+  // Sens inversé (cotes) : borne basse = meilleur, et les bornes montent
+  const desc = (arr, fmt) => [
+    `<div><span class="chip c-dg">≤ ${fmt(arr[0])}</span> meilleur</div>`,
+    `<div><span class="chip c-lg">${fmt(arr[0])}–${fmt(arr[1])}</span></div>`,
+    `<div><span class="chip c-ye">${fmt(arr[1])}–${fmt(arr[2])}</span></div>`,
+    `<div><span class="chip c-or">${fmt(arr[2])}–${fmt(arr[3])}</span></div>`,
+    `<div><span class="chip c-rd">&gt; ${fmt(arr[3])}</span> pire</div>`
+  ].join('');
+
+  el.innerHTML = `
+    <div style="width:100%;margin-top:4px"><b class="small">PPG</b></div>${asc(ppg, f2, '')}
+    <div style="width:100%;margin-top:10px"><b class="small">Pourcentages</b></div>${asc(pct, f0, '%')}
+    <div style="width:100%;margin-top:10px"><b class="small">Cotes (inversé : court = fort)</b></div>${desc(odd, f2)}`;
+}
+
+/* ---------- actions ---------- */
+function addMatch(m){
+  S.matches.push({ id: seq++, ...m });
+  save(); renderAll();
+}
+
+function renderAll(){
+  renderMatches();
+  renderPPG();
+  renderFiltre();
+  fillReglages();
+}
+
+/* ---------- exemples ---------- */
+function loadDemo(){
+  const demo = [
+    // 4 équipes fictives, 12 journées
+    ['2026-08-15','Ligue 1','1','Nord FC','Sud FC',2,0],
+    ['2026-08-15','Ligue 1','1','Est FC','Ouest FC',1,1],
+    ['2026-08-22','Ligue 1','1','Sud FC','Est FC',0,2],
+    ['2026-08-22','Ligue 1','1','Ouest FC','Nord FC',1,3],
+    ['2026-08-29','Ligue 1','1','Nord FC','Est FC',1,0],
+    ['2026-08-29','Ligue 1','1','Sud FC','Ouest FC',2,2],
+    ['2026-09-05','Ligue 1','1','Est FC','Nord FC',0,1],
+    ['2026-09-05','Ligue 1','1','Ouest FC','Sud FC',3,1],
+    ['2026-09-12','Ligue 1','1','Nord FC','Ouest FC',2,1],
+    ['2026-09-12','Ligue 1','1','Est FC','Sud FC',2,0],
+    ['2026-09-19','Ligue 1','1','Ouest FC','Est FC',1,1],
+    ['2026-09-19','Ligue 1','1','Sud FC','Nord FC',0,2]
+  ];
+  demo.forEach(([date,league,div,home,away,hg,ag]) => S.matches.push({ id: seq++, date, league, div, home, away, hg, ag }));
+  const fx = [
+    { date: todayISO(), league:'Ligue 1', div:'1', home:'Nord FC', away:'Ouest FC', oh:'1.45', od:'4.20', oa:'6.50' },
+    { date: todayISO(), league:'Ligue 1', div:'1', home:'Est FC', away:'Sud FC', oh:'2.10', od:'3.30', oa:'3.60' }
+  ];
+  fx.forEach(f => S.fixtures.push({ id: seq++, ...f }));
+  save(); renderAll();
+  setStatus($('s-saisie'), 'Jeu de démonstration chargé (données fictives).');
+}
+
+/* ---------- CSV ---------- */
+function parseCSV(text){
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length);
+  const out = [];
+  for (const line of lines){
+    const parts = line.split(line.includes('\t') ? '\t' : (line.includes(';') ? ';' : ',')).map(s=>s.trim());
+    if (parts.length < 7) continue;
+    const [date, league, div, home, away, hg, ag] = parts;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;      // ignore l'en-tête
+    if (!isFinite(Number(hg)) || !isFinite(Number(ag))) continue;
+    if (!home || !away) continue;
+    out.push({ date, league, div: ['1','2','3'].includes(div) ? div : 'C', home, away, hg: Number(hg), ag: Number(ag) });
+  }
+  return out;
+}
+
+/* ---------- init ---------- */
+function wire(){
+  // onglets
+  document.querySelectorAll('nav button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
+      document.querySelectorAll('main section').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      $('tab-' + b.dataset.tab).classList.add('on');
+      if (b.dataset.tab === 'ppg') renderPPG();
+      if (b.dataset.tab === 'filtre') renderFiltre();
+    });
+  });
+
+  // formulaire match
+  $('f-match').addEventListener('submit', e=>{
+    e.preventDefault();
+    const home = $('m-home').value.trim(), away = $('m-away').value.trim();
+    if (!home || !away) return;
+    addMatch({
+      date: $('m-date').value || todayISO(),
+      league: $('m-league').value.trim() || '—',
+      div: $('m-div').value,
+      home, away,
+      hg: Number($('m-hg').value), ag: Number($('m-ag').value)
+    });
+    $('m-home').value = ''; $('m-away').value = ''; $('m-hg').value = ''; $('m-ag').value = '';
+    $('m-home').focus();
+    setStatus($('s-saisie'), 'Match ajouté.');
+  });
+
+  // suppression
+  document.addEventListener('click', e=>{
+    const dm = e.target.getAttribute && e.target.getAttribute('data-del-match');
+    if (dm){ S.matches = S.matches.filter(m => String(m.id) !== dm); save(); renderAll(); }
+    const df = e.target.getAttribute && e.target.getAttribute('data-del-fix');
+    if (df){ S.fixtures = S.fixtures.filter(f => String(f.id) !== df); save(); renderAll(); }
+  });
+
+  // démo / reset matchs
+  $('btn-demo').addEventListener('click', loadDemo);
+  $('btn-clear-matches').addEventListener('click', ()=>{
+    if (!confirm('Effacer tous les résultats et matchs à venir ?')) return;
+    S.matches = []; S.fixtures = []; save(); renderAll();
+  });
+
+  // CSV
+  $('btn-csv').addEventListener('click', ()=>{
+    const rows = parseCSV($('csv-in').value);
+    if (!rows.length) return setStatus($('s-csv'), 'Aucune ligne valide reconnue.', true);
+    rows.forEach(r => S.matches.push({ id: seq++, ...r }));
+    save(); renderAll();
+    setStatus($('s-csv'), rows.length + ' match(s) importé(s).');
+    $('csv-in').value = '';
+  });
+
+  // filtre fixtures
+  $('f-fix').addEventListener('submit', e=>{
+    e.preventDefault();
+    const home = $('x-home').value.trim(), away = $('x-away').value.trim();
+    if (!home || !away) return;
+    S.fixtures.push({
+      id: seq++, date: $('x-date').value || todayISO(),
+      league: $('x-league').value.trim() || '—', div: $('x-div').value,
+      home, away,
+      oh: $('x-oh').value, od: $('x-od').value, oa: $('x-oa').value
+    });
+    ['x-oh','x-od','x-oa'].forEach(id => $(id).value = '');
+    $('x-home').value = ''; $('x-away').value = '';
+    save(); renderAll();
+    setStatus($('s-filt'), 'Match à venir ajouté.');
+  });
+
+  // réglages : filtre
+  const bindNum = (id, apply) => $(id).addEventListener('change', ()=>{ apply(Number($(id).value)); save(); renderAll(); });
+  bindNum('cfg-minppg', v => { if (isFinite(v)) S.cfg.filt.minPpg = v; });
+  bindNum('cfg-tol', v => { if (isFinite(v)) S.cfg.filt.tol = Math.max(0, v); });
+  bindNum('cfg-maxodd', v => { if (isFinite(v)) S.cfg.filt.maxOdd = v; });
+  bindNum('cfg-minn', v => { if (isFinite(v)) S.cfg.minN = Math.max(0, Math.round(v)); });
+  bindNum('cfg-early', v => { if (isFinite(v)) S.cfg.earlyN = Math.max(0, Math.round(v)); });
+  $('cfg-only12').addEventListener('change', ()=>{ S.cfg.filt.only12 = $('cfg-only12').checked; save(); renderAll(); });
+  $('cfg-mode').addEventListener('change', ()=>{ S.cfg.mode = $('cfg-mode').value; save(); renderAll(); });
+
+  // réglages : seuils couleurs
+  ['p','q','o'].forEach((k,i)=>{
+    [0,1,2,3].forEach(j=>{
+      $('th-' + k + j).addEventListener('change', ()=>{
+        const v = Number($('th-' + k + j).value);
+        if (!isFinite(v)) return;
+        const arr = i === 0 ? S.cfg.th.ppg : i === 1 ? S.cfg.th.pct : S.cfg.th.odd;
+        arr[j] = v;
+        // garde l'ordre décroissant (pour les cotes : croissant)
+        save(); renderAll();
+      });
+    });
+  });
+
+  // export / import
+  $('btn-export').addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify({ matches:S.matches, fixtures:S.fixtures, cfg:S.cfg }, null, 2)], { type:'application/json' });
+    download(blob, 'ppglab-sauvegarde.json');
+  });
+  $('btn-export-csv').addEventListener('click', ()=>{
+    const head = 'date;competition;division;domicile;exterieur;buts_dom;buts_ext';
+    const body = S.matches.map(m => [m.date, m.league, m.div, m.home, m.away, m.hg, m.ag].join(';'));
+    download(new Blob([[head, ...body].join('\n')], { type:'text/csv' }), 'ppglab-resultats.csv');
+  });
+  $('file-json').addEventListener('change', ev=>{
+    const f = ev.target.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const d = JSON.parse(rd.result);
+        S.matches = Array.isArray(d.matches) ? d.matches : [];
+        S.fixtures = Array.isArray(d.fixtures) ? d.fixtures : [];
+        S.cfg = deepCfg(d.cfg);
+        seq = Math.max(0, ...S.matches.map(m=>m.id||0), ...S.fixtures.map(f=>f.id||0)) + 1;
+        save(); renderAll();
+        setStatus($('s-cfg'), 'Sauvegarde importée.');
+      } catch(e){ setStatus($('s-cfg'), 'Fichier JSON invalide.', true); }
+    };
+    rd.readAsText(f);
+  });
+  $('btn-reset').addEventListener('click', ()=>{
+    if (!confirm('Tout réinitialiser (données + réglages) ?')) return;
+    S.matches = []; S.fixtures = []; S.cfg = clone(DEFAULT_CFG); seq = 1;
+    save(); renderAll();
+    setStatus($('s-cfg'), 'Application réinitialisée.');
+  });
+
+  // filtres du tableau PPG
+  $('ppg-divfilter').addEventListener('change', renderPPG);
+  $('ppg-sort').addEventListener('change', renderPPG);
+}
+function download(blob, name){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+load();
+$('m-date').value = todayISO();
+$('x-date').value = todayISO();
+wire();
+renderAll();
+
+/* ---------- PWA : installation Android + hors-ligne ---------- */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* ignoré : l'app marche quand même */ });
+  });
+}
+
+let deferredPrompt = null;
+const btnInstall = $('btn-install');
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (btnInstall) {
+    btnInstall.classList.remove('hidden');
+    const hint = $('install-hint');
+    if (hint) hint.textContent = 'Chrome propose l\'installation sur cet appareil.';
+  }
+});
+if (btnInstall) {
+  btnInstall.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try { await deferredPrompt.userChoice; } catch (err) { /* ignoré */ }
+    deferredPrompt = null;
+    btnInstall.classList.add('hidden');
+    const hint = $('install-hint');
+    if (hint) hint.textContent = 'Si rien ne s\'est passé : menu ⋮ → « Ajouter à l\'écran d\'accueil ».';
+  });
+}
+window.addEventListener('appinstalled', () => {
+  if (btnInstall) btnInstall.classList.add('hidden');
+  const hint = $('install-hint');
+  if (hint) hint.textContent = 'Application installée ✓';
+});
+</script>
+</body>
+</html>
