@@ -7,5 +7,5 @@ Parieur sportif
 
 ## Outils
 
-- **[`index.html`](index.html)** — app en ligne — **PPG Lab** : calculateur de PPG (global / domicile / extérieur / last 5-6-10), heatmap 5 couleurs calibrable et filtre « PPG + cote ». Hors-ligne, sans dépendance. Doc : [`docs/ppg-lab.md`](docs/ppg-lab.md)
+- **[`index.html`](index.html)** — app en ligne — **PPG Lab** : calculateur de PPG (global / domicile / extérieur / last 5-6-10), heatmap 5 couleurs calibrable, filtre « PPG + cote » et règle **H2H « victoire sèche »** (taux de victoire du favori en confrontations directes > 60 % + probabilité bookmaker > 60 %). Hors-ligne, sans dépendance. Doc : [`docs/ppg-lab.md`](docs/ppg-lab.md)
 - [`analyses/`](analyses) — analyses ponctuelles produites depuis FootyStats.

@@ -5,7 +5,8 @@ Mini-application **hors-ligne** (un seul fichier `index.html`, aucune dépendanc
 1. calcule le **PPG** d'une équipe exactement comme FootyStats (global / domicile / extérieur / last 5-6-10) ;
 2. applique la **heatmap 5 couleurs** (vert foncé, vert clair, jaune, orangé, rouge) avec des seuils que **tu** contrôles ;
 3. rejoue ton **filtre valeur** (« PPG ≥ 3 et cote < 1,70 ») sur les matchs à venir ;
-4. stocke tout dans ton navigateur (localStorage) avec export / import JSON et CSV.
+4. applique la règle **H2H « victoire sèche »** (favori > 60 % en confrontations directes **et** > 60 % de chances selon le bookmaker) ;
+5. stocke tout dans ton navigateur (localStorage) avec export / import JSON et CSV.
 
 ## 0. Installation sur Android (PWA)
 
@@ -80,7 +81,51 @@ Réglages modifiables : PPG cible, tolérance, cote max, nombre minimum de match
 
 Le tableau du filtre **explique chaque rejet** (`PPG 1.00`, `cote 6.50`, `division hors D1/D2`, `échantillon < 3`), pour que tu voies pourquoi un match ne sort pas.
 
-## 4. Saisie des données
+## 4. La règle H2H « victoire sèche »
+
+> **Règle demandée.** Si le taux de victoire du favori dans les confrontations directes est supérieur à 60 % **et** que la probabilité de victoire de ce favori selon les bookmakers est supérieure à 60 %, alors **victoire sèche** (pari 1X2 sur le favori, le nul est perdant).
+
+L'onglet **4. H2H & victoire sèche** applique la règle aux matchs à venir saisis dans l'onglet *Filtre valeur*. Aucune nouvelle saisie : les confrontations directes sont relues dans les résultats déjà enregistrés.
+
+### 4.1 Ce que calcule l'app
+
+| Élément | Formule | Détail |
+|---|---|---|
+| Favori | cote 1X2 la plus basse | cotes domicile **et** extérieur nécessaires ; sinon le favori n'est pas désigné |
+| Taux H2H | victoires ÷ confrontations directes | **nuls compris**, toutes compétitions, les deux terrains, uniquement les matchs antérieurs à la date du match à venir |
+| Proba brute | 1 ÷ cote du favori | c'est aussi le **seuil de rentabilité** (1,60 → 62,5 %) |
+| Proba nette (défaut) | (1 ÷ cote favori) ÷ (1 ÷ cote dom. + 1 ÷ cote nul + 1 ÷ cote ext.) | marge du bookmaker (2 à 6 % en général) retirée ; repli sur la proba brute si les 3 cotes ne sont pas renseignées |
+| Verdict | H2H > 60 % **et** proba > 60 % **et** confrontations ≥ minimum | comparaisons strictes : 60,0 % pile ne passe pas |
+
+« Victoire sèche » = le favori gagne dans le temps réglementaire. Le nul est **perdu** (ce n'est pas une double chance).
+
+### 4.2 Exemple avec le jeu de démonstration
+
+| Match | Favori | Cote | Proba nette | H2H | Taux | Verdict |
+|---|---|---|---|---|---|---|
+| Nord FC – Ouest FC | Nord FC (dom.) | 1,45 | 63,8 % | 2 V, 0 N, 0 D | 100 % | ✅ victoire sèche |
+| Est FC – Sud FC | Est FC (dom.) | 2,10 | 45,1 % | 2 V, 0 N, 0 D | 100 % | ❌ proba 45 % ≤ 60 % |
+
+Chaque rejet est expliqué dans la colonne **Verdict** (`H2H 50 % ≤ 60 %`, `proba 55 % ≤ 60 %`, `2 confrontation(s) < 3`, `marché 64% ≤ H2H 100 %`, `cote dom. ou ext. manquante`). La colonne **Détail** déplie la liste des confrontations (date, score, terrain, compétition).
+
+### 4.3 Réglages (onglet *Réglages → Règle H2H*)
+
+- **Taux H2H minimum** — 60 % par défaut.
+- **Proba marché minimum** — 60 % par défaut.
+- **Confrontations minimum** — 1 par défaut (règle brute). **Mets 3 à 5** : un H2H de 1 ou 2 matchs donne vite 100 % sur du vide. Les échantillons < 3 sont signalés par un badge « n faible ».
+- **Proba marché utilisée** — nette (marge retirée) ou brute (1 ÷ cote).
+- **Exiger proba > taux H2H** — option stricte : le marché doit être plus confiant que l'historique.
+
+### 4.4 Ce que la règle fait — et ne fait pas
+
+- **Elle mesure la confiance, pas la valeur.** Proba bookmaker > 60 % ⇒ cote < 1,67 : le marché est déjà très affirmé. Si la proba dépasse en plus le taux H2H, tu paies plus court que ce que l'historique suggère.
+- **Le value bet est dans l'autre sens** : proba marché **inférieure** au taux H2H (le bookmaker sous-estime le favori). La règle telle que demandée est un filtre de confiance, pas une martingale.
+- **À cote 1,60, il faut 62,5 % de réussite pour être à l'équilibre** (1 ÷ cote). Sur 100 paris à 1,60, deux ou trois points de réussite décident du profit.
+- **Contexte ignoré** : le taux H2H mélange domicile/extérieur, saisons et compétitions ; les petits échantillons sont instables. Vérifie la colonne *Détail*.
+- **Aucune cote, aucun verdict** : l'app ne désigne pas de favori sans les deux cotes 1X2.
+- **Pas de suivi de bankroll** : la règle classe les matchs, elle ne garantit pas le résultat. Juge-la sur 30 à 50 paris minimum.
+
+## 5. Saisie des données
 
 **Formulaire** : date, compétition, division (D1 / D2 / D3 / Coupe), équipes, score.
 
@@ -94,20 +139,23 @@ date;competition;division;domicile;exterieur;buts_dom;buts_ext
 
 L'en-tête est optionnel (les lignes qui ne commencent pas par une date `AAAA-MM-JJ` sont ignorées). Import d'un export JSON, export JSON et CSV depuis *Réglages*.
 
-## 5. Limites assumées
+## 6. Limites assumées
 
 - **Pas de scraper** : l'app ne va pas chercher FootyStats (conditions d'utilisation + aucune API publique gratuite). Tu saisis les résultats une fois, l'app calcule tout le reste — c'est ça, l'autonomie.
 - **PPG ≠ niveau réel** : dépend de l'adversaire, du calendrier, des blessures. Un 3,00 sur 3 matchs contre des mal classés ne vaut pas un 3,00 sur 9 journées.
 - **Montées/descentes** : mélanger deux saisons dans le même jeu de données fausse les PPG globaux — utilise l'export JSON pour archiver et repartir à zéro.
 - Les cotes bougent : la cote stockée est celle du moment de la saisie.
 
-## 6. Vérifications
+## 7. Vérifications
 
-Test automatisé (jsdom) sur le fichier livré, 16 assertions, 0 erreur :
+Test automatisé (jsdom) sur le fichier livré, **52 assertions, 0 erreur** :
 
 - 12 matchs chargés → Nord FC 6 MJ, 18 pts, PPG global 3,00 / dom. 3,00 / ext. 3,00 ; Sud FC 1 pt, PPG 0,17 ;
 - couleurs : 3,00 → vert foncé, 0,17 → rouge ;
 - filtre : Nord FC (dom., 3,00) à 1,45 → **retenu** ; Ouest FC à 6,50 → **rejeté** ; cote **1,70 pile → rejetée** (strictement inférieure) ;
+- H2H : Nord FC 2-0-0 (100 %) à 1,45 → proba nette 63,8 % → **victoire sèche** ; Est FC à 2,10 → proba 45,1 % → **rejeté** ;
+- seuils stricts : 60,0 % pile rejeté, 66,7 % retenu ; option « proba > taux H2H » ; proba brute vs nette ; repli sur la brute quand les cotes 1X2 sont incomplètes ; minimum de confrontations ; H2H limité aux matchs antérieurs à la date du match ;
+- persistance des réglages H2H (localStorage et `deepCfg`), ancienne sauvegarde sans section H2H → valeurs par défaut ;
 - import CSV, persistance localStorage, changement de mode PPG, réinitialisation.
 
 Un exemple d'analyse produite à la main (avant l'app) : `../analyses/2026-10-25_ppg-3_cote-moins-1.70.md`.
