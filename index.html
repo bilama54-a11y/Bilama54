@@ -331,10 +331,10 @@
   <div class="card">
     <h2>Ce que la règle fait — et ne fait pas</h2>
     <ul class="tight">
-      <li><b>Elle filtre la confiance, pas la valeur.</b> Exiger une proba bookmaker ≥ 60 % revient à exiger une cote ≤ 1,67 : le marché est déjà très affirmé. Si en plus la proba dépasse le taux H2H, tu paies plus cher que ce que l'historique suggère — plus de chances de gagner, mais aucune marge cachée.</li>
+      <li><b>Elle filtre la confiance, pas la valeur.</b> Exiger une proba bookmaker &gt; 60 % revient à exiger une cote &lt; 1,67 : le marché est déjà très affirmé. Si en plus la proba dépasse le taux H2H, tu paies plus cher que ce que l'historique suggère — plus de chances de gagner, mais aucune marge cachée.</li>
       <li><b>La valeur se joue dans l'autre sens</b> : proba marché <i>inférieure</i> au taux H2H (le bookmaker sous-estime le favori). L'option « exiger proba &gt; taux H2H » de l'onglet <i>Réglages</i> durcit la règle dans le sens que tu as demandé ; ne l'active pas si tu cherches un value bet.</li>
       <li><b>Un seul match gagné sur un seul joué = 100 %.</b> Le taux peut donc être parfait sur un échantillon minuscule. D'où la colonne V-N-D, le compteur « V / joués » sous le taux, le badge « n faible » sous 3 matchs joués et le réglage « matchs joués minimum » (mets 3 à 5 pour un vrai filtre).</li>
-      <li><b>Seuils inclusifs par défaut</b> : « ≥ 60 % » retient 60,0 % pile. Décoche « seuils inclusifs » dans <i>Réglages</i> pour revenir à « strictement plus de 60 % ».</li>
+      <li><b>Opérateurs par défaut</b> : le <b>taux H2H</b> est comparé en <b>≥ 60 %</b> (60,0 % pile passe), la <b>proba bookmaker</b> en <b>&gt; 60 %</b> (60,0 % pile est rejeté). Les deux cases de <i>Réglages → Règle H2H</i> permettent d'inverser chaque opérateur séparément.</li>
       <li><b>Le contexte est ignoré</b> : le taux mélange domicile/extérieur, saisons et compétitions. Le bouton <i>Détail</i> montre chaque confrontation avant de valider.</li>
       <li><b>Rien ne garantit le résultat</b> : la règle décrit une probabilité, pas une certitude. Suis tes mises sur au moins 30-50 paris pour juger.</li>
     </ul>
@@ -375,13 +375,16 @@
           <input type="checkbox" id="cfg-h-strict" style="width:auto"> Exiger proba &gt; taux H2H
         </label>
       </div>
-      <div style="display:flex;align-items:flex-end;gap:10px">
+      <div style="display:flex;align-items:flex-end;gap:10px;flex-direction:column">
         <label style="display:flex;gap:6px;align-items:center;text-transform:none;font-size:12.5px;color:var(--txt)">
-          <input type="checkbox" id="cfg-h-incl" style="width:auto"> Seuils inclusifs (≥ : 60,0 % pile passe)
+          <input type="checkbox" id="cfg-h-incl" style="width:auto"> Taux H2H inclusif (≥ : 60,0 % passe)
+        </label>
+        <label style="display:flex;gap:6px;align-items:center;text-transform:none;font-size:12.5px;color:var(--txt)">
+          <input type="checkbox" id="cfg-h-inclp" style="width:auto"> Proba marché inclusive (≥ : 60,0 % passe)
         </label>
       </div>
     </div>
-    <p class="hint">Règle par défaut : le taux de victoire du favori en confrontations directes doit être <b>supérieur ou égal à 60 %</b> et la probabilité implicite de sa cote bookmaker <b>supérieure ou égale à 60 %</b>. Les nuls ne sont pas des victoires, mais ils entrent au dénominateur : 3 V, 1 nul, 1 défaite = 3 ÷ 5 = 60 %. Décoche « seuils inclusifs » pour exiger strictement plus de 60 %. Les deux seuils et le nombre minimum de matchs joués sont modifiables ici.</p>
+    <p class="hint">Règle par défaut : le taux de victoire du favori en confrontations directes doit être <b>supérieur ou égal à 60 %</b> (60,0 % pile passe) et la probabilité implicite de sa cote bookmaker <b>strictement supérieure à 60 %</b> (60,0 % pile est rejeté). Les nuls ne sont pas des victoires, mais ils entrent au dénominateur : 3 V, 1 nul, 1 défaite = 3 ÷ 5 = 60 %. Les deux cases permettent d'inverser chaque opérateur séparément ; les seuils et le minimum de matchs joués sont aussi modifiables ici.</p>
   </div>
 
   <div class="card">
@@ -484,12 +487,12 @@
       <li><b>Taux H2H</b> = <code>victoires du favori ÷ matchs joués</code> — un nul n'est pas une victoire mais compte comme match joué (3 V, 1 nul, 1 défaite = 3/5 = 60 %), matchs enregistrés dans l'onglet <i>Résultats</i> avant la date du match.</li>
       <li><b>Proba brute</b> = <code>1 ÷ cote du favori</code>.</li>
       <li><b>Proba nette</b> = <code>(1 ÷ cote favori) ÷ (1 ÷ cote dom. + 1 ÷ cote nul + 1 ÷ cote ext.)</code> — la marge du bookmaker est retirée.</li>
-      <li><b>Verdict « victoire sèche »</b> si <code>taux H2H ≥ 60 %</code> <b>et</b> <code>proba marché ≥ 60 %</code> <b>et</b> <code>matchs joués ≥ minimum</code>. Seuils inclusifs par défaut : 60,0 % pile passe (décoche « seuils inclusifs » pour exiger strictement plus).</li>
+      <li><b>Verdict « victoire sèche »</b> si <code>taux H2H ≥ 60 %</code> <b>et</b> <code>proba marché &gt; 60 %</code> <b>et</b> <code>matchs joués ≥ minimum</code>. Par défaut, 60,0 % pile passe pour le taux H2H mais <b>pas</b> pour la proba bookmaker ; chaque opérateur a sa case dans <i>Réglages</i>.</li>
     </ul>
     <p class="hint">
       Exemple : cotes <b>1,50 / 4,00 / 6,50</b>. Proba brute du favori = 1 ÷ 1,50 = <b>66,7 %</b> ;
       somme des inverses = 1,0705 (marge 7,05 %) ; proba nette = 66,7 ÷ 1,0705 = <b>62,3 %</b>.
-      H2H à 3 V, 1 nul, 1 défaite = 3 ÷ 5 = <b>60 %</b> → <b>retenu</b> (seuil inclusif : ≥ 60 %). H2H à 2 V, 2 nuls, 0 défaite = 2 ÷ 4 = 50 % → rejeté. H2H à 4 V, 1 nul, 1 défaite = 4 ÷ 6 = <b>66,7 %</b> → retenu aussi. En mode strict, 60 % pile est rejeté. Chaque nul supplémentaire compte comme un match joué : 4 V, 5 nuls, 1 défaite = 4 ÷ 10 = 40 %.
+      H2H à 3 V, 1 nul, 1 défaite = 3 ÷ 5 = <b>60 %</b> → <b>retenu</b> (taux comparé en ≥ 60 %). H2H à 2 V, 2 nuls, 0 défaite = 2 ÷ 4 = 50 % → rejeté. H2H à 4 V, 1 nul, 1 défaite = 4 ÷ 6 = <b>66,7 %</b> → retenu aussi. Côté marché, une proba de 60,0 % pile est rejetée (comparaison stricte) : cote 1,666… → 60,0 % → ✕ ; cote 1,65 → 60,6 % → ✓. Chaque nul supplémentaire compte comme un match joué : 4 V, 5 nuls, 1 défaite = 4 ÷ 10 = 40 %.
     </p>
   </div>
 
@@ -530,7 +533,7 @@ const DEFAULT_CFG = {
   earlyN: 5,
   minN: 1,
   filt: { minPpg: 3.00, tol: 0.005, maxOdd: 1.70, only12: true },
-  h2h: { minRate: 60, minProb: 60, minN: 1, base: 'net', strictVsH2H: false, inclusive: true },
+  h2h: { minRate: 60, minProb: 60, minN: 1, base: 'net', strictVsH2H: false, inclusive: true, probInclusive: false },
   th: {
     ppg: [2.00, 1.60, 1.20, 0.80],
     pct: [70, 60, 50, 40],
@@ -557,6 +560,7 @@ function deepCfg(saved){
     if (h.base === 'raw' || h.base === 'net') c.h2h.base = h.base;
     if (typeof h.strictVsH2H === 'boolean') c.h2h.strictVsH2H = h.strictVsH2H;
     if (typeof h.inclusive === 'boolean') c.h2h.inclusive = h.inclusive;
+    if (typeof h.probInclusive === 'boolean') c.h2h.probInclusive = h.probInclusive;
   }
   if (saved.th) {
     ['ppg','pct','odd'].forEach(k => { if (Array.isArray(saved.th[k]) && saved.th[k].length === 4) c.th[k] = saved.th[k].map(Number); });
@@ -955,22 +959,22 @@ function evaluateH2HRule(){
     const rec = side ? h2hRecord(fav, other, f.date) : { n:0, w:0, d:0, l:0, rate:null, list:[] };
 
     const rateOk = rec.rate != null && (c.inclusive ? rec.rate >= c.minRate : rec.rate > c.minRate);
-    const probOk = prob.value != null && (c.inclusive ? prob.value >= c.minProb : prob.value > c.minProb);
+    const probOk = prob.value != null && (c.probInclusive ? prob.value >= c.minProb : prob.value > c.minProb);
     const nOk = rec.n >= c.minN;
-    const strictOk = !c.strictVsH2H || (prob.value != null && rec.rate != null
-      && (c.inclusive ? prob.value >= rec.rate : prob.value > rec.rate));
+    const strictOk = !c.strictVsH2H || (prob.value != null && rec.rate != null && prob.value > rec.rate);
     const pass = !!side && rateOk && probOk && nOk && strictOk;
 
     const reasons = [];
     if (!side){
       reasons.push(oh == null || oa == null ? 'cote dom. ou ext. manquante' : 'cotes dom./ext. égales');
     } else {
-      const below = c.inclusive ? ' < ' : ' ≤ ';
+      const belowRate = c.inclusive ? ' < ' : ' ≤ ';
+      const belowProb = c.probInclusive ? ' < ' : ' ≤ ';
       if (rec.n === 0) reasons.push('aucune confrontation directe');
-      else if (!rateOk) reasons.push('H2H ' + Math.round(rec.rate) + ' %' + below + c.minRate + ' %');
-      if (!probOk) reasons.push(prob.value == null ? 'proba marché indisponible' : 'proba ' + Math.round(prob.value) + ' %' + below + c.minProb + ' %');
+      else if (!rateOk) reasons.push('H2H ' + Math.round(rec.rate) + ' %' + belowRate + c.minRate + ' %');
+      if (!probOk) reasons.push(prob.value == null ? 'proba marché indisponible' : 'proba ' + Math.round(prob.value) + ' %' + belowProb + c.minProb + ' %');
       if (rec.n > 0 && !nOk) reasons.push(rec.n + ' match(s) joué(s) < ' + c.minN);
-      if (!strictOk) reasons.push('marché ' + Math.round(prob.value) + ' %' + below + 'H2H ' + Math.round(rec.rate) + ' %');
+      if (!strictOk) reasons.push('marché ' + Math.round(prob.value) + ' % ≤ H2H ' + Math.round(rec.rate) + ' %');
     }
     rows.push({ f, side, fav, other, favOdd, mk, prob, rec, rateOk, probOk, nOk, strictOk, pass, reasons });
   }
@@ -983,12 +987,13 @@ function renderH2H(){
   const baseTxt = c.base === 'net'
     ? 'probabilité nette du bookmaker (marge retirée)'
     : 'probabilité brute (1 ÷ cote)';
-  const op = c.inclusive ? '≥' : '>';
+  const opRate = c.inclusive ? '≥' : '>';
+  const opProb = c.probInclusive ? '≥' : '>';
   $('h2h-desc').innerHTML =
-    `Règle active : le favori (cote 1X2 la plus basse) doit avoir un <b>taux de victoire en confrontations directes ${op} ${c.minRate} %</b>`
-    + ` (victoires ÷ matchs joués, un nul n'est pas une victoire) et une <b>${baseTxt} ${op} ${c.minProb} %</b>,`
+    `Règle active : le favori (cote 1X2 la plus basse) doit avoir un <b>taux de victoire en confrontations directes ${opRate} ${c.minRate} %</b>`
+    + ` (victoires ÷ matchs joués, un nul n'est pas une victoire) et une <b>${baseTxt} ${opProb} ${c.minProb} %</b>,`
     + ` sur au moins <b>${c.minN}</b> ${c.minN > 1 ? 'matchs joués' : 'match joué'}.`
-    + (c.strictVsH2H ? ' La proba du marché doit en plus ' + (c.inclusive ? 'atteindre ou dépasser' : 'dépasser') + ' le taux H2H.' : '')
+    + (c.strictVsH2H ? ' La proba du marché doit en plus dépasser strictement le taux H2H.' : '')
     + ` Alors → <b>victoire sèche</b> (pari 1X2 sur le favori, le nul est perdant).`;
 
   const rows = evaluateH2HRule();
@@ -1045,6 +1050,7 @@ function fillReglages(){
   $('cfg-h-base').value = c.h2h.base;
   $('cfg-h-strict').checked = !!c.h2h.strictVsH2H;
   $('cfg-h-incl').checked = !!c.h2h.inclusive;
+  $('cfg-h-inclp').checked = !!c.h2h.probInclusive;
   ['p','q','o'].forEach((k,i)=>{
     const arr = i === 0 ? c.th.ppg : i === 1 ? c.th.pct : c.th.odd;
     arr.forEach((v,j)=> { const el = $('th-' + k + j); if (el) el.value = v; });
@@ -1229,6 +1235,7 @@ function wire(){
   $('cfg-h-base').addEventListener('change', ()=>{ S.cfg.h2h.base = $('cfg-h-base').value === 'raw' ? 'raw' : 'net'; save(); renderAll(); });
   $('cfg-h-strict').addEventListener('change', ()=>{ S.cfg.h2h.strictVsH2H = $('cfg-h-strict').checked; save(); renderAll(); });
   $('cfg-h-incl').addEventListener('change', ()=>{ S.cfg.h2h.inclusive = $('cfg-h-incl').checked; save(); renderAll(); });
+  $('cfg-h-inclp').addEventListener('change', ()=>{ S.cfg.h2h.probInclusive = $('cfg-h-inclp').checked; save(); renderAll(); });
 
   // réglages : seuils couleurs
   ['p','q','o'].forEach((k,i)=>{
