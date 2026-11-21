@@ -87,15 +87,17 @@ Le tableau du filtre **explique chaque rejet** (`PPG 1.00`, `cote 6.50`, `divisi
 
 L'onglet **4. H2H & victoire sèche** applique la règle aux matchs à venir saisis dans l'onglet *Filtre valeur*. Aucune nouvelle saisie : les confrontations directes sont relues dans les résultats déjà enregistrés.
 
+**Les matchs nuls sont exclus du taux de victoire** : il se calcule sur les seules confrontations décisives, `victoires ÷ (victoires + défaites)`. Un nul n'est donc ni une victoire ni une défaite, et il ne dilue pas le taux.
+
 ### 4.1 Ce que calcule l'app
 
 | Élément | Formule | Détail |
 |---|---|---|
 | Favori | cote 1X2 la plus basse | cotes domicile **et** extérieur nécessaires ; sinon le favori n'est pas désigné |
-| Taux H2H | victoires ÷ confrontations directes | **nuls compris**, toutes compétitions, les deux terrains, uniquement les matchs antérieurs à la date du match à venir |
+| Taux H2H | victoires ÷ **matchs décisifs** (victoires + défaites) | **nuls exclus**, toutes compétitions, les deux terrains, uniquement les matchs antérieurs à la date du match à venir |
 | Proba brute | 1 ÷ cote du favori | c'est aussi le **seuil de rentabilité** (1,60 → 62,5 %) |
 | Proba nette (défaut) | (1 ÷ cote favori) ÷ (1 ÷ cote dom. + 1 ÷ cote nul + 1 ÷ cote ext.) | marge du bookmaker (2 à 6 % en général) retirée ; repli sur la proba brute si les 3 cotes ne sont pas renseignées |
-| Verdict | H2H > 60 % **et** proba > 60 % **et** confrontations ≥ minimum | comparaisons strictes : 60,0 % pile ne passe pas |
+| Verdict | H2H > 60 % **et** proba > 60 % **et** matchs décisifs ≥ minimum | comparaisons strictes : 60,0 % pile ne passe pas |
 
 « Victoire sèche » = le favori gagne dans le temps réglementaire. Le nul est **perdu** (ce n'est pas une double chance).
 
@@ -103,16 +105,18 @@ L'onglet **4. H2H & victoire sèche** applique la règle aux matchs à venir sai
 
 | Match | Favori | Cote | Proba nette | H2H | Taux | Verdict |
 |---|---|---|---|---|---|---|
-| Nord FC – Ouest FC | Nord FC (dom.) | 1,45 | 63,8 % | 2 V, 0 N, 0 D | 100 % | ✅ victoire sèche |
-| Est FC – Sud FC | Est FC (dom.) | 2,10 | 45,1 % | 2 V, 0 N, 0 D | 100 % | ❌ proba 45 % ≤ 60 % |
+| Nord FC – Ouest FC | Nord FC (dom.) | 1,45 | 63,8 % | 2 V, 0 nul, 0 défaite | 2 ÷ 2 = 100 % | ✅ victoire sèche |
+| Est FC – Sud FC | Est FC (dom.) | 2,10 | 45,1 % | 2 V, 0 nul, 0 défaite | 2 ÷ 2 = 100 % | ❌ proba 45 % ≤ 60 % |
 
-Chaque rejet est expliqué dans la colonne **Verdict** (`H2H 50 % ≤ 60 %`, `proba 55 % ≤ 60 %`, `2 confrontation(s) < 3`, `marché 64% ≤ H2H 100 %`, `cote dom. ou ext. manquante`). La colonne **Détail** déplie la liste des confrontations (date, score, terrain, compétition).
+Effet de l'exclusion des nuls : **3 V, 1 nul, 1 défaite → 3 ÷ 4 = 75 %** (et non 60 %) ; **2 V, 2 nuls, 0 défaite → 100 %** ; **0 V, 0 défaite, 4 nuls → taux indéterminé**, le match est rejeté (`uniquement des nuls (exclus du taux)`).
+
+Chaque rejet est expliqué dans la colonne **Verdict** (`H2H 50 % ≤ 60 %`, `proba 55 % ≤ 60 %`, `2 match(s) décisif(s) < 3`, `marché 64 % ≤ H2H 100 %`, `uniquement des nuls (exclus du taux)`, `cote dom. ou ext. manquante`). La colonne **Détail** déplie la liste des confrontations (date, score, terrain, compétition).
 
 ### 4.3 Réglages (onglet *Réglages → Règle H2H*)
 
 - **Taux H2H minimum** — 60 % par défaut.
 - **Proba marché minimum** — 60 % par défaut.
-- **Confrontations minimum** — 1 par défaut (règle brute). **Mets 3 à 5** : un H2H de 1 ou 2 matchs donne vite 100 % sur du vide. Les échantillons < 3 sont signalés par un badge « n faible ».
+- **Matchs décisifs minimum** — 1 par défaut (règle brute). **Mets 3 à 5** : comme les nuls sont exclus, un seul match gagné suffit à afficher 100 %. Les échantillons < 3 matchs décisifs sont signalés par un badge « n faible ».
 - **Proba marché utilisée** — nette (marge retirée) ou brute (1 ÷ cote).
 - **Exiger proba > taux H2H** — option stricte : le marché doit être plus confiant que l'historique.
 
@@ -121,7 +125,7 @@ Chaque rejet est expliqué dans la colonne **Verdict** (`H2H 50 % ≤ 60 %`, `pr
 - **Elle mesure la confiance, pas la valeur.** Proba bookmaker > 60 % ⇒ cote < 1,67 : le marché est déjà très affirmé. Si la proba dépasse en plus le taux H2H, tu paies plus court que ce que l'historique suggère.
 - **Le value bet est dans l'autre sens** : proba marché **inférieure** au taux H2H (le bookmaker sous-estime le favori). La règle telle que demandée est un filtre de confiance, pas une martingale.
 - **À cote 1,60, il faut 62,5 % de réussite pour être à l'équilibre** (1 ÷ cote). Sur 100 paris à 1,60, deux ou trois points de réussite décident du profit.
-- **Contexte ignoré** : le taux H2H mélange domicile/extérieur, saisons et compétitions ; les petits échantillons sont instables. Vérifie la colonne *Détail*.
+- **Contexte ignoré** : le taux H2H mélange domicile/extérieur, saisons et compétitions ; les petits échantillons sont instables, et exclure les nuls réduit encore l'échantillon. Vérifie la colonne *Détail*.
 - **Aucune cote, aucun verdict** : l'app ne désigne pas de favori sans les deux cotes 1X2.
 - **Pas de suivi de bankroll** : la règle classe les matchs, elle ne garantit pas le résultat. Juge-la sur 30 à 50 paris minimum.
 
@@ -148,13 +152,14 @@ L'en-tête est optionnel (les lignes qui ne commencent pas par une date `AAAA-MM
 
 ## 7. Vérifications
 
-Test automatisé (jsdom) sur le fichier livré, **52 assertions, 0 erreur** :
+Test automatisé (jsdom) sur le fichier livré, **61 assertions, 0 erreur** :
 
 - 12 matchs chargés → Nord FC 6 MJ, 18 pts, PPG global 3,00 / dom. 3,00 / ext. 3,00 ; Sud FC 1 pt, PPG 0,17 ;
 - couleurs : 3,00 → vert foncé, 0,17 → rouge ;
 - filtre : Nord FC (dom., 3,00) à 1,45 → **retenu** ; Ouest FC à 6,50 → **rejeté** ; cote **1,70 pile → rejetée** (strictement inférieure) ;
 - H2H : Nord FC 2-0-0 (100 %) à 1,45 → proba nette 63,8 % → **victoire sèche** ; Est FC à 2,10 → proba 45,1 % → **rejeté** ;
-- seuils stricts : 60,0 % pile rejeté, 66,7 % retenu ; option « proba > taux H2H » ; proba brute vs nette ; repli sur la brute quand les cotes 1X2 sont incomplètes ; minimum de confrontations ; H2H limité aux matchs antérieurs à la date du match ;
+- **nuls exclus** : 2 V + 3 nuls → 100 % sur 2 décisifs (et non 40 %) ; 0 V + 4 nuls → taux indéterminé et rejet ; 3 V, 2 défaites, 1 nul → 60 % pile → rejeté, 4 V → 66,7 % → retenu ;
+- seuils stricts ; option « proba > taux H2H » ; proba brute vs nette ; repli sur la brute quand les cotes 1X2 sont incomplètes ; minimum de **matchs décisifs** (2 décisifs refusés même avec 5 confrontations) ; H2H limité aux matchs antérieurs à la date du match ;
 - persistance des réglages H2H (localStorage et `deepCfg`), ancienne sauvegarde sans section H2H → valeurs par défaut ;
 - import CSV, persistance localStorage, changement de mode PPG, réinitialisation.
 

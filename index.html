@@ -321,7 +321,7 @@
     <h2>Les notions de la règle</h2>
     <ul class="tight">
       <li><b>Favori</b> = l'équipe à la <b>cote 1X2 la plus basse</b>. Si les deux cotes sont absentes ou égales, aucun favori n'est désigné.</li>
-      <li><b>Taux H2H</b> = victoires du favori ÷ nombre de confrontations directes enregistrées, <b>nuls compris</b> (2 V, 1 N, 1 D sur 4 matchs → 50 %). Les matchs sont lus dans l'onglet <i>Résultats</i>, toutes compétitions et les deux terrains confondus.</li>
+      <li><b>Taux H2H</b> = victoires du favori ÷ <b>matchs décisifs</b> (victoires + défaites). <b>Les nuls sont exclus</b> : 3 V, 1 nul, 1 défaite → 3 ÷ 4 = 75 % ; 2 V, 2 nuls, 0 défaite → 100 %. Les matchs sont lus dans l'onglet <i>Résultats</i>, toutes compétitions et les deux terrains confondus.</li>
       <li><b>Proba brute</b> = 1 ÷ cote. C'est exactement le <b>seuil de rentabilité</b> : à 1,60 il faut gagner 62,5 % du temps pour être à l'équilibre.</li>
       <li><b>Proba nette</b> (par défaut) = (1 ÷ cote du favori) ÷ (1 ÷ cote dom. + 1 ÷ cote nul + 1 ÷ cote ext.). La marge du bookmaker (<i>overround</i>, souvent 2 à 6 %) est retirée : c'est son estimation la plus honnête.</li>
       <li><b>Victoire sèche</b> = pari 1X2 sur le favori : le nul est perdant (à ne pas confondre avec la double chance).</li>
@@ -333,7 +333,7 @@
     <ul class="tight">
       <li><b>Elle filtre la confiance, pas la valeur.</b> Exiger une proba bookmaker &gt; 60 % revient à exiger une cote &lt; 1,67 : le marché est déjà très affirmé. Si en plus la proba dépasse le taux H2H, tu paies plus cher que ce que l'historique suggère — plus de chances de gagner, mais aucune marge cachée.</li>
       <li><b>La valeur se joue dans l'autre sens</b> : proba marché <i>inférieure</i> au taux H2H (le bookmaker sous-estime le favori). L'option « exiger proba &gt; taux H2H » de l'onglet <i>Réglages</i> durcit la règle dans le sens que tu as demandé ; ne l'active pas si tu cherches un value bet.</li>
-      <li><b>Un H2H de 1 match = 100 %.</b> D'où la colonne V-N-D, le badge « n faible » sous 3 confrontations et le réglage « confrontations minimum » (mets 3 à 5 pour un vrai filtre).</li>
+      <li><b>Un seul match décisif gagné = 100 %.</b> Comme les nuls sont exclus, le taux peut être parfait sur un échantillon minuscule. D'où la colonne V-N-D, le compteur « décisifs » sous le taux, le badge « n faible » sous 3 matchs décisifs et le réglage « matchs décisifs minimum » (mets 3 à 5 pour un vrai filtre).</li>
       <li><b>Le contexte est ignoré</b> : le taux mélange domicile/extérieur, saisons et compétitions. Le bouton <i>Détail</i> montre chaque confrontation avant de valider.</li>
       <li><b>Rien ne garantit le résultat</b> : la règle décrit une probabilité, pas une certitude. Suis tes mises sur au moins 30-50 paris pour juger.</li>
     </ul>
@@ -362,7 +362,7 @@
     <div class="grid g-in">
       <div><label>Taux H2H minimum (&gt; %)</label><input type="number" id="cfg-h-rate" step="1" min="0" max="100"></div>
       <div><label>Proba marché minimum (&gt; %)</label><input type="number" id="cfg-h-prob" step="1" min="0" max="100"></div>
-      <div><label>Confrontations min.</label><input type="number" id="cfg-h-minn" step="1" min="1"></div>
+      <div><label>Matchs décisifs min.</label><input type="number" id="cfg-h-minn" step="1" min="1"></div>
       <div><label>Proba marché utilisée</label>
         <select id="cfg-h-base">
           <option value="net">Nette (marge retirée)</option>
@@ -375,7 +375,7 @@
         </label>
       </div>
     </div>
-    <p class="hint">Règle par défaut : le taux de victoire du favori en confrontations directes doit être <b>strictement supérieur à 60 %</b> et la probabilité implicite de sa cote bookmaker <b>strictement supérieure à 60 %</b>. Les deux seuils sont modifiables ici, ainsi que le nombre minimum de confrontations directes.</p>
+    <p class="hint">Règle par défaut : le taux de victoire du favori en confrontations directes doit être <b>strictement supérieur à 60 %</b> et la probabilité implicite de sa cote bookmaker <b>strictement supérieure à 60 %</b>. Les matchs nuls sont exclus du taux (il se calcule sur les seules confrontations décisives). Les deux seuils et le nombre minimum de matchs décisifs sont modifiables ici.</p>
   </div>
 
   <div class="card">
@@ -475,15 +475,15 @@
     <h2>La règle H2H « victoire sèche », en formule</h2>
     <ul class="tight">
       <li><b>Favori</b> = équipe à la cote 1X2 la plus basse (dom. ou ext.).</li>
-      <li><b>Taux H2H</b> = <code>victoires du favori ÷ confrontations directes</code>, nuls compris, matchs enregistrés dans l'onglet <i>Résultats</i> avant la date du match.</li>
+      <li><b>Taux H2H</b> = <code>victoires du favori ÷ (victoires + défaites)</code> — <b>les nuls sont exclus</b>, matchs enregistrés dans l'onglet <i>Résultats</i> avant la date du match.</li>
       <li><b>Proba brute</b> = <code>1 ÷ cote du favori</code>.</li>
       <li><b>Proba nette</b> = <code>(1 ÷ cote favori) ÷ (1 ÷ cote dom. + 1 ÷ cote nul + 1 ÷ cote ext.)</code> — la marge du bookmaker est retirée.</li>
-      <li><b>Verdict « victoire sèche »</b> si <code>taux H2H &gt; 60 %</code> <b>et</b> <code>proba marché &gt; 60 %</code> <b>et</b> <code>confrontations ≥ minimum</code>. Comparaisons strictes : 60,0 % pile ne passe pas.</li>
+      <li><b>Verdict « victoire sèche »</b> si <code>taux H2H &gt; 60 %</code> <b>et</b> <code>proba marché &gt; 60 %</code> <b>et</b> <code>matchs décisifs ≥ minimum</code>. Comparaisons strictes : 60,0 % pile ne passe pas.</li>
     </ul>
     <p class="hint">
       Exemple : cotes <b>1,50 / 4,00 / 6,50</b>. Proba brute du favori = 1 ÷ 1,50 = <b>66,7 %</b> ;
       somme des inverses = 1,0705 (marge 7,05 %) ; proba nette = 66,7 ÷ 1,0705 = <b>62,3 %</b>.
-      H2H à 3 V, 1 N, 1 D = <b>60 %</b> → rejeté (il faut <i>plus de</i> 60 %). H2H à 4 V, 1 N, 1 D = <b>66,7 %</b> → victoire sèche retenue.
+      H2H à 3 V, 2 défaites (et des nuls) = <b>60 %</b> → rejeté (il faut <i>plus de</i> 60 %). H2H à 4 V, 2 défaites = <b>66,7 %</b> → victoire sèche retenue. Les nuls, eux, ne changent pas le taux : 4 V, 2 défaites, 5 nuls → toujours 66,7 %.
     </p>
   </div>
 
@@ -879,10 +879,11 @@ function h2hBetween(teamA, teamB, before){
   }).sort((x,y)=> String(y.date||'').localeCompare(String(x.date||'')) || (y.id||0)-(x.id||0));
 }
 
-/* Bilan du point de vue de `team` : V / N / D, taux de victoire (nuls au dénominateur). */
+/* Bilan du point de vue de `team` : V / N / D.
+   Taux de victoire = V ÷ (V + D) : les matchs nuls sont exclus du calcul. */
 function h2hRecord(team, opp, before){
   const ms = h2hBetween(team, opp, before);
-  const rec = { n:0, w:0, d:0, l:0, rate:null, list:[] };
+  const rec = { n:0, w:0, d:0, l:0, decisive:0, rate:null, list:[] };
   let gf = 0, ga = 0;
   for (const m of ms){
     const hg = Number(m.hg), ag = Number(m.ag);
@@ -895,7 +896,8 @@ function h2hRecord(team, opp, before){
     rec.n++; gf += f; ga += a;
     rec.list.push({ date:m.date||'', league:m.league||'', home:m.home, away:m.away, hg, ag, res, venue: atHome ? 'dom.' : 'ext.' });
   }
-  rec.rate = rec.n ? (100 * rec.w / rec.n) : null;
+  rec.decisive = rec.w + rec.l;
+  rec.rate = rec.decisive ? (100 * rec.w / rec.decisive) : null;
   rec.gf = rec.n ? gf / rec.n : null;
   rec.ga = rec.n ? ga / rec.n : null;
   return rec;
@@ -943,11 +945,11 @@ function evaluateH2HRule(){
     const favOdd = side ? (side === 'home' ? oh : oa) : null;
     const mk = marketProb(f);
     const prob = side ? favProbability(side, mk, c.base) : { value:null, label:'—' };
-    const rec = side ? h2hRecord(fav, other, f.date) : { n:0, w:0, d:0, l:0, rate:null, list:[] };
+    const rec = side ? h2hRecord(fav, other, f.date) : { n:0, w:0, d:0, l:0, decisive:0, rate:null, list:[] };
 
     const rateOk = rec.rate != null && rec.rate > c.minRate;
     const probOk = prob.value != null && prob.value > c.minProb;
-    const nOk = rec.n >= c.minN;
+    const nOk = rec.decisive >= c.minN;
     const strictOk = !c.strictVsH2H || (prob.value != null && rec.rate != null && prob.value > rec.rate);
     const pass = !!side && rateOk && probOk && nOk && strictOk;
 
@@ -956,9 +958,10 @@ function evaluateH2HRule(){
       reasons.push(oh == null || oa == null ? 'cote dom. ou ext. manquante' : 'cotes dom./ext. égales');
     } else {
       if (rec.n === 0) reasons.push('aucune confrontation directe');
+      else if (rec.decisive === 0) reasons.push('uniquement des nuls (exclus du taux)');
       else if (!rateOk) reasons.push('H2H ' + Math.round(rec.rate) + ' % ≤ ' + c.minRate + ' %');
       if (!probOk) reasons.push(prob.value == null ? 'proba marché indisponible' : 'proba ' + Math.round(prob.value) + ' % ≤ ' + c.minProb + ' %');
-      if (rec.n > 0 && !nOk) reasons.push(rec.n + ' confrontation(s) < ' + c.minN);
+      if (rec.decisive > 0 && !nOk) reasons.push(rec.decisive + ' match(s) décisif(s) < ' + c.minN);
       if (!strictOk) reasons.push('marché ' + Math.round(prob.value) + ' % ≤ H2H ' + Math.round(rec.rate) + ' %');
     }
     rows.push({ f, side, fav, other, favOdd, mk, prob, rec, rateOk, probOk, nOk, strictOk, pass, reasons });
@@ -974,7 +977,7 @@ function renderH2H(){
     : 'probabilité brute (1 ÷ cote)';
   $('h2h-desc').innerHTML =
     `Règle active : le favori (cote 1X2 la plus basse) doit avoir un <b>taux de victoire en confrontations directes &gt; ${c.minRate} %</b>`
-    + ` et une <b>${baseTxt} &gt; ${c.minProb} %</b>, sur au moins <b>${c.minN}</b> ${c.minN > 1 ? 'confrontations directes' : 'confrontation directe'}.`
+    + ` (nuls exclus du taux) et une <b>${baseTxt} &gt; ${c.minProb} %</b>, sur au moins <b>${c.minN}</b> ${c.minN > 1 ? 'matchs décisifs' : 'match décisif'}.`
     + (c.strictVsH2H ? ' La proba du marché doit en plus dépasser le taux H2H.' : '')
     + ` Alors → <b>victoire sèche</b> (pari 1X2 sur le favori, le nul est perdant).`;
 
@@ -989,7 +992,7 @@ function renderH2H(){
         ? `<details><summary class="small">${rec.n} match${rec.n > 1 ? 's' : ''}</summary>`
           + `<div class="small" style="white-space:normal;min-width:230px;text-align:left;padding-top:5px">`
           + rec.list.map(x => `<div>${esc(x.date || '—')} · ${esc(x.home)} <b>${x.hg}–${x.ag}</b> ${esc(x.away)} <span class="muted">(${x.venue}, ${esc(x.league || '—')})</span></div>`).join('')
-          + `</div></details>`
+          + `<div class="muted" style="padding-top:4px">Les nuls ne comptent pas dans le taux.</div></div></details>`
         : '<span class="muted small">—</span>';
       return `<tr>
         <td class="muted small">${esc(r.f.date || '')}</td>
@@ -999,7 +1002,9 @@ function renderH2H(){
         <td>${r.favOdd != null ? chipOdd(r.favOdd) : '<span class="muted">—</span>'}</td>
         <td>${p.value != null ? chip(p.value, S.cfg.th.pct, fmtPct) : '<span class="muted">—</span>'}<div class="small muted">${esc(p.label)}</div></td>
         <td class="num">${rec.n ? rec.w + '-' + rec.d + '-' + rec.l : '—'}</td>
-        <td>${rec.rate != null ? chip(rec.rate, S.cfg.th.pct, fmtPct) : '<span class="muted">—</span>'}${rec.n > 0 && rec.n < 3 ? ' <span class="pill warn">n faible</span>' : ''}</td>
+        <td>${rec.rate != null ? chip(rec.rate, S.cfg.th.pct, fmtPct) : '<span class="muted">—</span>'}
+          <div class="small muted">${rec.decisive} décisif${rec.decisive > 1 ? 's' : ''}${rec.d ? ' · ' + rec.d + ' nul' + (rec.d > 1 ? 's' : '') + ' exclu' + (rec.d > 1 ? 's' : '') : ''}</div>
+          ${rec.decisive > 0 && rec.decisive < 3 ? '<span class="pill warn">n faible</span>' : ''}</td>
         <td>${r.pass
           ? '<span class="pill ok">✓ Victoire sèche</span>'
           : '<span class="pill no">✕ ' + esc(r.reasons.join(' · ')) + '</span>'}</td>
