@@ -1,5 +1,5 @@
 /* PPG Lab — service worker : l'app fonctionne hors-ligne une fois ouverte une fois. */
-const CACHE = 'ppglab-v1';
+const CACHE = 'ppglab-v2';
 const ASSETS = [
   './',
   './index.html',

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PPG Lab">
-<meta name="description" content="Calculateur de PPG façon FootyStats, heatmap 5 couleurs et filtre valeur. Fonctionne hors-ligne.">
+<meta name="description" content="Calculateur de PPG façon FootyStats, heatmap 5 couleurs, filtre valeur et règle H2H « victoire sèche ». Fonctionne hors-ligne.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -84,6 +84,9 @@
   .pill{font-size:11px;padding:2px 7px;border-radius:99px;border:1px solid var(--line);color:var(--muted);font-weight:600}
   .pill.ok{background:#0f7a3d22;border-color:#0f7a3d;color:#5ee08a}
   .pill.no{background:#e5484d1f;border-color:#5b2a2d;color:#ff9ba0}
+  .pill.warn{background:#f59f3c22;border-color:#8a5a12;color:#f5b563}
+  td details summary{cursor:pointer;color:var(--muted);font-weight:600}
+  td details summary:hover{color:var(--txt)}
   .kv{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:4px 0;border-bottom:1px dashed #223043}
   .kv:last-child{border-bottom:0}
   .muted{color:var(--muted)}
@@ -141,13 +144,14 @@
 <body>
 <header>
   <h1>⚽ PPG Lab</h1>
-  <p class="sub">Calcul du PPG façon FootyStats + heatmap 5 couleurs + filtre valeur. 100 % hors-ligne, données stockées dans ton navigateur.</p>
+  <p class="sub">Calcul du PPG façon FootyStats + heatmap 5 couleurs + filtre valeur + règle H2H « victoire sèche ». 100 % hors-ligne, données stockées dans ton navigateur.</p>
   <nav>
     <button data-tab="saisie" class="on">1. Résultats</button>
     <button data-tab="ppg">2. PPG &amp; stats</button>
     <button data-tab="filtre">3. Filtre valeur</button>
-    <button data-tab="reglages">4. Réglages &amp; couleurs</button>
-    <button data-tab="aide">5. Méthode</button>
+    <button data-tab="h2h">4. H2H &amp; victoire sèche</button>
+    <button data-tab="reglages">5. Réglages &amp; couleurs</button>
+    <button data-tab="aide">6. Méthode</button>
   </nav>
 </header>
 
@@ -295,7 +299,48 @@
   </div>
 </section>
 
-<!-- ================= 4. REGLAGES ================= -->
+<!-- ================= 4. H2H / VICTOIRE SECHE ================= -->
+<section id="tab-h2h">
+  <div class="card">
+    <h2>Règle « victoire sèche »</h2>
+    <p class="hint" id="h2h-desc"></p>
+    <div class="tblwrap">
+      <table>
+        <thead><tr>
+          <th>Date</th><th>Compétition</th><th style="text-align:left">Match</th>
+          <th style="text-align:left">Favori</th><th>Cote</th><th>Proba marché</th>
+          <th>H2H V-N-D</th><th>Taux H2H</th><th>Verdict</th><th>Détail</th>
+        </tr></thead>
+        <tbody id="tb-h2h"><tr><td colspan="10" class="muted">Aucun match à venir. Ajoute-en dans l'onglet « Filtre valeur ».</td></tr></tbody>
+      </table>
+    </div>
+    <div class="status" id="s-h2h"></div>
+  </div>
+
+  <div class="card">
+    <h2>Les notions de la règle</h2>
+    <ul class="tight">
+      <li><b>Favori</b> = l'équipe à la <b>cote 1X2 la plus basse</b>. Si les deux cotes sont absentes ou égales, aucun favori n'est désigné.</li>
+      <li><b>Taux H2H</b> = victoires du favori ÷ <b>matchs décisifs</b> (victoires + défaites). <b>Les nuls sont exclus</b> : 3 V, 1 nul, 1 défaite → 3 ÷ 4 = 75 % ; 2 V, 2 nuls, 0 défaite → 100 %. Les matchs sont lus dans l'onglet <i>Résultats</i>, toutes compétitions et les deux terrains confondus.</li>
+      <li><b>Proba brute</b> = 1 ÷ cote. C'est exactement le <b>seuil de rentabilité</b> : à 1,60 il faut gagner 62,5 % du temps pour être à l'équilibre.</li>
+      <li><b>Proba nette</b> (par défaut) = (1 ÷ cote du favori) ÷ (1 ÷ cote dom. + 1 ÷ cote nul + 1 ÷ cote ext.). La marge du bookmaker (<i>overround</i>, souvent 2 à 6 %) est retirée : c'est son estimation la plus honnête.</li>
+      <li><b>Victoire sèche</b> = pari 1X2 sur le favori : le nul est perdant (à ne pas confondre avec la double chance).</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Ce que la règle fait — et ne fait pas</h2>
+    <ul class="tight">
+      <li><b>Elle filtre la confiance, pas la valeur.</b> Exiger une proba bookmaker &gt; 60 % revient à exiger une cote &lt; 1,67 : le marché est déjà très affirmé. Si en plus la proba dépasse le taux H2H, tu paies plus cher que ce que l'historique suggère — plus de chances de gagner, mais aucune marge cachée.</li>
+      <li><b>La valeur se joue dans l'autre sens</b> : proba marché <i>inférieure</i> au taux H2H (le bookmaker sous-estime le favori). L'option « exiger proba &gt; taux H2H » de l'onglet <i>Réglages</i> durcit la règle dans le sens que tu as demandé ; ne l'active pas si tu cherches un value bet.</li>
+      <li><b>Un seul match décisif gagné = 100 %.</b> Comme les nuls sont exclus, le taux peut être parfait sur un échantillon minuscule. D'où la colonne V-N-D, le compteur « décisifs » sous le taux, le badge « n faible » sous 3 matchs décisifs et le réglage « matchs décisifs minimum » (mets 3 à 5 pour un vrai filtre).</li>
+      <li><b>Le contexte est ignoré</b> : le taux mélange domicile/extérieur, saisons et compétitions. Le bouton <i>Détail</i> montre chaque confrontation avant de valider.</li>
+      <li><b>Rien ne garantit le résultat</b> : la règle décrit une probabilité, pas une certitude. Suis tes mises sur au moins 30-50 paris pour juger.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= 5. REGLAGES ================= -->
 <section id="tab-reglages">
   <div class="card">
     <h2>Seuils du filtre</h2>
@@ -310,6 +355,27 @@
         </label>
       </div>
     </div>
+  </div>
+
+  <div class="card">
+    <h2>Règle H2H — victoire sèche</h2>
+    <div class="grid g-in">
+      <div><label>Taux H2H minimum (&gt; %)</label><input type="number" id="cfg-h-rate" step="1" min="0" max="100"></div>
+      <div><label>Proba marché minimum (&gt; %)</label><input type="number" id="cfg-h-prob" step="1" min="0" max="100"></div>
+      <div><label>Matchs décisifs min.</label><input type="number" id="cfg-h-minn" step="1" min="1"></div>
+      <div><label>Proba marché utilisée</label>
+        <select id="cfg-h-base">
+          <option value="net">Nette (marge retirée)</option>
+          <option value="raw">Brute (1 ÷ cote)</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:10px">
+        <label style="display:flex;gap:6px;align-items:center;text-transform:none;font-size:12.5px;color:var(--txt)">
+          <input type="checkbox" id="cfg-h-strict" style="width:auto"> Exiger proba &gt; taux H2H
+        </label>
+      </div>
+    </div>
+    <p class="hint">Règle par défaut : le taux de victoire du favori en confrontations directes doit être <b>strictement supérieur à 60 %</b> et la probabilité implicite de sa cote bookmaker <b>strictement supérieure à 60 %</b>. Les matchs nuls sont exclus du taux (il se calcule sur les seules confrontations décisives). Les deux seuils et le nombre minimum de matchs décisifs sont modifiables ici.</p>
   </div>
 
   <div class="card">
@@ -380,7 +446,7 @@
   </div>
 </section>
 
-<!-- ================= 5. METHODE ================= -->
+<!-- ================= 6. METHODE ================= -->
 <section id="tab-aide">
   <div class="card">
     <h2>Comment FootyStats calcule le PPG (vérifié)</h2>
@@ -403,6 +469,22 @@
       <li>Ce que fait cette app : mêmes 5 niveaux, mêmes conventions, mais <b>les bornes sont les tiennes</b> — c'est ce qui te rend autonome plutôt que dépendant d'une grille opaque.</li>
     </ul>
     <p class="hint">Les bornes livrées par défaut sont un calage raisonné (PPG : 2,00 / 1,60 / 1,20 / 0,80 · % : 70 / 60 / 50 / 40 · cotes : 1,30 / 1,60 / 2,00 / 2,60), pas une copie officielle.</p>
+  </div>
+
+  <div class="card">
+    <h2>La règle H2H « victoire sèche », en formule</h2>
+    <ul class="tight">
+      <li><b>Favori</b> = équipe à la cote 1X2 la plus basse (dom. ou ext.).</li>
+      <li><b>Taux H2H</b> = <code>victoires du favori ÷ (victoires + défaites)</code> — <b>les nuls sont exclus</b>, matchs enregistrés dans l'onglet <i>Résultats</i> avant la date du match.</li>
+      <li><b>Proba brute</b> = <code>1 ÷ cote du favori</code>.</li>
+      <li><b>Proba nette</b> = <code>(1 ÷ cote favori) ÷ (1 ÷ cote dom. + 1 ÷ cote nul + 1 ÷ cote ext.)</code> — la marge du bookmaker est retirée.</li>
+      <li><b>Verdict « victoire sèche »</b> si <code>taux H2H &gt; 60 %</code> <b>et</b> <code>proba marché &gt; 60 %</code> <b>et</b> <code>matchs décisifs ≥ minimum</code>. Comparaisons strictes : 60,0 % pile ne passe pas.</li>
+    </ul>
+    <p class="hint">
+      Exemple : cotes <b>1,50 / 4,00 / 6,50</b>. Proba brute du favori = 1 ÷ 1,50 = <b>66,7 %</b> ;
+      somme des inverses = 1,0705 (marge 7,05 %) ; proba nette = 66,7 ÷ 1,0705 = <b>62,3 %</b>.
+      H2H à 3 V, 2 défaites (et des nuls) = <b>60 %</b> → rejeté (il faut <i>plus de</i> 60 %). H2H à 4 V, 2 défaites = <b>66,7 %</b> → victoire sèche retenue. Les nuls, eux, ne changent pas le taux : 4 V, 2 défaites, 5 nuls → toujours 66,7 %.
+    </p>
   </div>
 
   <div class="card" id="card-install">
@@ -442,6 +524,7 @@ const DEFAULT_CFG = {
   earlyN: 5,
   minN: 1,
   filt: { minPpg: 3.00, tol: 0.005, maxOdd: 1.70, only12: true },
+  h2h: { minRate: 60, minProb: 60, minN: 1, base: 'net', strictVsH2H: false },
   th: {
     ppg: [2.00, 1.60, 1.20, 0.80],
     pct: [70, 60, 50, 40],
@@ -460,6 +543,14 @@ function deepCfg(saved){
   c.earlyN = Number.isFinite(saved.earlyN) ? saved.earlyN : c.earlyN;
   c.minN = Number.isFinite(saved.minN) ? saved.minN : c.minN;
   if (saved.filt) Object.assign(c.filt, saved.filt);
+  if (saved.h2h) {
+    const h = saved.h2h;
+    if (Number.isFinite(h.minRate)) c.h2h.minRate = h.minRate;
+    if (Number.isFinite(h.minProb)) c.h2h.minProb = h.minProb;
+    if (Number.isFinite(h.minN)) c.h2h.minN = Math.max(1, Math.round(h.minN));
+    if (h.base === 'raw' || h.base === 'net') c.h2h.base = h.base;
+    if (typeof h.strictVsH2H === 'boolean') c.h2h.strictVsH2H = h.strictVsH2H;
+  }
   if (saved.th) {
     ['ppg','pct','odd'].forEach(k => { if (Array.isArray(saved.th[k]) && saved.th[k].length === 4) c.th[k] = saved.th[k].map(Number); });
   }
@@ -771,6 +862,163 @@ function renderFiltre(){
 }
 function numOrNull(v){ const n = Number(v); return (v === '' || v === null || v === undefined || !isFinite(n)) ? null : n; }
 
+/* ---------- moteur : confrontations directes + règle « victoire sèche » ---------- */
+const normTeam = s => String(s == null ? '' : s).trim().toLowerCase().replace(/\s+/g, ' ');
+
+/* Matchs déjà joués entre deux équipes (toutes compétitions, les deux terrains),
+   strictement avant la date du match à venir quand elle est connue. */
+function h2hBetween(teamA, teamB, before){
+  const A = normTeam(teamA), B = normTeam(teamB);
+  if (!A || !B || A === B) return [];
+  return S.matches.filter(m => {
+    const h = normTeam(m.home), a = normTeam(m.away);
+    const pair = (h === A && a === B) || (h === B && a === A);
+    if (!pair) return false;
+    if (before && m.date && String(m.date) > String(before)) return false;
+    return isFinite(Number(m.hg)) && isFinite(Number(m.ag));
+  }).sort((x,y)=> String(y.date||'').localeCompare(String(x.date||'')) || (y.id||0)-(x.id||0));
+}
+
+/* Bilan du point de vue de `team` : V / N / D.
+   Taux de victoire = V ÷ (V + D) : les matchs nuls sont exclus du calcul. */
+function h2hRecord(team, opp, before){
+  const ms = h2hBetween(team, opp, before);
+  const rec = { n:0, w:0, d:0, l:0, decisive:0, rate:null, list:[] };
+  let gf = 0, ga = 0;
+  for (const m of ms){
+    const hg = Number(m.hg), ag = Number(m.ag);
+    const atHome = normTeam(m.home) === normTeam(team);
+    const f = atHome ? hg : ag, a = atHome ? ag : hg;
+    let res;
+    if (f > a){ res = 'V'; rec.w++; }
+    else if (f === a){ res = 'N'; rec.d++; }
+    else { res = 'D'; rec.l++; }
+    rec.n++; gf += f; ga += a;
+    rec.list.push({ date:m.date||'', league:m.league||'', home:m.home, away:m.away, hg, ag, res, venue: atHome ? 'dom.' : 'ext.' });
+  }
+  rec.decisive = rec.w + rec.l;
+  rec.rate = rec.decisive ? (100 * rec.w / rec.decisive) : null;
+  rec.gf = rec.n ? gf / rec.n : null;
+  rec.ga = rec.n ? ga / rec.n : null;
+  return rec;
+}
+
+/* Probabilités implicites 1X2, en %. `net*` = marge du bookmaker retirée. */
+function marketProb(f){
+  const oh = numOrNull(f.oh), od = numOrNull(f.od), oa = numOrNull(f.oa);
+  const ok = o => o != null && o > 1;
+  const rawH = ok(oh) ? 100 / oh : null;
+  const rawD = ok(od) ? 100 / od : null;
+  const rawA = ok(oa) ? 100 / oa : null;
+  const sum = [rawH, rawD, rawA].filter(v => v != null).reduce((s,v)=>s+v, 0);
+  const complete = rawH != null && rawD != null && rawA != null && sum > 0;
+  return {
+    rawH, rawD, rawA,
+    netH: complete ? 100 * rawH / sum : null,
+    netD: complete ? 100 * rawD / sum : null,
+    netA: complete ? 100 * rawA / sum : null,
+    overround: complete ? sum - 100 : null
+  };
+}
+
+function favProbability(side, mk, base){
+  const net = side === 'home' ? mk.netH : mk.netA;
+  const raw = side === 'home' ? mk.rawH : mk.rawA;
+  if (base === 'net'){
+    if (net != null) return { value: net, label: 'nette' };
+    if (raw != null) return { value: raw, label: 'brute (cotes 1X2 incomplètes)' };
+    return { value: null, label: '—' };
+  }
+  if (raw != null) return { value: raw, label: 'brute' };
+  return { value: null, label: '—' };
+}
+
+function evaluateH2HRule(){
+  const c = S.cfg.h2h;
+  const rows = [];
+  for (const f of S.fixtures){
+    const oh = numOrNull(f.oh), oa = numOrNull(f.oa);
+    let side = null;
+    if (oh != null && oa != null && oh !== oa) side = oh < oa ? 'home' : 'away';
+    const fav = side ? (side === 'home' ? f.home : f.away) : null;
+    const other = side ? (side === 'home' ? f.away : f.home) : null;
+    const favOdd = side ? (side === 'home' ? oh : oa) : null;
+    const mk = marketProb(f);
+    const prob = side ? favProbability(side, mk, c.base) : { value:null, label:'—' };
+    const rec = side ? h2hRecord(fav, other, f.date) : { n:0, w:0, d:0, l:0, decisive:0, rate:null, list:[] };
+
+    const rateOk = rec.rate != null && rec.rate > c.minRate;
+    const probOk = prob.value != null && prob.value > c.minProb;
+    const nOk = rec.decisive >= c.minN;
+    const strictOk = !c.strictVsH2H || (prob.value != null && rec.rate != null && prob.value > rec.rate);
+    const pass = !!side && rateOk && probOk && nOk && strictOk;
+
+    const reasons = [];
+    if (!side){
+      reasons.push(oh == null || oa == null ? 'cote dom. ou ext. manquante' : 'cotes dom./ext. égales');
+    } else {
+      if (rec.n === 0) reasons.push('aucune confrontation directe');
+      else if (rec.decisive === 0) reasons.push('uniquement des nuls (exclus du taux)');
+      else if (!rateOk) reasons.push('H2H ' + Math.round(rec.rate) + ' % ≤ ' + c.minRate + ' %');
+      if (!probOk) reasons.push(prob.value == null ? 'proba marché indisponible' : 'proba ' + Math.round(prob.value) + ' % ≤ ' + c.minProb + ' %');
+      if (rec.decisive > 0 && !nOk) reasons.push(rec.decisive + ' match(s) décisif(s) < ' + c.minN);
+      if (!strictOk) reasons.push('marché ' + Math.round(prob.value) + ' % ≤ H2H ' + Math.round(rec.rate) + ' %');
+    }
+    rows.push({ f, side, fav, other, favOdd, mk, prob, rec, rateOk, probOk, nOk, strictOk, pass, reasons });
+  }
+  rows.sort((a,b)=> (b.pass - a.pass) || String(a.f.date||'').localeCompare(String(b.f.date||'')));
+  return rows;
+}
+
+function renderH2H(){
+  const c = S.cfg.h2h;
+  const baseTxt = c.base === 'net'
+    ? 'probabilité nette du bookmaker (marge retirée)'
+    : 'probabilité brute (1 ÷ cote)';
+  $('h2h-desc').innerHTML =
+    `Règle active : le favori (cote 1X2 la plus basse) doit avoir un <b>taux de victoire en confrontations directes &gt; ${c.minRate} %</b>`
+    + ` (nuls exclus du taux) et une <b>${baseTxt} &gt; ${c.minProb} %</b>, sur au moins <b>${c.minN}</b> ${c.minN > 1 ? 'matchs décisifs' : 'match décisif'}.`
+    + (c.strictVsH2H ? ' La proba du marché doit en plus dépasser le taux H2H.' : '')
+    + ` Alors → <b>victoire sèche</b> (pari 1X2 sur le favori, le nul est perdant).`;
+
+  const rows = evaluateH2HRule();
+  const tb = $('tb-h2h');
+  if (!rows.length){
+    tb.innerHTML = '<tr><td colspan="10" class="muted">Aucun match à venir. Ajoute-en dans l\'onglet « Filtre valeur ».</td></tr>';
+  } else {
+    tb.innerHTML = rows.map(r => {
+      const rec = r.rec, p = r.prob;
+      const detail = rec.list.length
+        ? `<details><summary class="small">${rec.n} match${rec.n > 1 ? 's' : ''}</summary>`
+          + `<div class="small" style="white-space:normal;min-width:230px;text-align:left;padding-top:5px">`
+          + rec.list.map(x => `<div>${esc(x.date || '—')} · ${esc(x.home)} <b>${x.hg}–${x.ag}</b> ${esc(x.away)} <span class="muted">(${x.venue}, ${esc(x.league || '—')})</span></div>`).join('')
+          + `<div class="muted" style="padding-top:4px">Les nuls ne comptent pas dans le taux.</div></div></details>`
+        : '<span class="muted small">—</span>';
+      return `<tr>
+        <td class="muted small">${esc(r.f.date || '')}</td>
+        <td class="small">${esc(r.f.league || '')} <span class="muted">${esc(divLabel(r.f.div))}</span></td>
+        <td class="name">${esc(r.f.home)} <span class="muted">–</span> ${esc(r.f.away)}</td>
+        <td class="name">${r.fav ? esc(r.fav) + ' <span class="muted small">(' + (r.side === 'home' ? 'dom.' : 'ext.') + ')</span>' : '<span class="muted">—</span>'}</td>
+        <td>${r.favOdd != null ? chipOdd(r.favOdd) : '<span class="muted">—</span>'}</td>
+        <td>${p.value != null ? chip(p.value, S.cfg.th.pct, fmtPct) : '<span class="muted">—</span>'}<div class="small muted">${esc(p.label)}</div></td>
+        <td class="num">${rec.n ? rec.w + '-' + rec.d + '-' + rec.l : '—'}</td>
+        <td>${rec.rate != null ? chip(rec.rate, S.cfg.th.pct, fmtPct) : '<span class="muted">—</span>'}
+          <div class="small muted">${rec.decisive} décisif${rec.decisive > 1 ? 's' : ''}${rec.d ? ' · ' + rec.d + ' nul' + (rec.d > 1 ? 's' : '') + ' exclu' + (rec.d > 1 ? 's' : '') : ''}</div>
+          ${rec.decisive > 0 && rec.decisive < 3 ? '<span class="pill warn">n faible</span>' : ''}</td>
+        <td>${r.pass
+          ? '<span class="pill ok">✓ Victoire sèche</span>'
+          : '<span class="pill no">✕ ' + esc(r.reasons.join(' · ')) + '</span>'}</td>
+        <td>${detail}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  const picks = rows.filter(r => r.pass).length;
+  setStatus($('s-h2h'), rows.length
+    ? `${picks} sélection(s) « victoire sèche » sur ${rows.length} match(s) à venir.`
+    : 'Aucun match à venir : ajoute des cotes dans l\'onglet « Filtre valeur ».');
+}
+
 /* ---------- rendu : réglages ---------- */
 function fillReglages(){
   const c = S.cfg;
@@ -781,6 +1029,11 @@ function fillReglages(){
   $('cfg-only12').checked = !!c.filt.only12;
   $('cfg-mode').value = c.mode;
   $('cfg-early').value = c.earlyN;
+  $('cfg-h-rate').value = c.h2h.minRate;
+  $('cfg-h-prob').value = c.h2h.minProb;
+  $('cfg-h-minn').value = c.h2h.minN;
+  $('cfg-h-base').value = c.h2h.base;
+  $('cfg-h-strict').checked = !!c.h2h.strictVsH2H;
   ['p','q','o'].forEach((k,i)=>{
     const arr = i === 0 ? c.th.ppg : i === 1 ? c.th.pct : c.th.odd;
     arr.forEach((v,j)=> { const el = $('th-' + k + j); if (el) el.value = v; });
@@ -827,6 +1080,7 @@ function renderAll(){
   renderMatches();
   renderPPG();
   renderFiltre();
+  renderH2H();
   fillReglages();
 }
 
@@ -884,6 +1138,7 @@ function wire(){
       $('tab-' + b.dataset.tab).classList.add('on');
       if (b.dataset.tab === 'ppg') renderPPG();
       if (b.dataset.tab === 'filtre') renderFiltre();
+      if (b.dataset.tab === 'h2h') renderH2H();
     });
   });
 
@@ -955,6 +1210,13 @@ function wire(){
   bindNum('cfg-early', v => { if (isFinite(v)) S.cfg.earlyN = Math.max(0, Math.round(v)); });
   $('cfg-only12').addEventListener('change', ()=>{ S.cfg.filt.only12 = $('cfg-only12').checked; save(); renderAll(); });
   $('cfg-mode').addEventListener('change', ()=>{ S.cfg.mode = $('cfg-mode').value; save(); renderAll(); });
+
+  // réglages : règle H2H
+  bindNum('cfg-h-rate', v => { if (isFinite(v)) S.cfg.h2h.minRate = Math.min(100, Math.max(0, v)); });
+  bindNum('cfg-h-prob', v => { if (isFinite(v)) S.cfg.h2h.minProb = Math.min(100, Math.max(0, v)); });
+  bindNum('cfg-h-minn', v => { if (isFinite(v)) S.cfg.h2h.minN = Math.max(1, Math.round(v)); });
+  $('cfg-h-base').addEventListener('change', ()=>{ S.cfg.h2h.base = $('cfg-h-base').value === 'raw' ? 'raw' : 'net'; save(); renderAll(); });
+  $('cfg-h-strict').addEventListener('change', ()=>{ S.cfg.h2h.strictVsH2H = $('cfg-h-strict').checked; save(); renderAll(); });
 
   // réglages : seuils couleurs
   ['p','q','o'].forEach((k,i)=>{
