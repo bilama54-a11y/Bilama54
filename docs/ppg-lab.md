@@ -5,7 +5,7 @@ Mini-application **hors-ligne** (un seul fichier `index.html`, aucune dépendanc
 1. calcule le **PPG** d'une équipe exactement comme FootyStats (global / domicile / extérieur / last 5-6-10) ;
 2. applique la **heatmap 5 couleurs** (vert foncé, vert clair, jaune, orangé, rouge) avec des seuils que **tu** contrôles ;
 3. rejoue ton **filtre valeur** (« PPG ≥ 3 et cote < 1,70 ») sur les matchs à venir ;
-4. applique la règle **H2H « victoire sèche »** (favori > 60 % en confrontations directes **et** > 60 % de chances selon le bookmaker) ;
+4. applique la règle **H2H « victoire sèche »** (favori ≥ 60 % en confrontations directes **et** ≥ 60 % de chances selon le bookmaker) ;
 5. stocke tout dans ton navigateur (localStorage) avec export / import JSON et CSV.
 
 ## 0. Installation sur Android (PWA)
@@ -89,6 +89,8 @@ L'onglet **4. H2H & victoire sèche** applique la règle aux matchs à venir sai
 
 **Le taux de victoire est `victoires ÷ matchs joués`** : un nul n'est **jamais** compté comme une victoire, mais il **compte comme match joué**. Exemple de référence : **3 V, 1 nul, 1 défaite → 3 ÷ 5 = 60 %**. Le total de matchs joués (nuls compris) sert aussi au minimum de confrontations et au badge « n faible ».
 
+Les deux seuils sont **inclusifs par défaut** (`≥ 60 %`) : un taux de **60,0 % pile passe**. La case *Seuils inclusifs* de l'onglet *Réglages* permet de revenir à `> 60 %` (strict).
+
 ### 4.1 Ce que calcule l'app
 
 | Élément | Formule | Détail |
@@ -98,7 +100,7 @@ L'onglet **4. H2H & victoire sèche** applique la règle aux matchs à venir sai
 | Matchs joués | total des confrontations | **nuls compris** ; sert au minimum de matchs joués et au badge « n faible » |
 | Proba brute | 1 ÷ cote du favori | c'est aussi le **seuil de rentabilité** (1,60 → 62,5 %) |
 | Proba nette (défaut) | (1 ÷ cote favori) ÷ (1 ÷ cote dom. + 1 ÷ cote nul + 1 ÷ cote ext.) | marge du bookmaker (2 à 6 % en général) retirée ; repli sur la proba brute si les 3 cotes ne sont pas renseignées |
-| Verdict | H2H > 60 % **et** proba > 60 % **et** matchs joués ≥ minimum | comparaisons strictes : 60,0 % pile ne passe pas |
+| Verdict | H2H ≥ 60 % **et** proba ≥ 60 % **et** matchs joués ≥ minimum | seuils inclusifs par défaut : 60,0 % pile passe ; décochable pour exiger `> 60 %` |
 
 « Victoire sèche » = le favori gagne dans le temps réglementaire. Le nul est **perdu** (ce n'est pas une double chance).
 
@@ -109,7 +111,7 @@ L'onglet **4. H2H & victoire sèche** applique la règle aux matchs à venir sai
 | Nord FC – Ouest FC | Nord FC (dom.) | 1,45 | 63,8 % | 2 V, 0 nul, 0 défaite | 2 ÷ 2 = 100 % | ✅ victoire sèche |
 | Est FC – Sud FC | Est FC (dom.) | 2,10 | 45,1 % | 2 V, 0 nul, 0 défaite | 2 ÷ 2 = 100 % | ❌ proba 45 % ≤ 60 % |
 
-Cas avec nuls : **3 V, 1 nul, 1 défaite → 3 ÷ 5 = 60 %** (rejeté, il faut plus de 60 %) ; **4 V, 1 nul, 1 défaite → 4 ÷ 6 = 66,7 %** (retenu) ; **2 V, 2 nuls, 0 défaite → 2 ÷ 4 = 50 %** ; **0 V, 4 nuls → 0 ÷ 4 = 0 %**.
+Cas avec nuls : **3 V, 1 nul, 1 défaite → 3 ÷ 5 = 60 %** (retenu avec le seuil inclusif par défaut, rejeté en mode strict) ; **4 V, 1 nul, 1 défaite → 4 ÷ 6 = 66,7 %** (retenu) ; **2 V, 2 nuls, 0 défaite → 2 ÷ 4 = 50 %** ; **0 V, 4 nuls → 0 ÷ 4 = 0 %**.
 
 Chaque rejet est expliqué dans la colonne **Verdict** (`H2H 60 % ≤ 60 %`, `proba 55 % ≤ 60 %`, `2 match(s) joué(s) < 3`, `marché 64 % ≤ H2H 100 %`, `cote dom. ou ext. manquante`). La colonne **Détail** déplie la liste des confrontations (date, score, terrain, compétition).
 
@@ -118,6 +120,7 @@ Chaque rejet est expliqué dans la colonne **Verdict** (`H2H 60 % ≤ 60 %`, `pr
 - **Taux H2H minimum** — 60 % par défaut.
 - **Proba marché minimum** — 60 % par défaut.
 - **Matchs joués minimum** — 1 par défaut (règle brute), **nuls compris**. **Mets 3 à 5** : un seul match gagné sur un seul joué affiche déjà 100 %. Les échantillons < 3 matchs joués sont signalés par un badge « n faible ».
+- **Seuils inclusifs (≥)** — coché par défaut : 60,0 % pile passe. Décoche pour exiger strictement plus de 60 %.
 - **Proba marché utilisée** — nette (marge retirée) ou brute (1 ÷ cote).
 - **Exiger proba > taux H2H** — option stricte : le marché doit être plus confiant que l'historique.
 
@@ -153,13 +156,13 @@ L'en-tête est optionnel (les lignes qui ne commencent pas par une date `AAAA-MM
 
 ## 7. Vérifications
 
-Test automatisé (jsdom) sur le fichier livré, **65 assertions, 0 erreur** :
+Test automatisé (jsdom) sur le fichier livré, **72 assertions, 0 erreur** :
 
 - 12 matchs chargés → Nord FC 6 MJ, 18 pts, PPG global 3,00 / dom. 3,00 / ext. 3,00 ; Sud FC 1 pt, PPG 0,17 ;
 - couleurs : 3,00 → vert foncé, 0,17 → rouge ;
 - filtre : Nord FC (dom., 3,00) à 1,45 → **retenu** ; Ouest FC à 6,50 → **rejeté** ; cote **1,70 pile → rejetée** (strictement inférieure) ;
 - H2H : Nord FC 2-0-0 (100 %) à 1,45 → proba nette 63,8 % → **victoire sèche** ; Est FC à 2,10 → proba 45,1 % → **rejeté** ;
-- **taux = victoires ÷ matchs joués** : 3 V, 1 nul, 1 défaite → 60 % pile → rejeté ; 4 V, 1 nul, 1 défaite → 66,7 % → retenu ; 2 V + 3 nuls → 2/5 = 40 % → rejeté ; 0 V + 2 nuls → 0 % → rejeté ;
+- **taux = victoires ÷ matchs joués** : 3 V, 1 nul, 1 défaite → 60 % pile → **retenu** (inclusif), **rejeté** en mode strict ; 4 V, 1 nul, 1 défaite → 66,7 % → retenu ; 2 V + 3 nuls → 2/5 = 40 % → rejeté ; 0 V + 2 nuls → 0 % → rejeté ;
 - **nuls comptés au dénominateur et dans le minimum** : 5 matchs joués dont 3 nuls satisfont le minimum de 3 ; 2 joués refusés (`2 match(s) joué(s) < 3`) ;
 - seuils stricts ; option « proba > taux H2H » ; proba brute vs nette ; repli sur la brute quand les cotes 1X2 sont incomplètes ; minimum de **matchs joués** ; H2H limité aux matchs antérieurs à la date du match ;
 - persistance des réglages H2H (localStorage et `deepCfg`), ancienne sauvegarde sans section H2H → valeurs par défaut ;
