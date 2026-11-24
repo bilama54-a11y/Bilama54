@@ -8,15 +8,22 @@ League Phase (36 clubs, 8 journées) : tiers 50/30/20 = 18/11/7, zones de qualif
 score global −4 à +4, projection de buts (ligne adaptative 2,5 / 3,5 / 4,5 / auto) et `Journal_Paris`.
 Installable sur Android, fonctionne hors-ligne. Doc : [`docs/ucl-over-under.md`](docs/ucl-over-under.md)
 
+**https://bilama54-a11y.github.io/Bilama54/paliers/** — **PL Paliers 2026-27** 📐 *(nouveau)*
+Modèle Over/Under **à seuils absolus** : attaque `≥ 1,40` but/match → `+1` OVER · `1,00–1,39` → `0` ·
+`< 1,00` → `−1` ; défense en miroir (`≤ 1,00` → `−1`, `≥ 1,40` → `+1`). Aucun rang, aucun 50/30/20.
+Score global −4 à +4, projection vs ligne/cote, `Journal_Paris`. Doc : [`docs/pl-paliers.md`](docs/pl-paliers.md)
+
 **https://bilama54-a11y.github.io/Bilama54/** — **PL Over/Under 2026-27**
 20 clubs de Premier League : tiers 10/6/4, analyseur Dom vs Ext, verdict couleur + projection vs
 ligne/cote, `Journal_Paris`. Doc : [`docs/pl-over-under.md`](docs/pl-over-under.md)
 
-Les deux apps sont indépendantes (icônes, journaux et caches séparés) et **mettent à jour leurs
+Les apps sont indépendantes (icônes, journaux et caches séparés) et **mettent à jour leurs
 statistiques automatiquement** dès que le téléphone retrouve Internet.
 
 ## Outils
 
+- **[`paliers/index.html`](paliers/index.html)** — **PL Paliers** : modèle à seuils absolus (1,40 / 1,00),
+  badges de paliers, mêmes projection/verdict/journal que le modèle par rangs.
 - **[`ucl/index.html`](ucl/index.html)** — **UCL Over/Under 2026-27** (déployé sur `/ucl/`) :
   36 clubs de la League Phase, tiers 18/11/7, analyseur Dom vs Ext, verdict couleur + projection
   vs ligne/cote, `Journal_Paris` (ROI, winrate, export CSV/JSON), matchs à venir par journée (J5→J8).

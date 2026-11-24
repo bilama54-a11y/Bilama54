@@ -502,11 +502,34 @@ function toast(msg, isErr) {
   toast._t = setTimeout(() => { el.className = 'toast' + (isErr ? ' err' : ''); }, 2600);
 }
 
+/* Lettres nordiques/germaniques que NFD ne décompose pas (Bodø, ŁKS, Straßburg…). */
+function foldLetters(str) {
+  return str
+    .replace(/[øØ]/g, 'o').replace(/[łŁ]/g, 'l').replace(/[đĐ]/g, 'd')
+    .replace(/[ðÐ]/g, 'd').replace(/[þÞ]/g, 'th').replace(/[ß]/g, 'ss')
+    .replace(/[æÆ]/g, 'ae').replace(/[œŒ]/g, 'oe').replace(/[ıİ]/g, 'i');
+}
+
 function normName(s) {
-  return (s || '').toString().toLowerCase().normalize('NFD')
+  return foldLetters((s || '').toString().toLowerCase()).normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
+}
+
+/* Similarité de Dice sur les bigrammes : tolère « Nott'm » vs « Nottingham ». */
+function bigrams(str) {
+  const t = ' ' + str.replace(/ /g, '') + ' ';
+  const out = new Set();
+  for (let i = 0; i < t.length - 1; i++) out.add(t.slice(i, i + 2));
+  return out;
+}
+function similarity(a, b) {
+  const A = bigrams(a), B = bigrams(b);
+  if (!A.size || !B.size) return 0;
+  let inter = 0;
+  A.forEach(g => { if (B.has(g)) inter++; });
+  return (2 * inter) / (A.size + B.size);
 }
 
 function teamByKey(key) {
@@ -528,7 +551,13 @@ function teamByKey(key) {
   if (cands.length > 1) {
     return cands.sort((a, b) => Math.abs(normName(a.name).length - n.length) - Math.abs(normName(b.name).length - n.length))[0];
   }
-  return null;
+  // dernier recours : similarité bigrammes (« Nott'm Forest » ↔ « Nottingham Forest »)
+  let best = null, bestScore = 0;
+  teams.forEach(t => {
+    const sc = similarity(n, normName(t.name));
+    if (sc > bestScore) { bestScore = sc; best = t; }
+  });
+  return bestScore >= 0.6 ? best : null;
 }
 
 /* ----------------------- rangs & tiers ----------------------- */
@@ -742,6 +771,11 @@ function fillSelects() {
   const dom = $('#selDom'), ext = $('#selExt');
   dom.innerHTML = '<option value="">— Choisir —</option>' + opts;
   ext.innerHTML = '<option value="">— Choisir —</option>' + opts;
+
+  // La sélection vient peut-être d'un instantané plus ancien : on la re-résout par le nom.
+  const ids = new Set(teams.map(t => t.id));
+  if (state.dom && !ids.has(state.dom)) { const r = teamByKey(state.dom); state.dom = r ? r.id : ''; }
+  if (state.ext && !ids.has(state.ext)) { const r = teamByKey(state.ext); state.ext = r ? r.id : ''; }
 
   const fx = (state.data.fixtures || [])[0];
   const fxHome = fx ? teamByKey(fx.home) : null;
