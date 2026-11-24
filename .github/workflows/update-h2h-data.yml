@@ -16,7 +16,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: gh-pages-deploy
+  # Groupe dédié : les 3 workflows peuvent publier en parallèle sans s'annuler
+  group: deploy-h2h
   cancel-in-progress: false
 
 jobs:
@@ -83,7 +84,15 @@ jobs:
             echo "Site déjà à jour — rien à publier."
           else
             git commit -m "deploy(h2h): H2H Scanner + cotes $(date -u +%Y-%m-%dT%H:%MZ)"
-            git push origin HEAD:gh-pages
+            # un autre workflow peut publier en même temps : rebase + nouvelle tentative
+            published=0
+            for i in 1 2 3 4 5; do
+              if git pull --rebase --autostash -q origin gh-pages && git push -q origin HEAD:gh-pages; then
+                published=1; break
+              fi
+              sleep 4
+            done
+            [ "$published" = "1" ] || { echo 'Échec de la publication gh-pages' >&2; exit 1; }
           fi
 
       - name: Résumé
