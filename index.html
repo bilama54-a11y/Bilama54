@@ -839,14 +839,16 @@ function renderBetMetrics(a) {
 
 function betReading(a) {
   const diff = a.proj - state.line;
-  const pick = a.score >= 0 ? 'OVER' : 'UNDER';
+  const pick = a.score > 0 ? 'OVER' : a.score < 0 ? 'UNDER' : 'Aucun pari';
   if (a.verdict.key === 'neutral') {
     return 'Score 0 : aucun avantage statistique (No Bet). La projection ' + fmt2(a.proj) +
       ' buts est ' + (diff >= 0 ? 'au-dessus' : 'sous') + ' la ligne ' + fmt2(state.line) + '.';
   }
+  const pOver = poissonOver(a.proj, state.line);
+  const probs = pOver == null ? '' :
+    ' Modèle Poisson : ' + nf1.format(pOver * 100) + ' % OVER / ' + nf1.format((1 - pOver) * 100) + ' % UNDER.';
   return pick + ' ' + fmt2(state.line) + ' : projection ' + fmt2(a.proj) + ' buts (' +
-    (diff >= 0 ? '+' : '') + fmt2(diff) + ' vs ligne), soit ' +
-    nf1.format((poissonOver(a.proj, state.line) * 100)) + ' % de chance de OVER selon le modèle Poisson.';
+    (diff >= 0 ? '+' : '−') + fmt2(Math.abs(diff)) + ' vs ligne).' + probs;
 }
 
 /* ----------------------- rendu : fixtures ----------------------- */
