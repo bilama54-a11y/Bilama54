@@ -1,688 +1,1363 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Bilama54 — Dashboard NBA Opening Night 20 Oct 2026 | Pronos Rating & Pace</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      fontFamily: { sans: ['Space Grotesk','sans-serif'], mono: ['IBM Plex Mono','monospace'] },
-      colors: { bilama: { bg:'#0B0E14', card:'#11151E', border:'#1E2533', accent:'#00E5A0', accent2:'#6C5CFF', warn:'#FFB800', danger:'#FF3B30', lab:'#0A1A2E' } }
-    }
-  }
-}
-</script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>PL Over/Under 2026-27 — Tiers & Analyseur</title>
+<meta name="description" content="Modèle Over/Under Premier League 2026-27 : tiers offensifs/défensifs, score global -4 à +4, projection de buts et journal de paris. Données synchronisées automatiquement." />
+<meta name="theme-color" content="#0b0f14" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="PL O/U" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="icon" href="./icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="./apple-touch-icon.png" />
 <style>
-.glass { backdrop-filter: blur(12px); }
-.live-dot { animation: pulse 1.5s infinite; }
-@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.35 } }
-.scrollbar-hide::-webkit-scrollbar { display:none }
-.range-slider::-webkit-slider-thumb { appearance:none; width:16px; height:16px; border-radius:999px; background:#00E5A0; cursor:pointer; }
+  :root{
+    --bg:#0b0f14;
+    --panel:#111820;
+    --panel-2:#151e28;
+    --line:#1f2b38;
+    --txt:#e8eef6;
+    --muted:#8d9bad;
+    --green:#22c55e;
+    --green-dk:#0f2f1d;
+    --red:#ef4444;
+    --red-dk:#3a1414;
+    --orange:#f59e0b;
+    --orange-dk:#3a2708;
+    --blue:#3b82f6;
+    --blue-dk:#0e2340;
+    --sky:#38bdf8;
+    --sky-dk:#0b2b38;
+    --yellow:#eab308;
+    --yellow-dk:#33290a;
+    --radius:16px;
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-t: env(safe-area-inset-top, 0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1200px 500px at 50% -210px, rgba(34,197,94,.13), transparent 70%),
+      var(--bg);
+    color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:15px;line-height:1.45;
+    padding-bottom:calc(96px + var(--safe-b));
+    min-height:100vh;
+    overscroll-behavior-y:contain;
+  }
+  .wrap{max-width:620px;margin:0 auto;padding:0 14px}
+
+  /* ---------- Barre du haut ---------- */
+  header.appbar{
+    position:sticky;top:0;z-index:40;
+    padding-top:var(--safe-t);
+    background:rgba(11,15,20,.86);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .appbar-in{max-width:620px;margin:0 auto;padding:10px 14px;display:flex;align-items:center;gap:10px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:-.2px;font-size:16px}
+  .brand .pill{background:linear-gradient(135deg,#22c55e,#16a34a);color:#04140a;border-radius:7px;padding:2px 7px;font-size:11px;font-weight:900;letter-spacing:.4px}
+  .brand small{color:var(--muted);font-weight:600;font-size:12px}
+  .spacer{flex:1}
+  .sync{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--panel-2);border:1px solid var(--line);color:var(--txt);
+    padding:7px 11px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;
+  }
+  .sync:active{transform:scale(.96)}
+  .sync .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+  .sync[data-s="ok"] .dot{background:var(--green);box-shadow:0 0 8px rgba(34,197,94,.8)}
+  .sync[data-s="loading"] .dot{background:var(--orange);animation:pulse 1s infinite}
+  .sync[data-s="error"] .dot{background:var(--red)}
+  .sync[data-s="offline"] .dot{background:var(--muted)}
+  @keyframes pulse{50%{opacity:.25}}
+  .sync .spin{display:inline-block}
+  .sync[data-s="loading"] .spin{animation:rot 1s linear infinite}
+  @keyframes rot{to{transform:rotate(360deg)}}
+
+  .netbar{max-width:620px;margin:0 auto;padding:0 14px 8px;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .netbar b{color:var(--txt);font-weight:700}
+  .tag{display:inline-flex;align-items:center;gap:5px;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;color:var(--muted)}
+  .tag.live{color:#7ee2a8;border-color:#1c4430;background:#0d2016}
+  .tag.warn{color:#ffd08a;border-color:#5c4212;background:#2a1f08}
+
+  /* ---------- Cartes ---------- */
+  main{padding-top:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+  .card h2{margin:0 0 4px;font-size:15px;letter-spacing:-.1px}
+  .card .sub{margin:0 0 12px;color:var(--muted);font-size:12.5px}
+  .step{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:#1b2a3a;color:#8fc6ff;font-size:11.5px;font-weight:900;margin-right:7px}
+  .row{display:flex;gap:10px;align-items:center}
+  .row.wrap{flex-wrap:wrap}
+  .grow{flex:1;min-width:0}
+
+  /* ---------- Segmented ---------- */
+  .seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+  .seg button{
+    flex:1;appearance:none;border:0;background:transparent;color:var(--muted);
+    padding:8px 6px;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;
+    font-family:inherit;transition:.15s;
+  }
+  .seg button.on{background:#1f3b2b;color:#b6f5cd;box-shadow:inset 0 0 0 1px #26543a}
+  .seg.neutral button.on{background:#1b2a3a;color:#a9d4ff;box-shadow:inset 0 0 0 1px #2a445e}
+
+  /* ---------- Tableau des tiers ---------- */
+  .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -6px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:430px}
+  th{position:sticky;top:0;background:var(--panel);text-align:right;color:var(--muted);font-weight:700;font-size:11px;padding:6px 5px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th:nth-child(1),th:nth-child(2){text-align:left}
+  td{padding:7px 5px;border-bottom:1px solid #16202b;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  td:nth-child(1),td:nth-child(2){text-align:left}
+  tbody tr:active{background:#16212c}
+  .club{display:flex;align-items:center;gap:7px;font-weight:700}
+  .pos{color:var(--muted);font-weight:700;font-size:11.5px;min-width:16px}
+  .tbadge{display:inline-flex;align-items:center;justify-content:center;min-width:30px;padding:2px 6px;border-radius:7px;font-weight:900;font-size:11.5px;border:1px solid transparent}
+  .t-pos{background:var(--green-dk);color:#7fe0a2;border-color:#1d4a30}
+  .t-neg{background:var(--red-dk);color:#ff9c9c;border-color:#4d2020}
+  .t-zero{background:#1a232e;color:#95a3b4;border-color:#27323f}
+  .t-def1{background:var(--blue-dk);color:#9cc4ff;border-color:#1e3a63}
+  .t-def3{background:var(--orange-dk);color:#ffc778;border-color:#4a3310}
+  .rk{color:var(--muted);font-size:11px;font-weight:700}
+  tr.tier1 td:nth-child(2){}
+  .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+  /* ---------- Sélecteurs ---------- */
+  .pickers{display:grid;grid-template-columns:1fr;gap:10px}
+  .pick{background:var(--panel-2);border:1px solid var(--line);border-radius:13px;padding:10px}
+  .pick label{display:block;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+  select{
+    width:100%;appearance:none;background:#0e151d;color:var(--txt);
+    border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;font-weight:700;font-family:inherit;
+  }
+  select:focus{outline:2px solid #2d6a45;outline-offset:1px}
+  .swap{display:flex;justify-content:center;margin:-2px 0}
+  .swap button{background:var(--panel-2);border:1px solid var(--line);color:var(--muted);border-radius:999px;width:34px;height:34px;font-size:15px;cursor:pointer}
+
+  /* ---------- Composantes du score ---------- */
+  .comp{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+  .cbox{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:9px 10px}
+  .cbox .lbl{font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .cbox .val{font-size:16px;font-weight:900;margin-top:2px;font-variant-numeric:tabular-nums}
+  .cbox .meta{font-size:11px;color:var(--muted);margin-top:1px}
+  .cbox .pts{float:right;margin-top:-2px}
+
+  /* ---------- Jauge ---------- */
+  .gauge{position:relative;height:12px;border-radius:8px;margin:16px 0 4px;
+    background:linear-gradient(90deg,#3b82f6 0%,#38bdf8 22%,#eab308 50%,#f59e0b 78%,#ef4444 100%);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+  .gauge .needle{position:absolute;top:-5px;width:4px;height:22px;border-radius:3px;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.55);transform:translateX(-50%);transition:left .35s cubic-bezier(.3,1.4,.5,1)}
+  .gauge-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:700;margin-bottom:2px}
+
+  .verdict{border-radius:14px;padding:13px 14px;margin-top:12px;border:1px solid;display:flex;align-items:center;gap:12px}
+  .verdict .big{font-size:18px;font-weight:900;letter-spacing:-.2px;line-height:1.15}
+  .verdict .small{font-size:11.5px;opacity:.85;margin-top:2px;font-weight:600}
+  .verdict .score{margin-left:auto;font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+  .v-red{background:var(--red-dk);border-color:#63262a;color:#ffd7d7}
+  .v-orange{background:var(--orange-dk);border-color:#6a4a12;color:#ffe4b5}
+  .v-yellow{background:var(--yellow-dk);border-color:#635114;color:#f6ecb4}
+  .v-sky{background:var(--sky-dk);border-color:#16516a;color:#c4ecff}
+  .v-blue{background:var(--blue-dk);border-color:#1f3f6e;color:#cfe0ff}
+
+  /* ---------- Inputs ---------- */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .field label{display:block;font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+  input[type=number],input[type=text],input[type=date]{
+    width:100%;background:#0e151d;color:var(--txt);border:1px solid var(--line);border-radius:10px;
+    padding:10px 11px;font-size:15px;font-weight:800;font-family:inherit;font-variant-numeric:tabular-nums;
+  }
+  input:focus{outline:2px solid #2d6a45;outline-offset:1px}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;width:100%;
+    background:linear-gradient(135deg,#22c55e,#16a34a);color:#04140a;border:0;border-radius:12px;
+    padding:13px 16px;font-size:14.5px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:12px;
+    box-shadow:0 6px 20px -8px rgba(34,197,94,.8);
+  }
+  .btn:active{transform:scale(.985)}
+  .btn.ghost{background:var(--panel-2);color:var(--txt);border:1px solid var(--line);box-shadow:none;font-weight:800}
+  .btn.sm{padding:9px 12px;font-size:12.5px;margin-top:0;width:auto}
+  .btn.danger{background:#2a1214;border:1px solid #4d2020;color:#ffb4b4;box-shadow:none}
+
+  .metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+  .metric{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:9px 10px}
+  .metric .k{font-size:10.5px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.4px}
+  .metric .v{font-size:17px;font-weight:900;margin-top:1px;font-variant-numeric:tabular-nums}
+
+  /* ---------- Fixtures ---------- */
+  .fx{display:flex;align-items:center;gap:8px;padding:9px 2px;border-bottom:1px solid #16202b}
+  .fx:last-child{border-bottom:0}
+  .fx .when{width:64px;flex:none;font-size:10.5px;color:var(--muted);font-weight:800;line-height:1.25}
+  .fx .who{flex:1;min-width:0;font-size:13px;font-weight:700;line-height:1.3}
+  .fx .who span{color:var(--muted);font-weight:600;font-size:11px}
+  .chip{background:#16281d;border:1px solid #23503a;color:#a7f0c4;border-radius:9px;padding:6px 9px;font-size:11px;font-weight:900;cursor:pointer;white-space:nowrap;font-family:inherit}
+  .chip.alt{background:#152436;border-color:#25415e;color:#b7d7ff}
+  .chip:active{transform:scale(.95)}
+
+  /* ---------- Journal ---------- */
+  .bet{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:10px 11px;margin-bottom:9px}
+  .bet .top{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .bet .who{font-weight:800;font-size:13px;flex:1;min-width:0}
+  .badge{border-radius:7px;padding:2px 7px;font-size:10.5px;font-weight:900;border:1px solid transparent}
+  .b-pend{background:#1a232e;color:#a6b4c4;border-color:#27323f}
+  .b-won{background:var(--green-dk);color:#8ef0b3;border-color:#1d4a30}
+  .b-lost{background:var(--red-dk);color:#ff9c9c;border-color:#4d2020}
+  .b-push{background:var(--yellow-dk);color:#f6e6a8;border-color:#5c4a12}
+  .bet .l2{font-size:11.5px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
+  .bet .l2 b{color:var(--txt);font-weight:700}
+  .bet .acts{display:flex;gap:6px;margin-top:8px}
+  .bet .acts button{flex:1;padding:6px 4px;border-radius:8px;font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;background:#0e151d;border:1px solid var(--line);color:var(--muted)}
+  .bet .acts button.on{color:#04140a;border-color:transparent}
+  .bet .acts button.on.won{background:#22c55e}
+  .bet .acts button.on.lost{background:#ef4444;color:#fff}
+  .bet .acts button.on.push{background:#eab308}
+  .empty{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 8px}
+
+  /* ---------- Note d'info ---------- */
+  details.note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:14px}
+  details.note summary{font-size:12.5px;font-weight:800;color:#a9d4ff;cursor:pointer;list-style:none}
+  details.note summary::-webkit-details-marker{display:none}
+  details.note p{font-size:12px;color:var(--muted);margin:8px 0 0}
+  details.note code{background:#0e151d;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:11px;color:#b8e6c9}
+  details.note a{color:#7fb6ff}
+
+  /* ---------- Barre d'onglets ---------- */
+  nav.tabbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    background:rgba(13,18,24,.94);
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border-top:1px solid var(--line);
+    padding:6px 6px calc(6px + var(--safe-b));
+  }
+  .tabbar-in{max-width:620px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:2px}
+  .tabbar button{
+    appearance:none;border:0;background:transparent;color:var(--muted);font-family:inherit;
+    padding:6px 2px;border-radius:11px;font-size:10.5px;font-weight:800;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.1;
+  }
+  .tabbar button .ico{font-size:17px;line-height:1}
+  .tabbar button.on{color:#c9f8da;background:#16241c}
+  .tabbar button.on .ico{filter:drop-shadow(0 0 6px rgba(34,197,94,.55))}
+  .hidden{display:none!important}
+  .toast{
+    position:fixed;left:50%;transform:translateX(-50%) translateY(20px);
+    bottom:calc(84px + var(--safe-b));background:#16241c;border:1px solid #26543a;color:#c9f8da;
+    padding:10px 16px;border-radius:12px;font-size:12.5px;font-weight:800;z-index:99;
+    opacity:0;pointer-events:none;transition:.25s;max-width:90vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{background:#2a1214;border-color:#4d2020;color:#ffb4b4}
+  .fine{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+  .kv{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:5px 0;border-bottom:1px solid #16202b}
+  .kv:last-child{border-bottom:0}
+  .kv span:first-child{color:var(--muted);font-weight:600}
+  .kv span:last-child{font-weight:800;font-variant-numeric:tabular-nums}
+  #installBtn{display:none}
 </style>
 </head>
-<body class="bg-bilama-bg text-white font-sans min-h-screen antialiased">
-  <!-- TOP BAR -->
-  <header class="sticky top-0 z-50 bg-bilama-bg/80 glass border-b border-bilama-border">
-    <div class="max-w-[1440px] mx-auto px-4 lg:px-6 h-[64px] flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-bilama-accent to-bilama-accent2 flex items-center justify-center font-bold text-black">B54</div>
-        <div>
-          <div class="font-bold leading-none text-[18px] tracking-tight">Bilama54 <span class="text-bilama-accent">•</span> <span class="font-normal text-zinc-400">Parieur sportif</span></div>
-          <div class="text-[11px] text-zinc-500 font-mono tracking-widest uppercase">Dashboard • Opening Night • Rating + Pace + Compos</div>
-        </div>
-      </div>
-      <div class="hidden lg:flex items-center gap-3">
-        <a href="global.html" class="bg-sky-500 text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-sky-400 transition"><i class="fa-solid fa-layer-group"></i> Global 30 Teams</a>
-        <a href="foot.html" class="bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-emerald-600 transition"><i class="fa-solid fa-futbol"></i> Foot Top 15 + D2</a>
-        <div class="flex items-center gap-2 bg-bilama-card border border-bilama-border rounded-full px-3 py-1.5">
-          <span class="w-2 h-2 rounded-full bg-bilama-accent live-dot"></span>
-          <span class="text-xs font-medium">Auto-refresh 60s</span>
-          <span class="text-[11px] text-zinc-500 font-mono" id="lastUpdate">—</span>
-        </div>
-        <a href="#lab" class="bg-bilama-accent text-black px-4 py-2 rounded-full text-sm font-bold hover:bg-emerald-400 transition">🧪 Bilama Lab</a>
-        <button id="refreshBtn" class="bg-white text-black px-4 py-2 rounded-full text-sm font-semibold hover:bg-zinc-100 transition flex items-center gap-2">
-          <i class="fa-solid fa-rotate"></i> Actualiser
-        </button>
-        <a href="https://www.rotowire.com/basketball/nba-lineups.php" target="_blank" class="bg-bilama-card border border-bilama-border px-4 py-2 rounded-full text-sm font-medium hover:bg-zinc-800 transition">RotoWire <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-xs"></i></a>
-      </div>
-      <div class="lg:hidden flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-bilama-accent live-dot"></span>
-        <span class="text-xs">Live</span>
-      </div>
-    </div>
-  </header>
+<body data-plou-app="2026-27">
 
-  <!-- HERO -->
-  <section class="max-w-[1440px] mx-auto px-4 lg:px-6 pt-6 pb-2">
-    <div class="grid grid-cols-1 lg:grid-cols-[1.35fr_0.65fr] gap-4">
-      <div class="bg-gradient-to-br from-[#11151E] via-[#131A2B] to-[#0B0E14] border border-bilama-border rounded-[24px] p-6 lg:p-8 relative overflow-hidden">
-        <div class="absolute -right-10 -top-10 w-64 h-64 bg-bilama-accent2/20 blur-[80px] rounded-full"></div>
-        <div class="absolute -left-10 -bottom-10 w-64 h-64 bg-bilama-accent/15 blur-[80px] rounded-full"></div>
-        <div class="relative">
-          <div class="inline-flex items-center gap-2 bg-white/10 border border-white/10 rounded-full px-3 py-1 text-xs mb-3">
-            <i class="fa-solid fa-basketball text-bilama-accent"></i> NBA 2026-27 • Saison 80 • Tip-Off
-            <span class="bg-bilama-accent text-black px-2 py-0.5 rounded-full font-bold text-[11px]">LIVE 20 OCT</span>
-          </div>
-          <h1 class="text-[28px] lg:text-[40px] font-bold leading-[0.95] tracking-tight">Opening Night.<br><span class="text-bilama-accent">3 matchs.</span> Tes pronos<br>basés sur la data.</h1>
-          <p class="text-zinc-400 mt-3 text-sm lg:text-[15px] max-w-[560px]">Compos RotoWire + <b class="text-white">Rating Off/Def</b> + <b class="text-white">Pace</b> + blessures. Notre modèle <b class="text-bilama-accent">Bilama Lab v1</b> calcule le score projeté, la proba de victoire et l'écart avec le book.</p>
-          <div class="flex flex-wrap gap-3 mt-5">
-            <div class="flex items-center gap-2 bg-black/40 border border-white/10 rounded-full px-3 py-2">
-              <img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fnyk.png&w=40&h=40" class="w-6 h-6"/>
-              <span class="text-xs font-mono">NYK champion • Ring Night 18h30 ET</span>
-            </div>
-            <div class="flex items-center gap-2 bg-bilama-accent text-black rounded-full px-3 py-2 text-xs font-bold">
-              <i class="fa-solid fa-clock"></i> <span id="countdown">Chargement…</span>
-            </div>
-          </div>
-          <div class="flex gap-2 mt-6">
-            <a href="#games" class="bg-white text-black px-5 py-2.5 rounded-full font-semibold text-sm">Voir les compos <i class="fa-solid fa-arrow-down ml-1"></i></a>
-            <a href="#lab" class="bg-bilama-card border border-bilama-accent text-bilama-accent px-5 py-2.5 rounded-full font-semibold text-sm">Voir les pronos <i class="fa-solid fa-flask ml-1"></i></a>
-            <button id="toggleTZ" class="bg-bilama-card border border-bilama-border px-5 py-2.5 rounded-full font-medium text-sm hidden lg:flex">Heure: Paris (UTC+2) <i class="fa-solid fa-repeat ml-1"></i></button>
-          </div>
-        </div>
-      </div>
-      <div class="grid grid-rows-[auto_1fr] gap-4">
-        <div class="bg-bilama-card border border-bilama-border rounded-[20px] p-4 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-bilama-warn/15 flex items-center justify-center text-bilama-warn"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <div>
-              <div class="text-sm font-semibold">Source RotoWire</div>
-              <div class="text-xs text-zinc-500">Projected → Confirmed à J-0</div>
-            </div>
-          </div>
-          <div class="text-right">
-            <div class="text-[11px] text-zinc-500 font-mono">DERNIÈRE VÉRIF</div>
-            <div class="text-sm font-mono font-medium" id="verifyTime">19 oct • Paris</div>
-          </div>
-        </div>
-        <div class="bg-gradient-to-br from-bilama-accent2 to-violet-900 rounded-[20px] p-5 text-white relative overflow-hidden flex flex-col justify-between">
-          <div class="absolute right-0 top-0 w-40 h-40 bg-white/10 blur-2xl rounded-full"></div>
-          <div>
-            <div class="text-xs font-mono tracking-widest opacity-80">BILAMA LAB • TOP VALUE DU JOUR</div>
-            <div class="mt-2 flex items-center gap-2">
-              <span class="bg-white text-black px-2 py-1 rounded-full text-xs font-bold">DET +1.5</span>
-              <span class="text-sm font-medium">Écart modèle vs book : 2.9 pts</span>
-            </div>
-            <p class="text-sm opacity-90 mt-2 leading-relaxed">Detroit a Net +8.2 et déf #2 NBA. Le marché fait de BOS favori à l'extérieur, notre modèle voit DET gagnant à domicile avec la Pace lente (94.8) qui casse le rythme.</p>
-          </div>
-          <div class="mt-4 flex items-center justify-between bg-white/15 rounded-full px-3 py-2">
-            <span class="text-xs">Confiance Bilama: ★★★★☆</span>
-            <span class="bg-bilama-accent text-black text-xs font-bold px-3 py-1 rounded-full">Cote 1.92</span>
-          </div>
-        </div>
-      </div>
+<header class="appbar">
+  <div class="appbar-in">
+    <div class="brand">
+      <span class="pill">PL</span>
+      Over/Under <small>2026-27</small>
     </div>
-  </section>
-
-  <!-- NAV PILLS -->
-  <div class="max-w-[1440px] mx-auto px-4 lg:px-6">
-    <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide py-3">
-      <button data-filter="all" class="filter-btn active bg-white text-black px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap">Tous (3)</button>
-      <button data-filter="early" class="filter-btn bg-bilama-card border border-bilama-border px-4 py-2 rounded-full text-sm whitespace-nowrap">15h ET • BOS @ DET</button>
-      <button data-filter="prime" class="filter-btn bg-bilama-card border border-bilama-border px-4 py-2 rounded-full text-sm whitespace-nowrap">19h ET • PHI @ NYK ⭐</button>
-      <button data-filter="late" class="filter-btn bg-bilama-card border border-bilama-border px-4 py-2 rounded-full text-sm whitespace-nowrap">21h30 ET • OKC @ SAS</button>
-      <a href="#lab" class="ml-auto hidden lg:flex items-center gap-2 bg-bilama-accent text-black px-4 py-2 rounded-full text-sm font-bold"><i class="fa-solid fa-flask"></i> Bilama Lab</a>
-    </div>
+    <div class="spacer"></div>
+    <button class="sync" id="syncBtn" data-s="idle" title="Synchroniser maintenant">
+      <span class="dot"></span><span class="spin">⟳</span><span id="syncTxt">Sync</span>
+    </button>
   </div>
+  <div class="netbar">
+    <span class="tag" id="netTag">hors-ligne</span>
+    <span class="tag" id="srcTag">—</span>
+    <span class="tag warn hidden" id="splitTag"></span>
+    <span id="updTag">dernière MAJ : —</span>
+  </div>
+</header>
 
-  <!-- GAMES GRID -->
-  <section id="games" class="max-w-[1440px] mx-auto px-4 lg:px-6 py-2 grid grid-cols-1 lg:grid-cols-3 gap-4">
-    <!-- GAME 1 -->
-    <article data-cat="early" class="game-card bg-bilama-card border border-bilama-border rounded-[20px] overflow-hidden flex flex-col">
-      <div class="h-1.5 w-full bg-gradient-to-r from-green-500 to-emerald-700"></div>
-      <div class="p-5">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="bg-white text-black text-[11px] font-bold px-2 py-1 rounded-full">MATCH 1</span>
-            <span class="bg-bilama-accent/15 text-bilama-accent text-[11px] font-mono px-2 py-1 rounded-full border border-bilama-accent/20">PROJECTED</span>
-          </div>
-          <span class="text-xs font-mono text-zinc-500" data-et="15:00" data-fr="21:00">15:00 ET • 21:00 Paris</span>
-        </div>
-        <div class="mt-4 bg-black/40 rounded-2xl p-4 border border-white/5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fbos.png&w=60&h=60" class="w-10 h-10 bg-white rounded-full p-1"/>
-              <div><div class="font-bold leading-none">BOS</div><div class="text-[11px] text-zinc-400">Celtics 56-26</div></div>
-            </div>
-            <div class="text-center"><div class="text-[11px] font-mono text-zinc-500">TIP-OFF</div><div class="font-bold">@</div><div class="text-[11px] text-zinc-500">NBC • DET</div></div>
-            <div class="flex items-center gap-3">
-              <div class="text-right"><div class="font-bold leading-none">DET</div><div class="text-[11px] text-zinc-400">Pistons 60-22</div></div>
-              <img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fdet.png&w=60&h=60" class="w-10 h-10 bg-white rounded-full p-1"/>
-            </div>
-          </div>
-          <div class="mt-3 flex items-center justify-center gap-2 text-[11px] font-mono">
-            <span class="bg-white text-black px-2 py-1 rounded-full font-bold">BOS -1.5</span>
-            <span class="bg-zinc-800 px-2 py-1 rounded-full">O/U 222.5</span>
-            <span class="bg-zinc-800 px-2 py-1 rounded-full">Little Caesars</span>
-          </div>
-        </div>
-        <div class="mt-4">
-          <div class="flex items-center justify-between mb-2"><h3 class="font-semibold text-sm">Cinq majeurs RotoWire</h3><span class="text-[11px] text-zinc-500 font-mono">BasketballMonster</span></div>
-          <div class="grid grid-cols-2 gap-2">
-            <div class="bg-[#0B0E14] border border-bilama-border rounded-xl p-3">
-              <div class="text-[11px] font-mono text-zinc-500 flex items-center gap-1"><span class="w-2 h-2 bg-green-500 rounded-full"></span> BOSTON</div>
-              <ul class="mt-2 space-y-1.5 text-sm">
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PG</span> <span>Derrick White</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SG</span> <span>Baylor Scheierman</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SF</span> <span>Jayson Tatum</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PF</span> <span class="text-bilama-accent">Paul George</span> <span class="text-[10px] bg-bilama-accent text-black px-1 rounded">NEW</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">C</span> <span>Mitchell Robinson</span></li>
-              </ul>
-            </div>
-            <div class="bg-[#0B0E14] border border-bilama-border rounded-xl p-3">
-              <div class="text-[11px] font-mono text-zinc-500 flex items-center gap-1"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> DETROIT</div>
-              <ul class="mt-2 space-y-1.5 text-sm">
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PG</span> <span class="font-medium">Cade Cunningham</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SG</span> <span>Duncan Robinson</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SF</span> <span>Ausar Thompson</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PF</span> <span>John Collins</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">C</span> <span>Jalen Duren</span></li>
-              </ul>
-            </div>
-          </div>
-        </div>
+<main class="wrap">
+
+  <!-- ================= ÉTAPE 1 ================= -->
+  <section id="tab-tiers">
+    <div class="card">
+      <h2><span class="step">1</span>Classements &amp; Tiers PL</h2>
+      <p class="sub">20 clubs · 50 % / 30 % / 20 % = 10 / 6 / 4 équipes</p>
+      <div class="seg neutral" id="tiersMode">
+        <button data-m="global" class="on">Global</button>
+        <button data-m="home">Domicile</button>
+        <button data-m="away">Extérieur</button>
       </div>
-      <div class="mt-auto px-5 py-3 bg-black/20 border-t border-bilama-border flex items-center justify-between text-xs"><span class="text-zinc-500 font-mono">RotoWire 19 oct</span><span class="flex items-center gap-1 text-zinc-400"><i class="fa-solid fa-rotate text-[10px]"></i> auto-refresh</span></div>
-    </article>
-
-    <!-- GAME 2 -->
-    <article data-cat="prime" class="game-card bg-gradient-to-b from-[#1A1F2E] to-bilama-card border border-bilama-accent/30 rounded-[20px] overflow-hidden flex flex-col relative lg:scale-[1.02] shadow-xl shadow-bilama-accent/5">
-      <div class="h-1.5 w-full bg-gradient-to-r from-orange-500 via-bilama-warn to-yellow-400"></div>
-      <div class="absolute top-3 right-3 bg-bilama-accent text-black text-[11px] font-bold px-2 py-1 rounded-full flex items-center gap-1"><i class="fa-solid fa-crown"></i> RING NIGHT</div>
-      <div class="p-5">
-        <div class="flex items-center gap-2"><span class="bg-bilama-accent text-black text-[11px] font-bold px-2 py-1 rounded-full">MATCH 2 • PRIME</span><span class="bg-red-500 text-white text-[11px] font-mono px-2 py-1 rounded-full">NYK -4.5 • O/U 231.5</span></div>
-        <div class="text-xs font-mono text-zinc-400 mt-1" data-et="19:00" data-fr="01:00+1">19:00 ET • 01:00 Paris (nuit 21) • MSG • Cérémonie 18h30</div>
-        <div class="mt-3 bg-black rounded-2xl p-4 border border-white/10">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3"><img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fphi.png&w=60&h=60" class="w-11 h-11 bg-white rounded-full p-1"/><div><div class="font-bold">PHI</div><div class="text-[11px] text-zinc-400">76ers</div><div class="text-[10px] bg-bilama-accent2 text-white px-1.5 py-0.5 rounded-full inline-block mt-0.5">LeBron + Brown NEW</div></div></div>
-            <div class="text-center"><div class="text-zinc-500 text-[11px]">AT</div><div class="font-black text-xl">VS</div><div class="text-[10px] bg-white text-black px-2 py-0.5 rounded-full font-bold">MSG</div></div>
-            <div class="flex items-center gap-3"><div class="text-right"><div class="font-bold">NYK</div><div class="text-[11px] text-zinc-400">Knicks 53-29</div><div class="text-[10px] bg-yellow-500 text-black px-1.5 py-0.5 rounded-full inline-block mt-0.5">Champion 2026</div></div><img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fnyk.png&w=60&h=60" class="w-11 h-11 bg-white rounded-full p-1"/></div>
-          </div>
-          <div class="mt-3 grid grid-cols-3 gap-2 text-center text-xs"><div class="bg-zinc-800 rounded-full py-1.5"><span class="text-zinc-400">Spread</span> <b>NYK -4.5</b></div><div class="bg-zinc-800 rounded-full py-1.5"><span class="text-zinc-400">ML</span> <b>-197 / +161</b></div><div class="bg-zinc-800 rounded-full py-1.5"><span class="text-zinc-400">Total</span> <b>231.5</b></div></div>
-        </div>
-        <div class="mt-4">
-          <div class="flex items-center gap-2 mb-2"><h3 class="font-semibold text-sm">Cinq majeurs</h3><span class="bg-green-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">ROTOWIRE</span></div>
-          <div class="grid grid-cols-2 gap-2">
-            <div class="bg-[#0B0E14] border border-bilama-accent2/30 rounded-xl p-3">
-              <div class="text-[11px] font-mono text-zinc-400 flex justify-between"><span>PHI 76ers</span> <i class="fa-solid fa-star text-bilama-accent2"></i></div>
-              <ul class="mt-2 space-y-1 text-sm">
-                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">PG</span> <span>Tyrese Maxey <span class="text-zinc-500 text-xs">28.3</span></span></li>
-                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">SG</span> <span>VJ Edgecombe <span class="text-[10px] bg-white text-black px-1 rounded">ROOKIE</span></span></li>
-                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">SF</span> <span>Jaylen Brown</span></li>
-                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">PF</span> <span class="font-bold text-bilama-accent">LeBron James</span></li>
-                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">C</span> <span>Joel Embiid</span></li>
-              </ul>
-              <div class="mt-2 text-[11px] bg-red-500/10 border border-red-500/20 rounded-lg p-2"><div class="font-bold text-red-400"><i class="fa-solid fa-briefcase-medical"></i> Infirmerie</div><div class="text-zinc-400">Barlow OUT, Hukporti OUT (Achille), Fall OUT, Bona DTD</div></div>
-            </div>
-            <div class="bg-[#0B0E14] border border-orange-500/30 rounded-xl p-3">
-              <div class="text-[11px] font-mono text-zinc-400 flex justify-between"><span>NYK Knicks</span> <i class="fa-solid fa-trophy text-yellow-500"></i></div>
-              <ul class="mt-2 space-y-1 text-sm">
-                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">PG</span> <span class="font-bold">Jalen Brunson</span></li>
-                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">SG</span> <span>Mikal Bridges</span></li>
-                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">SF</span> <span>Josh Hart <span class="bg-yellow-500 text-black text-[10px] px-1 rounded font-bold">P</span></span></li>
-                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">PF</span> <span>OG Anunoby</span></li>
-                <li class="flex justify-between"><span class="text-zinc-500 font-mono text-xs">C</span> <span>Karl-Anthony Towns</span></li>
-              </ul>
-              <div class="mt-2 text-[11px] bg-green-500/10 border border-green-500/20 rounded-lg p-2"><div class="font-bold text-green-400"><i class="fa-solid fa-check"></i> Full squad</div><div class="text-zinc-400">Aucun absent — titre à défendre</div></div>
-            </div>
-          </div>
-        </div>
+      <div class="tblwrap" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Club</th><th>J</th><th>BM/m</th><th>Rg</th><th>Tier</th><th>BE/m</th><th>Rg</th><th>Tier</th>
+            </tr>
+          </thead>
+          <tbody id="tiersBody"></tbody>
+        </table>
       </div>
-      <div class="mt-auto px-5 py-3 bg-black/30 border-t border-white/10 flex items-center justify-between text-xs"><span class="text-zinc-400 font-mono">MSG • Complet</span><span class="text-bilama-accent font-medium">★ Prime</span></div>
-    </article>
-
-    <!-- GAME 3 -->
-    <article data-cat="late" class="game-card bg-bilama-card border border-bilama-border rounded-[20px] overflow-hidden flex flex-col">
-      <div class="h-1.5 w-full bg-gradient-to-r from-sky-500 to-indigo-600"></div>
-      <div class="p-5">
-        <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="bg-white text-black text-[11px] font-bold px-2 py-1 rounded-full">MATCH 3</span><span class="bg-bilama-accent2/20 text-bilama-accent2 text-[11px] font-mono px-2 py-1 rounded-full border border-bilama-accent2/20">REMATCH WCF</span></div><span class="text-xs font-mono text-zinc-500" data-et="21:30" data-fr="03:30+1">21:30 ET • 03:30 Paris</span></div>
-        <div class="mt-4 bg-black/40 rounded-2xl p-4 border border-white/5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3"><img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fokc.png&w=60&h=60" class="w-10 h-10 bg-white rounded-full p-1"/><div><div class="font-bold leading-none">OKC</div><div class="text-[11px] text-zinc-400">Thunder 64-18</div></div></div>
-            <div class="text-center"><div class="text-[11px] font-mono text-zinc-500">TIP-OFF</div><div class="font-bold">@</div><div class="text-[11px] text-zinc-500">NBC</div></div>
-            <div class="flex items-center gap-3"><div class="text-right"><div class="font-bold leading-none">SAS</div><div class="text-[11px] text-zinc-400">Spurs 62-20</div></div><img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fsas.png&w=60&h=60" class="w-10 h-10 bg-white rounded-full p-1"/></div>
-          </div>
-          <div class="mt-3 flex items-center justify-center gap-2 text-[11px] font-mono"><span class="bg-white text-black px-2 py-1 rounded-full font-bold">SAS -2.5</span><span class="bg-zinc-800 px-2 py-1 rounded-full">O/U 231.5</span><span class="bg-zinc-800 px-2 py-1 rounded-full">Frost Bank</span></div>
-        </div>
-        <div class="mt-4"><h3 class="font-semibold text-sm mb-2">Cinq majeurs RotoWire</h3>
-          <div class="grid grid-cols-2 gap-2">
-            <div class="bg-[#0B0E14] border border-bilama-border rounded-xl p-3"><div class="text-[11px] font-mono text-zinc-500">OKC THUNDER</div><ul class="mt-2 space-y-1.5 text-sm">
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PG</span> <span class="font-bold">S. Gilgeous-Alexander</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SG</span> <span>Cason Wallace</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SF</span> <span>Jalen Williams</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PF</span> <span>Chet Holmgren <span class="bg-orange-500 text-black text-[10px] px-1 rounded font-bold">Q</span></span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">C</span> <span>Isaiah Hartenstein</span></li>
-              </ul><div class="mt-2 text-[11px] bg-orange-500/10 border border-orange-500/20 rounded-lg p-2 text-zinc-400">Holmgren Q — impact déf. -2.1 pts si OUT</div></div>
-            <div class="bg-[#0B0E14] border border-bilama-border rounded-xl p-3"><div class="text-[11px] font-mono text-zinc-500">SAS SPURS</div><ul class="mt-2 space-y-1.5 text-sm">
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PG</span> <span>De'Aaron Fox</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SG</span> <span>Stephon Castle</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">SF</span> <span>Dylan Harper</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">PF</span> <span>Devin Vassell</span></li>
-                <li class="flex justify-between"><span class="text-zinc-400 font-mono text-xs">C</span> <span class="font-bold text-sky-400">Victor Wembanyama</span></li>
-              </ul><div class="mt-2 text-[11px] bg-sky-500/10 border border-sky-500/20 rounded-lg p-2 text-zinc-400">Wemby vs SGA : duel MVP</div></div>
-          </div>
-        </div>
+      <div class="legend">
+        <span><i class="sw" style="background:#1d4a30"></i>Off T1 → +1 OVER</span>
+        <span><i class="sw" style="background:#27323f"></i>T2 → 0</span>
+        <span><i class="sw" style="background:#4d2020"></i>Off T3 → −1 UNDER</span>
       </div>
-      <div class="mt-auto px-5 py-3 bg-black/20 border-t border-bilama-border flex items-center justify-between text-xs"><span class="text-zinc-500 font-mono">RotoWire 19 oct</span><span class="text-zinc-400">Revanche finale Ouest</span></div>
-    </article>
-  </section>
-
-  <!-- ============ BILAMA LAB ============ -->
-  <section id="lab" class="max-w-[1440px] mx-auto px-4 lg:px-6 py-6">
-    <div class="bg-gradient-to-br from-[#0A1A2E] via-[#0F1E35] to-[#0B0E14] border border-sky-500/20 rounded-[24px] overflow-hidden">
-      <!-- Lab header -->
-      <div class="p-6 lg:p-8 border-b border-white/5">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div class="inline-flex items-center gap-2 bg-sky-500/15 border border-sky-500/20 rounded-full px-3 py-1 text-xs">
-              <i class="fa-solid fa-flask text-sky-400"></i> BILAMA LAB v1.0 — Modèle Pace & Rating
-              <span class="bg-white text-black px-2 py-0.5 rounded-full font-bold">NOUVEAU</span>
-            </div>
-            <h2 class="text-[26px] lg:text-[34px] font-bold leading-none mt-3">Pronostics basés sur <span class="text-bilama-accent">les compos</span><br>+ Rating + Pace + Blessures</h2>
-            <p class="text-zinc-400 text-sm mt-2 max-w-[720px]">Notre modèle ajuste le <b class="text-white">Net Rating</b> 2025-26 avec la force du 5 majeur du jour, le <b class="text-white">Pace</b> projeté, l'avantage domicile (+3 pts) et l'impact blessures. Il compare ensuite au marché pour trouver la <b class="text-bilama-accent">value</b>.</p>
-          </div>
-          <div class="bg-black/40 border border-white/10 rounded-2xl p-4 min-w-[280px]">
-            <div class="text-[11px] font-mono text-zinc-500 tracking-widest">MÉTHODOLOGIE SIMPLIFIÉE</div>
-            <div class="mt-2 font-mono text-sm leading-relaxed text-zinc-200">
-              Score = Pace × (ORtg vs DRtg adversaire)/100<br>
-              <span class="text-zinc-500">+ Home +3.0 &nbsp;•&nbsp; Inj. adj.</span><br>
-              <span class="text-zinc-500">Proba via log5 (Pythagorean)</span>
-            </div>
-            <div class="mt-3 flex gap-2">
-              <button id="toggleMethod" class="text-xs bg-white text-black px-3 py-1.5 rounded-full font-semibold">Voir formule complète <i class="fa-solid fa-chevron-down ml-1"></i></button>
-              <span class="text-[11px] text-zinc-500 self-center">Basé sur Basketball-Reference & NBA Stats</span>
-            </div>
-            <div id="methodDetail" class="hidden mt-3 bg-bilama-bg border border-bilama-border rounded-xl p-3 text-xs text-zinc-400 leading-relaxed">
-              <b class="text-white">1. Rating ajusté :</b> ORtg_adj = ORtg_2025-26 + Σ Δ Joueur (ex: Paul George +1.2 ORtg, Holmgren -2.1 DRtg si OUT)<br>
-              <b class="text-white">2. Pace projeté :</b> (Pace_A + Pace_B)/2 × 0.97 (ralentissement Opening Night historique)<br>
-              <b class="text-white">3. Score projeté :</b> Pts_A = Pace_proj × ((ORtg_A + DRtg_B)/2 /100) ; Pts_B = idem<br>
-              <b class="text-white">4. Proba :</b> Win% = (Pts_A^14)/(Pts_A^14+Pts_B^14) (exponent 14 calibré NBA)<br>
-              <b class="text-white">5. Value spread :</b> Edge = Spread_modèle − Spread_book. Si |Edge| ≥2 pts → bet recommandé.<br>
-              <b class="text-white">6. Total O/U :</b> Total_modèle = Pts_A+Pts_B, Edge_Total = Total_modèle − O/U_book. Si Edge ≥5 → OVER fort, ≤-5 → UNDER fort, ≥2.5 → OVER, ≤-2.5 → UNDER.
-            </div>
-          </div>
-        </div>
-
-        <!-- RATINGS TABLE -->
-        <div class="mt-6 grid grid-cols-1 lg:grid-cols-[1.4fr_0.6fr] gap-4">
-          <div class="bg-black/30 border border-white/5 rounded-2xl overflow-hidden">
-            <div class="px-4 py-3 flex items-center justify-between border-b border-white/5">
-              <h3 class="font-semibold text-sm flex items-center gap-2"><i class="fa-solid fa-chart-simple text-bilama-accent"></i> Ratings & Pace 2025-26 — base modèle</h3>
-              <span class="text-[11px] font-mono text-zinc-500">Sources: BR + NBA.com</span>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead class="text-[11px] font-mono text-zinc-500 bg-white/[0.03]">
-                  <tr><th class="text-left px-3 py-2">Équipe</th><th class="text-center px-2 py-2">Bilan</th><th class="text-center px-2 py-2">ORtg</th><th class="text-center px-2 py-2">DRtg</th><th class="text-center px-2 py-2">Net</th><th class="text-center px-2 py-2">Pace</th><th class="text-left px-3 py-2">Note Lab</th></tr>
-                </thead>
-                <tbody class="font-mono text-xs divide-y divide-white/5">
-                  <tr class="hover:bg-white/5"><td class="px-3 py-2 flex items-center gap-2"><img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fbos.png&w=32&h=32" class="w-5 h-5 bg-white rounded-full p-0.5"> BOS</td><td class="text-center">56-26</td><td class="text-center text-emerald-400">120.8 (2e)</td><td class="text-center text-sky-400">112.7 (4e)</td><td class="text-center font-bold text-white">+8.1</td><td class="text-center">94.8 (30e)</td><td class="px-3 text-zinc-400">Elite Off, rythme le plus lent → Under auto</td></tr>
-                  <tr class="hover:bg-white/5 bg-white/[0.02]"><td class="px-3 py-2 flex items-center gap-2"><img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fdet.png&w=32&h=32" class="w-5 h-5 bg-white rounded-full p-0.5"> DET</td><td class="text-center">60-22</td><td class="text-center">118.0</td><td class="text-center text-emerald-400">109.8 (2e)</td><td class="text-center font-bold text-white">+8.2</td><td class="text-center">99.2 (11e)</td><td class="px-3 text-zinc-400">Top défense, 1er à l'Est 2026</td></tr>
-                  <tr class="hover:bg-white/5"><td class="px-3 py-2 flex items-center gap-2"><img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fphi.png&w=32&h=32" class="w-5 h-5 bg-white rounded-full p-0.5"> PHI</td><td class="text-center">47-35*</td><td class="text-center">117.5*</td><td class="text-center">114.8*</td><td class="text-center font-bold text-yellow-400">+2.7 → +7.0*</td><td class="text-center">98.6</td><td class="px-3 text-zinc-400">*ajusté +4.3 avec LeBron/Brown</td></tr>
-                  <tr class="hover:bg-white/5"><td class="px-3 py-2 flex items-center gap-2"><img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fnyk.png&w=32&h=32" class="w-5 h-5 bg-white rounded-full p-0.5"> NYK</td><td class="text-center">53-29</td><td class="text-center">119.9 (5e)</td><td class="text-center">113.4 (11e)</td><td class="text-center font-bold">+6.5</td><td class="text-center">96.8</td><td class="px-3 text-zinc-400">Champion 2026, continuité 5 majeur</td></tr>
-                  <tr class="hover:bg-white/5 bg-white/[0.02]"><td class="px-3 py-2 flex items-center gap-2"><img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fokc.png&w=32&h=32" class="w-5 h-5 bg-white rounded-full p-0.5"> OKC</td><td class="text-center">64-18</td><td class="text-center">119.0</td><td class="text-center text-emerald-400">107.8 (1er)</td><td class="text-center font-bold text-emerald-400">+11.2</td><td class="text-center">99.3</td><td class="px-3 text-zinc-400">Meilleure Net NBA, déf historique</td></tr>
-                  <tr class="hover:bg-white/5"><td class="px-3 py-2 flex items-center gap-2"><img src="https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fnba%2F500%2Fsas.png&w=32&h=32" class="w-5 h-5 bg-white rounded-full p-0.5"> SAS</td><td class="text-center">62-20</td><td class="text-center">119.7 (6e)</td><td class="text-center">111.3 (7e)</td><td class="text-center font-bold">+8.3</td><td class="text-center">99.9</td><td class="px-3 text-zinc-400">Wemby + Fox = Pace élevée</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="px-4 py-2 bg-bilama-accent/10 text-[11px] text-zinc-300 flex items-center gap-2"><i class="fa-solid fa-circle-info text-bilama-accent"></i> *PHI ajusté : on ajoute +2.8 ORtg (Brown spacing) et +1.5 ORtg (LeBron playmaking) vs 2025-26. Si chimie ratée, Net retombe à +4.</div>
-          </div>
-
-          <div class="bg-sky-500/10 border border-sky-500/20 rounded-2xl p-4">
-            <h4 class="font-semibold text-sm flex items-center gap-2"><i class="fa-solid fa-sliders text-sky-400"></i> Simulateur — impact blessures</h4>
-            <p class="text-xs text-zinc-400 mt-1">Bouge les curseurs pour voir l'effet sur le prono live. Le modèle recalcule à la volée.</p>
-            <div class="mt-4 space-y-4">
-              <div class="bg-black/30 rounded-xl p-3">
-                <div class="flex justify-between text-xs"><span class="font-medium">Chet Holmgren (OKC) Q</span><span class="font-mono text-orange-400" id="holmgrenLabel">PRÉSENT</span></div>
-                <input type="range" min="0" max="1" value="1" step="1" id="holmgrenToggle" class="w-full mt-2 accent-sky-500">
-                <div class="flex justify-between text-[11px] text-zinc-500 font-mono"><span>OUT (-2.1 Déf)</span><span>IN</span></div>
-              </div>
-              <div class="bg-black/30 rounded-xl p-3">
-                <div class="flex justify-between text-xs"><span class="font-medium">Josh Hart (NYK) P</span><span class="font-mono text-yellow-400" id="hartLabel">PRÉSENT</span></div>
-                <input type="range" min="0" max="1" value="1" step="1" id="hartToggle" class="w-full mt-2 accent-yellow-500">
-                <div class="flex justify-between text-[11px] text-zinc-500 font-mono"><span>OUT (-1.2 Reb)</span><span>IN</span></div>
-              </div>
-              <div class="bg-black/30 rounded-xl p-3">
-                <div class="flex justify-between text-xs"><span class="font-medium">Adem Bona (PHI) DTD</span><span class="font-mono text-red-400" id="bonaLabel">OUT</span></div>
-                <input type="range" min="0" max="1" value="0" step="1" id="bonaToggle" class="w-full mt-2 accent-red-500">
-              </div>
-              <div class="text-[11px] font-mono text-zinc-500 text-center">Les cotes ci-dessous se mettent à jour automatiquement ↓</div>
-            </div>
-          </div>
-        </div>
+      <div class="legend">
+        <span><i class="sw" style="background:#1e3a63"></i>Déf T1 → −1 UNDER</span>
+        <span><i class="sw" style="background:#4a3310"></i>Déf T3 → +1 OVER</span>
+        <span id="avgTag" style="margin-left:auto;color:#b8c6d6"></span>
       </div>
+    </div>
 
-      <!-- CONTRÔLES BOOK O/U ÉDITABLES -->
-      <div class="mx-6 lg:mx-8 mt-6 bg-gradient-to-r from-bilama-accent/10 via-sky-500/10 to-bilama-accent2/10 border-2 border-bilama-accent/30 rounded-2xl p-4">
-        <div class="flex items-center gap-2 mb-3">
-          <span class="bg-bilama-accent text-black text-xs font-black px-3 py-1 rounded-full animate-pulse">👉 TAPE ICI TON BOOK O/U</span>
-          <span class="text-xs text-zinc-400">Modifie la ligne du bookeur → le signal Over/Under se recalcule en direct</span>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
-          <div class="bg-black rounded-xl p-3 border border-white/10">
-            <div class="text-[11px] font-mono text-zinc-500 font-bold">MATCH 1 • BOS @ DET</div>
-            <div class="mt-2 flex gap-2">
-              <label class="flex-1 flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Book Spread (BOS)</span><input id="bookSpread1" type="number" step="0.5" value="-1.5" class="bg-zinc-900 border border-white/10 rounded-full px-3 py-1.5 text-center font-bold text-sm"></label>
-              <label class="flex-1 flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Book O/U</span><input id="bookTotal1" type="number" step="0.5" value="222.5" class="bg-zinc-900 border-2 border-bilama-accent/50 rounded-full px-3 py-1.5 text-center font-bold text-sm text-bilama-accent"></label>
-            </div>
-          </div>
-          <div class="bg-black rounded-xl p-3 border border-white/10">
-            <div class="text-[11px] font-mono text-zinc-500 font-bold">MATCH 2 • PHI @ NYK</div>
-            <div class="mt-2 flex gap-2">
-              <label class="flex-1 flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Book Spread (NYK)</span><input id="bookSpread2" type="number" step="0.5" value="-4.5" class="bg-zinc-900 border border-white/10 rounded-full px-3 py-1.5 text-center font-bold text-sm"></label>
-              <label class="flex-1 flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Book O/U</span><input id="bookTotal2" type="number" step="0.5" value="231.5" class="bg-zinc-900 border-2 border-bilama-accent/50 rounded-full px-3 py-1.5 text-center font-bold text-sm text-bilama-accent"></label>
-            </div>
-          </div>
-          <div class="bg-black rounded-xl p-3 border border-white/10">
-            <div class="text-[11px] font-mono text-zinc-500 font-bold">MATCH 3 • OKC @ SAS</div>
-            <div class="mt-2 flex gap-2">
-              <label class="flex-1 flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Book Spread (SAS)</span><input id="bookSpread3" type="number" step="0.5" value="-2.5" class="bg-zinc-900 border border-white/10 rounded-full px-3 py-1.5 text-center font-bold text-sm"></label>
-              <label class="flex-1 flex flex-col gap-1"><span class="text-[10px] text-zinc-500">Book O/U</span><input id="bookTotal3" type="number" step="0.5" value="231.5" class="bg-zinc-900 border-2 border-bilama-accent/50 rounded-full px-3 py-1.5 text-center font-bold text-sm text-bilama-accent"></label>
-            </div>
-          </div>
-        </div>
-        <div class="mt-2 text-[11px] text-zinc-500 text-center">💡 Astuce : laisse 222.5 / 231.5 par défaut, ou mets ta cote exacte et regarde le bloc <b class="text-white">TOTAL — O/U</b> passer de ⚪ PASS à 🔼 OVER / 🔽 UNDER</div>
-      </div>
+    <details class="note">
+      <summary>Comment sont attribués les points de tier ?</summary>
+      <p><b>Attaque</b> (buts marqués/match) : rangs 1-10 → <code>+1</code> (OVER), 11-16 → <code>0</code>, 17-20 → <code>−1</code> (UNDER).</p>
+      <p><b>Défense</b> (buts encaissés/match, #1 = meilleure défense) : rangs 1-10 → <code>−1</code> (UNDER), 11-16 → <code>0</code>, 17-20 → <code>+1</code> (OVER).</p>
+      <p>Le classement suit les moyennes par match, pas les totaux : une équipe avec un match de moins n'est pas pénalisée.</p>
+    </details>
 
-      <!-- PREDICTIONS -->
-      <div class="p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-3 gap-4 bg-black/20">
-        <!-- PRED 1 -->
-        <div class="bg-bilama-card border border-white/10 rounded-2xl overflow-hidden flex flex-col">
-          <div class="h-1 w-full bg-gradient-to-r from-green-500 to-emerald-600"></div>
-          <div class="p-4">
-            <div class="flex items-center justify-between"><span class="text-[11px] font-mono bg-white text-black px-2 py-1 rounded-full font-bold">PRONO 1 • BOS @ DET</span><span class="text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-full font-bold">VALUE DET</span></div>
-            <div class="mt-3 bg-black rounded-xl p-3 border border-white/5">
-              <div class="flex items-center justify-between text-xs font-mono text-zinc-500"><span>Pace projeté</span><span class="text-white">96.9 poss</span><span id="pace1">94.8 vs 99.2</span></div>
-              <div class="mt-2 flex items-center justify-center gap-3">
-                <div class="text-center"><div class="text-[11px] text-zinc-500">BOS</div><div class="text-xl font-black" id="scoreBos1">113.8</div><div class="text-[11px] font-mono text-zinc-500">ORtg 120.8</div></div>
-                <div class="bg-zinc-800 rounded-full px-3 py-1 text-xs font-bold">—</div>
-                <div class="text-center"><div class="text-[11px] text-zinc-500">DET</div><div class="text-xl font-black text-bilama-accent" id="scoreDet1">115.2</div><div class="text-[11px] font-mono text-zinc-500">DRtg 109.8</div></div>
-              </div>
-              <div class="mt-3 h-2 bg-zinc-800 rounded-full overflow-hidden flex"><div class="bg-zinc-600" style="width:48%"></div><div class="bg-bilama-accent" style="width:52%"></div></div>
-              <div class="flex justify-between text-[11px] font-mono text-zinc-400 mt-1"><span>BOS 44%</span><span class="font-bold text-white">DET 56% (modèle)</span></div>
-            </div>
-            <div class="mt-3 space-y-2">
-              <div class="flex justify-between bg-white/5 rounded-full px-3 py-2 text-xs"><span class="text-zinc-400">Modèle spread</span><b class="text-bilama-accent">DET -1.4</b><span class="text-zinc-500">vs Book BOS -1.5</span></div>
-              <div class="flex justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-2 text-xs"><span>Edge</span><b class="text-emerald-400">+2.9 pts sur DET</b><span>★★★★☆</span></div>
-              <div class="bg-bilama-accent text-black rounded-xl px-3 py-2.5 text-center font-bold text-sm">✅ Pari recommandé : DET +1.5 @ 1.92<br><span class="font-normal text-xs">Mise 1.5U — Pace lente BOS annule l'avantage extérieur</span></div>
-              <!-- OVER/UNDER -->
-              <div class="bg-black border border-white/10 rounded-xl p-3">
-                <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500"><span>TOTAL — O/U <span id="bookOu1">222.5</span></span><span id="ouSignal1" class="bg-emerald-500 text-black px-2 py-1 rounded-full font-bold">🔼 OVER FORT</span></div>
-                <div class="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
-                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Modèle</span> <b class="text-white" id="modelOu1">229.0</b></div>
-                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Book</span> <b id="bookOuVal1">222.5</b></div>
-                  <div class="bg-emerald-500/15 rounded-full py-1.5 border border-emerald-500/20"><span class="text-zinc-400">Edge</span> <b class="text-emerald-400" id="edgeOu1">+6.5</b></div>
-                </div>
-                <div class="mt-2 bg-emerald-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm" id="ouBox1">🔼 OVER 222.5 — Signal très fort</div>
-                <div class="mt-1 text-[11px] text-zinc-500 text-center" id="ouWhy1">Pace 96.9 malgré BOS lent → DET pousse le rythme à domicile. Modèle 229.0 vs 222.5.</div>
-              </div>
-              <div class="text-[11px] text-zinc-500 leading-relaxed"><b class="text-white">Pourquoi ?</b> DET était #1 Est (60-22) avec Net +8.2, déf #2. BOS sans Brown (parti à PHI) perd de la création. À domicile +3 pts, le modèle voit DET couvrir facilement.</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- PRED 2 -->
-        <div class="bg-gradient-to-b from-[#1E293B] to-bilama-card border border-sky-500/30 rounded-2xl overflow-hidden flex flex-col shadow-lg shadow-sky-500/10">
-          <div class="h-1 w-full bg-gradient-to-r from-orange-500 to-yellow-400"></div>
-          <div class="p-4">
-            <div class="flex items-center justify-between"><span class="text-[11px] font-mono bg-bilama-accent text-black px-2 py-1 rounded-full font-bold">PRONO 2 • PHI @ NYK</span><span class="text-xs bg-sky-500 text-white px-2 py-1 rounded-full font-bold">TOP PICK</span></div>
-            <div class="mt-3 bg-black rounded-xl p-3 border border-white/5">
-              <div class="flex items-center justify-between text-xs font-mono text-zinc-500"><span>Pace projeté</span><span class="text-white">97.7 poss</span><span id="pace2">98.6 vs 96.8</span></div>
-              <div class="mt-2 flex items-center justify-center gap-3">
-                <div class="text-center"><div class="text-[11px] text-zinc-500">PHI</div><div class="text-xl font-black" id="scorePhi">117.2</div><div class="text-[11px] font-mono text-zinc-500">Net +7.0*</div></div>
-                <div class="bg-zinc-800 rounded-full px-3 py-1 text-xs font-bold">—</div>
-                <div class="text-center"><div class="text-[11px] text-zinc-500">NYK</div><div class="text-xl font-black text-sky-400" id="scoreNyk">119.8</div><div class="text-[11px] font-mono text-zinc-500">Net +6.5</div></div>
-              </div>
-              <div class="mt-3 h-2 bg-zinc-800 rounded-full overflow-hidden flex"><div class="bg-bilama-accent2" style="width:46%"></div><div class="bg-sky-500" style="width:54%"></div></div>
-              <div class="flex justify-between text-[11px] font-mono text-zinc-400 mt-1"><span>PHI 42%</span><span class="font-bold text-white">NYK 58% (modèle)</span></div>
-              <div class="mt-2 bg-orange-500/15 border border-orange-500/20 rounded-lg px-2 py-1.5 text-xs flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-orange-400"></i> <span><b>Hart P</b> : si OUT, NYK Reb -3.5 → PHI +0.8 pt. Toggle ci-dessus.</span></div>
-            </div>
-            <div class="mt-3 space-y-2">
-              <div class="flex justify-between bg-white/5 rounded-full px-3 py-2 text-xs"><span class="text-zinc-400">Modèle spread</span><b class="text-sky-400">NYK -2.6</b><span class="text-zinc-500">vs Book -4.5</span></div>
-              <div class="flex justify-between bg-sky-500/15 border border-sky-500/20 rounded-full px-3 py-2 text-xs"><span>Edge</span><b class="text-sky-400">+1.9 pt sur PHI</b><span>★★★★★</span></div>
-              <div class="bg-white text-black rounded-xl px-3 py-2.5 text-center font-bold text-sm">✅ Pari roi : PHI +4.5 @ 1.90<br><span class="font-normal text-xs">Vainqueur : NYK 58% mais spread trop large</span></div>
-              <!-- OVER/UNDER -->
-              <div class="bg-black border border-white/10 rounded-xl p-3">
-                <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500"><span>TOTAL — O/U <span id="bookOu2">231.5</span></span><span id="ouSignal2" class="bg-emerald-500 text-black px-2 py-1 rounded-full font-bold">🔼 OVER FORT</span></div>
-                <div class="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
-                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Modèle</span> <b class="text-white" id="modelOu2">237.0</b></div>
-                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Book</span> <b id="bookOuVal2">231.5</b></div>
-                  <div class="bg-emerald-500/15 rounded-full py-1.5 border border-emerald-500/20"><span class="text-zinc-400">Edge</span> <b class="text-emerald-400" id="edgeOu2">+5.5</b></div>
-                </div>
-                <div class="mt-2 bg-emerald-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm" id="ouBox2">🔼 OVER 231.5 — Signal très fort</div>
-                <div class="mt-1 text-[11px] text-zinc-500 text-center" id="ouWhy2">Pace 97.7 + deux attaques top 5 (ORtg 117.5 & 119.9) + FT rate PHI → Over value.</div>
-              </div>
-              <div class="text-[11px] text-zinc-500 leading-relaxed"><b class="text-white">Clé :</b> PHI 4e aux contres (5.7) et 6e aux lancers (20.1 FT). Contre NYK 29e aux contres, Embiid/LeBron vont à la ligne. Les books surévaluent l'émotion du Ring Night.</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- PRED 3 -->
-        <div class="bg-bilama-card border border-white/10 rounded-2xl overflow-hidden flex flex-col">
-          <div class="h-1 w-full bg-gradient-to-r from-sky-500 to-indigo-600"></div>
-          <div class="p-4">
-            <div class="flex items-center justify-between"><span class="text-[11px] font-mono bg-white text-black px-2 py-1 rounded-full font-bold">PRONO 3 • OKC @ SAS</span><span class="text-xs bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-2 py-1 rounded-full font-bold">VALUE OKC</span></div>
-            <div class="mt-3 bg-black rounded-xl p-3 border border-white/5">
-              <div class="flex items-center justify-between text-xs font-mono text-zinc-500"><span>Pace projeté</span><span class="text-white" id="pace3Text">99.6 poss</span><span>99.3 vs 99.9</span></div>
-              <div class="mt-2 flex items-center justify-center gap-3">
-                <div class="text-center"><div class="text-[11px] text-zinc-500">OKC</div><div class="text-xl font-black text-emerald-400" id="scoreOkc">116.4</div><div class="text-[11px] font-mono text-zinc-500">Net +11.2</div></div>
-                <div class="bg-zinc-800 rounded-full px-3 py-1 text-xs font-bold">—</div>
-                <div class="text-center"><div class="text-[11px] text-zinc-500">SAS</div><div class="text-xl font-black" id="scoreSas">114.7</div><div class="text-[11px] font-mono text-zinc-500">Net +8.3</div></div>
-              </div>
-              <div class="mt-3 h-2 bg-zinc-800 rounded-full overflow-hidden flex"><div class="bg-emerald-500" style="width:52%" id="barOkc"></div><div class="bg-indigo-500" style="width:48%" id="barSas"></div></div>
-              <div class="flex justify-between text-[11px] font-mono text-zinc-400 mt-1"><span id="probOkc">OKC 54%</span><span id="probSas">SAS 46%</span></div>
-              <div class="mt-2 bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-2 py-1.5 text-xs flex items-center gap-2"><i class="fa-solid fa-user-injured text-indigo-400"></i> <span id="holmgrenImpact"><b>Holmgren IN</b> : OKC reste fav. Toggle pour voir OUT (-2.5 pts).</span></div>
-            </div>
-            <div class="mt-3 space-y-2">
-              <div class="flex justify-between bg-white/5 rounded-full px-3 py-2 text-xs"><span class="text-zinc-400">Modèle spread</span><b class="text-emerald-400" id="spreadOkc">OKC -1.7</b><span class="text-zinc-500">vs Book SAS -2.5</span></div>
-              <div class="flex justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-2 text-xs"><span>Edge</span><b class="text-emerald-400" id="edgeOkc">+4.2 pts sur OKC</b><span>★★★★☆</span></div>
-              <div class="bg-indigo-600 text-white rounded-xl px-3 py-2.5 text-center font-bold text-sm">✅ Pari : OKC +2.5 @ 1.88<br><span class="font-normal text-xs">Si Holmgren OUT → OKC +2.5 reste value mais mise 1U au lieu de 2U</span></div>
-              <!-- OVER/UNDER -->
-              <div class="bg-black border border-white/10 rounded-xl p-3">
-                <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500"><span>TOTAL — O/U <span id="bookOu3">231.5</span></span><span id="ouSignal3" class="bg-zinc-700 text-white px-2 py-1 rounded-full font-bold">⚪ PASS</span></div>
-                <div class="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
-                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Modèle</span> <b class="text-white" id="modelOu3">231.1</b></div>
-                  <div class="bg-white/5 rounded-full py-1.5"><span class="text-zinc-400">Book</span> <b id="bookOuVal3">231.5</b></div>
-                  <div class="bg-zinc-700 rounded-full py-1.5"><span class="text-zinc-400">Edge</span> <b class="text-zinc-300" id="edgeOu3">-0.4</b></div>
-                </div>
-                <div class="mt-2 bg-zinc-800 text-zinc-300 rounded-xl px-3 py-2 text-center font-bold text-sm" id="ouBox3">⚪ PASS — Pas de value O/U</div>
-                <div class="mt-1 text-[11px] text-zinc-500 text-center" id="ouWhy3">Pace 99.6 rapide mais OKC déf #1 (107.8) vs SAS ORtg 119.7 s'annulent → total pile sur le marché. Si Holmgren OUT → passe OVER.</div>
-              </div>
-              <div class="text-[11px] text-zinc-500 leading-relaxed"><b class="text-white">Duel MVP :</b> SGA vs Wemby. OKC #1 déf (107.8) étouffe SAS si Pace <100. SAS à domicile mais OKC a le meilleur Net NBA (+11.2).</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="px-6 lg:px-8 py-4 bg-black/30 flex flex-wrap gap-3 items-center justify-between text-xs">
-        <div class="flex items-center gap-2 text-zinc-400"><i class="fa-solid fa-shield-halved text-bilama-accent"></i> <span>Modèle non-commercial • à affiner avec minutes projetées RotoWire & usage% des starters. Mise recommandée en unités fictives.</span></div>
-        <div class="flex gap-2">
-          <button onclick="window.print()" class="bg-white text-black px-4 py-1.5 rounded-full font-bold">Imprimer ticket</button>
-          <a href="https://www.basketball-reference.com/leagues/NBA_2026_ratings.html" target="_blank" class="bg-bilama-card border border-bilama-border px-4 py-1.5 rounded-full">Voir ratings BR <i class="fa-solid fa-up-right-from-square ml-1"></i></a>
-        </div>
-      </div>
+    <div class="card">
+      <h2>Prochains matchs</h2>
+      <p class="sub" id="fxSub">1 tap = match chargé dans l'analyseur</p>
+      <div id="fixtures"></div>
     </div>
   </section>
 
-  <!-- BOTTOM -->
-  <section class="max-w-[1440px] mx-auto px-4 lg:px-6 pb-6">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div class="bg-bilama-card border border-bilama-border rounded-2xl p-4">
-        <h4 class="font-semibold text-sm flex items-center gap-2"><i class="fa-solid fa-shield-halved text-bilama-accent"></i> Comment lire RotoWire</h4>
-        <ul class="text-xs text-zinc-400 mt-2 space-y-1 leading-relaxed">
-          <li>• <b class="text-white">Projected</b> = estimation J-1 (ce que tu vois). Basé sur 5 derniers matchs + blessures.</li>
-          <li>• <b class="text-white">Confirmed</b> = officiel (vert) ~30 min avant tip.</li>
-          <li>• Toujours checker l'échauffement : scratches dernière minute.</li>
-        </ul>
+  <!-- ================= ÉTAPE 2 ================= -->
+  <section id="tab-analyse" class="hidden">
+    <div class="card">
+      <h2><span class="step">2</span>Analyseur Match : Dom vs Ext</h2>
+      <p class="sub">4 briques : Off Dom + Déf Dom + Off Ext + Déf Ext</p>
+
+      <div class="seg neutral" id="analyseMode" style="margin-bottom:12px">
+        <button data-m="global" class="on">Mode Global</button>
+        <button data-m="split">Split Dom/Ext</button>
       </div>
-      <div class="bg-bilama-card border border-bilama-border rounded-2xl p-4">
-        <h4 class="font-semibold text-sm flex items-center gap-2"><i class="fa-solid fa-coins text-yellow-500"></i> Synthèse Value (Spread + O/U)</h4>
-        <div class="mt-2 space-y-1.5 text-xs font-mono">
-          <div class="flex justify-between bg-emerald-500/15 border border-emerald-500/20 rounded-full px-3 py-1.5"><span>DET +1.5</span> <span class="font-bold">Edge +2.9 • ★★★★☆</span></div>
-          <div class="flex justify-between bg-emerald-500/15 border border-emerald-500/20 rounded-full px-3 py-1.5"><span>OVER 222.5</span> <span class="font-bold">Edge +6.5 • 🔼 FORT</span></div>
-          <div class="flex justify-between bg-sky-500/15 border border-sky-500/20 rounded-full px-3 py-1.5"><span>PHI +4.5</span> <b class="text-sky-400">Edge +1.9 • ★★★★★ TOP</b></div>
-          <div class="flex justify-between bg-emerald-500/15 border border-emerald-500/20 rounded-full px-3 py-1.5"><span>OVER 231.5</span> <span class="font-bold">Edge +5.5 • 🔼 FORT</span></div>
-          <div class="flex justify-between bg-indigo-500/15 border border-indigo-500/20 rounded-full px-3 py-1.5"><span>OKC +2.5</span> <span class="font-bold">Edge +4.2 • ★★★★☆</span></div>
-          <div class="flex justify-between bg-zinc-700 rounded-full px-3 py-1.5"><span>O/U 231.5</span> <span class="font-bold">Edge -0.4 • ⚪ PASS</span></div>
+
+      <div class="pickers">
+        <div class="pick">
+          <label>🏠 Domicile</label>
+          <select id="selDom"></select>
+        </div>
+        <div class="swap"><button id="swapBtn" title="Inverser">⇅</button></div>
+        <div class="pick">
+          <label>✈️ Visiteuse</label>
+          <select id="selExt"></select>
         </div>
       </div>
-      <div class="bg-bilama-card border border-bilama-border rounded-2xl p-4">
-        <h4 class="font-semibold text-sm flex items-center gap-2"><i class="fa-solid fa-clock text-sky-400"></i> Timeline J-0</h4>
-        <div class="text-xs text-zinc-400 mt-2 space-y-1">
-          <div class="flex justify-between"><span>Shootaround matin</span> <span class="font-mono">15h Paris</span></div>
-          <div class="flex justify-between"><span>Conf. coach (2h avant)</span> <span class="font-mono">19h / 23h / 01h30</span></div>
-          <div class="flex justify-between"><span>Lineups confirmés</span> <span class="font-mono text-bilama-accent">20:30 • 00:30 • 03:00</span></div>
-          <div class="mt-2 bg-bilama-accent text-black rounded-full px-3 py-1 text-center font-bold">Auto-refresh 60s actif</div>
-        </div>
-      </div>
+
+      <div class="comp" id="compBox"></div>
     </div>
-    <div class="mt-4 text-center text-[11px] text-zinc-500 font-mono">
-      Bilama54 © 2026 • Données: RotoWire, Basketball-Reference (Net Rating/Pace), ESPN, NBC Sports • Modèle Lab v1 • Jeu responsable 18+
+
+    <div class="card" id="verdictCard">
+      <h2><span class="step">3</span>Score Global &amp; Verdict</h2>
+      <p class="sub" id="verdictSub">Off Dom + Déf Dom + Off Ext + Déf Ext, de −4 à +4</p>
+      <div class="gauge-scale"><span>−4</span><span>−2</span><span>0</span><span>+2</span><span>+4</span></div>
+      <div class="gauge"><div class="needle" id="needle" style="left:50%"></div></div>
+      <div class="verdict v-yellow" id="verdictBox">
+        <div>
+          <div class="big" id="verdictLabel">NEUTRE</div>
+          <div class="small" id="verdictAdvice">Sélectionnez deux équipes</div>
+        </div>
+        <div class="score" id="verdictScore">0</div>
+      </div>
+      <div id="projBox"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">3b</span>Projection vs Ligne &amp; Cote</h2>
+      <p class="sub">Buts attendus = ((BM_Dom + BE_Ext) + (BM_Ext + BE_Dom)) / 2</p>
+      <div class="grid3">
+        <div class="field"><label>Ligne</label><input id="inLine" type="number" step="0.25" value="2.5" /></div>
+        <div class="field"><label>Cote</label><input id="inOdds" type="number" step="0.01" value="1.90" /></div>
+        <div class="field"><label>Mise (€)</label><input id="inStake" type="number" step="1" value="10" /></div>
+      </div>
+      <div class="metrics" id="betMetrics"></div>
+      <button class="btn" id="saveBet">＋ Enregistrer au Journal_Paris</button>
+      <button class="btn ghost" id="resetBet" style="margin-top:8px">Réinitialiser la sélection</button>
     </div>
   </section>
+
+  <!-- ================= ÉTAPE 4 ================= -->
+  <section id="tab-journal" class="hidden">
+    <div class="card">
+      <h2><span class="step">4</span>Journal_Paris</h2>
+      <p class="sub">Validation finale · suivi ROI &amp; winrate</p>
+      <div class="metrics" id="journalStats"></div>
+      <div class="grid2" style="margin-top:10px">
+        <button class="btn ghost sm" id="expCsv" style="justify-content:center">⬇ CSV</button>
+        <button class="btn ghost sm" id="expJson" style="justify-content:center">⬇ JSON</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Paris enregistrés</h2>
+      <p class="sub">Touchez Gagné / Perdu / Push pour régler un pari</p>
+      <div id="journalList"></div>
+    </div>
+    <div class="card">
+      <button class="btn danger" id="clearJournal">🗑 Vider le journal</button>
+      <p class="fine">Les paris sont stockés uniquement sur cet appareil (localStorage) — exportez régulièrement.</p>
+    </div>
+  </section>
+
+  <details class="note">
+    <summary>ℹ️ Source des données &amp; synchronisation</summary>
+    <p>Données : API officielle <b>Fantasy Premier League</b> (splits Domicile/Extérieur exacts), rafraîchie toutes les 6 h par GitHub Actions et publiée sur le site. Fusion temps réel via l'API <b>ESPN</b> quand elle est plus à jour.</p>
+    <p>L'app se resynchronise <b>automatiquement</b> à l'ouverture, au retour au premier plan et dès que l'Android retrouve Internet. Hors-ligne, le dernier instantané est conservé.</p>
+    <p>Version <span id="buildTag">2026-27</span> · <a href="./dashboard-nba.html">ancien dashboard NBA</a> · <a href="./foot.html">app Foot 20 ligues</a></p>
+  </details>
+
+</main>
+
+<nav class="tabbar">
+  <div class="tabbar-in">
+    <button data-tab="tiers" class="on"><span class="ico">📊</span>Tiers</button>
+    <button data-tab="analyse"><span class="ico">⚖️</span>Analyse</button>
+    <button data-tab="journal"><span class="ico">📒</span>Journal</button>
+    <button data-tab="install" class="hidden"><span class="ico">⬇️</span>Installer</button>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
 
 <script>
-const target = new Date('2026-10-20T19:00:00Z');
-let tzMode='paris';
-function updateClock(){
-  const now=new Date(); const diff=target-now;
-  if(diff>0){ const h=Math.floor(diff/1000/3600), m=Math.floor(diff/1000/60%60), s=Math.floor(diff/1000%60);
-    document.getElementById('countdown').textContent=`${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s avant BOS-DET`;
-  } else document.getElementById('countdown').textContent='TIP-OFF EN COURS !';
-  document.getElementById('lastUpdate').textContent=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' • Paris';
-  document.getElementById('verifyTime').textContent=now.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' • Paris';
-}
-setInterval(updateClock,1000); updateClock();
+/* =====================================================================
+   PL Over/Under 2026-27 — application autonome (vanilla JS)
+   Données : data/pl-2026-27.json (GitHub Actions) + fusion ESPN live
+   ===================================================================== */
 
-let countdown60=60; setInterval(()=>{countdown60--; if(countdown60<=0){countdown60=60; const b=document.getElementById('refreshBtn'); b&&b.classList.add('animate-pulse'); setTimeout(()=>b.classList.remove('animate-pulse'),800);}},1000);
+/* Instantané embarqué : permet le premier lancement 100 % hors-ligne. */
+const FALLBACK_DATA = {"season":"2026-27","league":"Premier League","slug":"eng.1","updatedAt":"2026-11-24T17:00:00Z","matchday":11,"source":"Snapshot PL 2026-27 (J11 — 24/11/2026)","teams":[{"id":"arsenal","name":"Arsenal","short":"ARS","pos":1,"mp":11,"w":9,"d":1,"l":1,"gf":17,"ga":7,"pts":28,"home":{"mp":5,"w":5,"d":0,"l":0,"gf":10,"ga":2,"pts":15},"away":{"mp":6,"w":4,"d":1,"l":1,"gf":7,"ga":5,"pts":13},"form":"WWWWD"},{"id":"brighton","name":"Brighton & Hove Albion","short":"BHA","pos":2,"mp":11,"w":7,"d":1,"l":3,"gf":26,"ga":9,"pts":22,"home":{"mp":5,"w":4,"d":1,"l":0,"gf":15,"ga":1,"pts":13},"away":{"mp":6,"w":3,"d":0,"l":3,"gf":11,"ga":8,"pts":9},"form":"WLWWL"},{"id":"man-city","name":"Manchester City","short":"MCI","pos":3,"mp":11,"w":7,"d":1,"l":3,"gf":22,"ga":14,"pts":22,"home":{"mp":6,"w":4,"d":1,"l":1,"gf":12,"ga":8,"pts":13},"away":{"mp":5,"w":3,"d":0,"l":2,"gf":10,"ga":6,"pts":9},"form":"WLLLD"},{"id":"liverpool","name":"Liverpool","short":"LIV","pos":4,"mp":11,"w":6,"d":3,"l":2,"gf":18,"ga":10,"pts":21,"home":{"mp":6,"w":2,"d":2,"l":2,"gf":8,"ga":6,"pts":8},"away":{"mp":5,"w":4,"d":1,"l":0,"gf":10,"ga":4,"pts":13},"form":"WWLWW"},{"id":"bournemouth","name":"AFC Bournemouth","short":"BOU","pos":5,"mp":11,"w":5,"d":3,"l":3,"gf":18,"ga":14,"pts":18,"home":{"mp":6,"w":3,"d":2,"l":1,"gf":9,"ga":4,"pts":11},"away":{"mp":5,"w":2,"d":1,"l":2,"gf":9,"ga":10,"pts":7},"form":"WWWWW"},{"id":"brentford","name":"Brentford","short":"BRE","pos":6,"mp":11,"w":4,"d":5,"l":2,"gf":20,"ga":11,"pts":17,"home":{"mp":6,"w":4,"d":1,"l":1,"gf":14,"ga":3,"pts":13},"away":{"mp":5,"w":0,"d":4,"l":1,"gf":6,"ga":8,"pts":4},"form":"LDWLW"},{"id":"leeds","name":"Leeds United","short":"LEE","pos":7,"mp":11,"w":4,"d":5,"l":2,"gf":14,"ga":9,"pts":17,"home":{"mp":5,"w":2,"d":3,"l":0,"gf":7,"ga":3,"pts":9},"away":{"mp":6,"w":2,"d":2,"l":2,"gf":7,"ga":6,"pts":8},"form":"DDLWW"},{"id":"chelsea","name":"Chelsea","short":"CHE","pos":8,"mp":11,"w":5,"d":1,"l":5,"gf":20,"ga":20,"pts":16,"home":{"mp":6,"w":3,"d":1,"l":2,"gf":14,"ga":12,"pts":10},"away":{"mp":5,"w":2,"d":0,"l":3,"gf":6,"ga":8,"pts":6},"form":"WLWLL"},{"id":"everton","name":"Everton","short":"EVE","pos":9,"mp":11,"w":4,"d":4,"l":3,"gf":12,"ga":14,"pts":16,"home":{"mp":5,"w":3,"d":1,"l":1,"gf":8,"ga":5,"pts":10},"away":{"mp":6,"w":1,"d":3,"l":2,"gf":4,"ga":9,"pts":6},"form":"LLWWL"},{"id":"tottenham","name":"Tottenham Hotspur","short":"TOT","pos":10,"mp":11,"w":4,"d":3,"l":4,"gf":12,"ga":11,"pts":15,"home":{"mp":6,"w":3,"d":1,"l":2,"gf":9,"ga":6,"pts":10},"away":{"mp":5,"w":1,"d":2,"l":2,"gf":3,"ga":5,"pts":5},"form":"WWWLW"},{"id":"hull","name":"Hull City","short":"HUL","pos":11,"mp":11,"w":3,"d":5,"l":3,"gf":13,"ga":11,"pts":14,"home":{"mp":6,"w":2,"d":4,"l":0,"gf":9,"ga":5,"pts":10},"away":{"mp":5,"w":1,"d":1,"l":3,"gf":4,"ga":6,"pts":4},"form":"LDDLW"},{"id":"aston-villa","name":"Aston Villa","short":"AVL","pos":12,"mp":11,"w":3,"d":5,"l":3,"gf":14,"ga":17,"pts":14,"home":{"mp":6,"w":1,"d":3,"l":2,"gf":6,"ga":7,"pts":6},"away":{"mp":5,"w":2,"d":2,"l":1,"gf":8,"ga":10,"pts":8},"form":"WWDDD"},{"id":"newcastle","name":"Newcastle United","short":"NEW","pos":13,"mp":11,"w":3,"d":4,"l":4,"gf":15,"ga":18,"pts":13,"home":{"mp":6,"w":1,"d":3,"l":2,"gf":8,"ga":9,"pts":6},"away":{"mp":5,"w":2,"d":1,"l":2,"gf":7,"ga":9,"pts":7},"form":"LWLDD"},{"id":"coventry","name":"Coventry City","short":"COV","pos":14,"mp":11,"w":4,"d":0,"l":7,"gf":13,"ga":21,"pts":12,"home":{"mp":6,"w":3,"d":0,"l":3,"gf":10,"ga":11,"pts":9},"away":{"mp":5,"w":1,"d":0,"l":4,"gf":3,"ga":10,"pts":3},"form":"LLWLW"},{"id":"fulham","name":"Fulham","short":"FUL","pos":15,"mp":11,"w":2,"d":5,"l":4,"gf":11,"ga":13,"pts":11,"home":{"mp":5,"w":1,"d":2,"l":2,"gf":7,"ga":8,"pts":5},"away":{"mp":6,"w":1,"d":3,"l":2,"gf":4,"ga":5,"pts":6},"form":"WWDDD"},{"id":"ipswich","name":"Ipswich Town","short":"IPS","pos":16,"mp":11,"w":3,"d":2,"l":6,"gf":15,"ga":22,"pts":11,"home":{"mp":5,"w":2,"d":1,"l":2,"gf":6,"ga":7,"pts":7},"away":{"mp":6,"w":1,"d":1,"l":4,"gf":9,"ga":15,"pts":4},"form":"LDDLL"},{"id":"nottingham-forest","name":"Nottingham Forest","short":"NFO","pos":17,"mp":11,"w":2,"d":3,"l":6,"gf":9,"ga":15,"pts":9,"home":{"mp":5,"w":1,"d":1,"l":3,"gf":3,"ga":4,"pts":4},"away":{"mp":6,"w":1,"d":2,"l":3,"gf":6,"ga":11,"pts":5},"form":"LDLWL"},{"id":"sunderland","name":"Sunderland","short":"SUN","pos":18,"mp":11,"w":2,"d":3,"l":6,"gf":8,"ga":17,"pts":9,"home":{"mp":5,"w":2,"d":1,"l":2,"gf":2,"ga":4,"pts":7},"away":{"mp":6,"w":0,"d":2,"l":4,"gf":6,"ga":13,"pts":2},"form":"LDLWD"},{"id":"man-utd","name":"Manchester United","short":"MUN","pos":19,"mp":11,"w":1,"d":5,"l":5,"gf":14,"ga":23,"pts":8,"home":{"mp":5,"w":1,"d":2,"l":2,"gf":10,"ga":11,"pts":5},"away":{"mp":6,"w":0,"d":3,"l":3,"gf":4,"ga":12,"pts":3},"form":"DLLDL"},{"id":"crystal-palace","name":"Crystal Palace","short":"CRY","pos":20,"mp":11,"w":2,"d":1,"l":8,"gf":12,"ga":27,"pts":7,"home":{"mp":5,"w":1,"d":0,"l":4,"gf":7,"ga":13,"pts":3},"away":{"mp":6,"w":1,"d":1,"l":4,"gf":5,"ga":14,"pts":4},"form":"LLLLL"}],"fixtures":[{"date":"2026-11-27","time":"20:00","round":"J12","home":"Nottingham Forest","away":"Chelsea"},{"date":"2026-11-28","time":"15:00","round":"J12","home":"Leeds United","away":"Coventry City"},{"date":"2026-11-28","time":"15:00","round":"J12","home":"Manchester United","away":"Brentford"},{"date":"2026-11-28","time":"17:30","round":"J12","home":"Ipswich Town","away":"Aston Villa"},{"date":"2026-11-29","time":"12:00","round":"J12","home":"Everton","away":"Liverpool"},{"date":"2026-11-29","time":"14:05","round":"J12","home":"Brighton & Hove Albion","away":"Newcastle United"},{"date":"2026-11-29","time":"14:05","round":"J12","home":"Crystal Palace","away":"Hull City"},{"date":"2026-11-29","time":"14:05","round":"J12","home":"Fulham","away":"AFC Bournemouth"},{"date":"2026-11-29","time":"14:05","round":"J12","home":"Sunderland","away":"Tottenham Hotspur"},{"date":"2026-11-29","time":"16:30","round":"J12","home":"Arsenal","away":"Manchester City"}]};
 
-document.getElementById('toggleTZ').addEventListener('click', function(){
-  const btn=this;
-  if(tzMode==='paris'){tzMode='et'; btn.innerHTML='Heure: ET (New York) <i class="fa-solid fa-repeat ml-1"></i>'; document.querySelectorAll('[data-et]').forEach(el=>el.textContent=el.dataset.et+' ET');}
-  else {tzMode='paris'; btn.innerHTML='Heure: Paris (UTC+2) <i class="fa-solid fa-repeat ml-1"></i>'; document.querySelectorAll('[data-et]').forEach(el=>el.textContent=el.dataset.et+' ET • '+el.dataset.fr+' Paris');}
-});
-document.querySelectorAll('.filter-btn').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    document.querySelectorAll('.filter-btn').forEach(x=>{x.classList.remove('active','bg-white','text-black'); x.classList.add('bg-bilama-card','border','border-bilama-border');});
-    b.classList.add('active','bg-white','text-black'); b.classList.remove('bg-bilama-card','border','border-bilama-border');
-    const f=b.dataset.filter; document.querySelectorAll('.game-card').forEach(card=>{ if(f==='all'||card.dataset.cat===f) card.style.display='flex'; else card.style.display='none';});
-  });
-});
-document.getElementById('refreshBtn').addEventListener('click', ()=>{
-  const btn=document.getElementById('refreshBtn'); const orig=btn.innerHTML;
-  btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Vérif RotoWire...';
-  setTimeout(()=>{btn.innerHTML=orig; document.getElementById('lastUpdate').textContent=new Date().toLocaleTimeString('fr-FR')+' • à jour';},1200);
-});
-document.getElementById('toggleMethod').addEventListener('click', ()=>{
-  const d=document.getElementById('methodDetail'); d.classList.toggle('hidden');
-});
-
-// Interactive toggles
-const holmgrenToggle=document.getElementById('holmgrenToggle'), hartToggle=document.getElementById('hartToggle'), bonaToggle=document.getElementById('bonaToggle');
-function recalc(){
-  // Holmgren
-  const holmIn = holmgrenToggle.value==='1';
-  document.getElementById('holmgrenLabel').textContent=holmIn?'PRÉSENT':'OUT';
-  document.getElementById('holmgrenLabel').className=holmIn?'font-mono text-sky-400':'font-mono text-red-400';
-  document.getElementById('holmgrenImpact').innerHTML=holmIn?'<b>Holmgren IN</b> : OKC déf #1 intacte.':'<b>Holmgren OUT</b> : OKC DRtg 107.8 → 109.9 (-2.1). SAS passe fav.';
-  // Hart
-  const hartIn = hartToggle.value==='1';
-  document.getElementById('hartLabel').textContent=hartIn?'PRÉSENT':'OUT';
-  document.getElementById('hartLabel').className=hartIn?'font-mono text-yellow-400':'font-mono text-red-400';
-  // Scores recalc simple
-  let okcScore=116.4, sasScore=114.7;
-  if(!holmIn){ okcScore-=1.6; sasScore+=0.9; }
-  document.getElementById('scoreOkc').textContent=okcScore.toFixed(1);
-  document.getElementById('scoreSas').textContent=sasScore.toFixed(1);
-  const diff = okcScore - sasScore;
-  document.getElementById('spreadOkc').textContent = (diff>=0?`OKC -${diff.toFixed(1)}`:`SAS -${Math.abs(diff).toFixed(1)}`);
-  const edge = diff +2.5; // vs book SAS -2.5 => diff - (-2.5) ??? Simplified: if diff= +1.7 (OKC fav 1.7), edge = diff - (-2.5)=4.2. We'll just adjust.
-  let edgeVal = diff - (-2.5);
-  document.getElementById('edgeOkc').textContent = (edgeVal>=0?`+${edgeVal.toFixed(1)} pts sur OKC`:`${edgeVal.toFixed(1)} pts sur SAS`);
-  const pace = holmIn?99.6:100.1;
-  document.getElementById('pace3Text').textContent = pace.toFixed(1)+' poss';
-  // Hart impact on PHI spread
-  let phiScore=117.2, nykScore=119.8;
-  if(!hartIn) { nykScore-=1.2; phiScore+=0.3; }
-  // Bona impact marginal
-  const bonaIn = bonaToggle.value==='1';
-  document.getElementById('bonaLabel').textContent=bonaIn?'PRÉSENT':'OUT';
-  document.getElementById('bonaLabel').className=bonaIn?'font-mono text-emerald-400':'font-mono text-red-400';
-  if(bonaIn) phiScore+=0.4;
-  document.getElementById('scorePhi').textContent=phiScore.toFixed(1);
-  document.getElementById('scoreNyk').textContent=nykScore.toFixed(1);
-  // prob update (simplified)
-  const okcProb = 50 + diff*3 + 2; // rough
-  document.getElementById('probOkc').textContent=`OKC ${Math.round(Math.min(68, Math.max(32, okcProb)))}%`;
-  document.getElementById('probSas').textContent=`SAS ${Math.round(100- Math.min(68, Math.max(32, okcProb)))}%`;
-}
-// --- OVER/UNDER LIVE ---
-function updateOU(num){
-  const bookEl = document.getElementById('bookTotal'+num);
-  const modelEl = document.getElementById('modelOu'+num);
-  const bookValEl = document.getElementById('bookOuVal'+num);
-  const bookOuEl = document.getElementById('bookOu'+num);
-  const edgeEl = document.getElementById('edgeOu'+num);
-  const signalEl = document.getElementById('ouSignal'+num);
-  const boxEl = document.getElementById('ouBox'+num);
-  const whyEl = document.getElementById('ouWhy'+num);
-  if(!bookEl || !modelEl) return;
-  const book = parseFloat(bookEl.value)||222.5;
-  const model = parseFloat(modelEl.textContent)||229.0;
-  const edge = model - book;
-  bookValEl.textContent = book.toFixed(1);
-  bookOuEl.textContent = book.toFixed(1);
-  edgeEl.textContent = (edge>0?'+':'')+edge.toFixed(1);
-  if(edge >= 5){
-    signalEl.textContent='🔼 OVER FORT'; signalEl.className='bg-emerald-500 text-black px-2 py-1 rounded-full font-bold';
-    boxEl.textContent=`🔼 OVER ${book.toFixed(1)} — Signal très fort (+${edge.toFixed(1)})`; boxEl.className='mt-2 bg-emerald-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm';
-    edgeEl.className='text-emerald-400'; whyEl.textContent=`Modèle ${model.toFixed(1)} vs Book ${book.toFixed(1)} → +${edge.toFixed(1)} pts au-dessus. Pace + ORtg élevés.`;
-  } else if(edge >= 2.5){
-    signalEl.textContent='🔼 OVER'; signalEl.className='bg-sky-500 text-white px-2 py-1 rounded-full font-bold';
-    boxEl.textContent=`🔼 OVER ${book.toFixed(1)} — Value`; boxEl.className='mt-2 bg-sky-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm';
-    edgeEl.className='text-sky-400'; whyEl.textContent=`Léger Over : +${edge.toFixed(1)} pts au-dessus du marché.`;
-  } else if(edge <= -5){
-    signalEl.textContent='🔽 UNDER FORT'; signalEl.className='bg-red-500 text-white px-2 py-1 rounded-full font-bold';
-    boxEl.textContent=`🔽 UNDER ${book.toFixed(1)} — Signal très fort (${edge.toFixed(1)})`; boxEl.className='mt-2 bg-red-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm';
-    edgeEl.className='text-red-400'; whyEl.textContent=`Modèle ${model.toFixed(1)} vs Book ${book.toFixed(1)} → ${Math.abs(edge).toFixed(1)} pts en-dessous. Déf elite + Pace lente.`;
-  } else if(edge <= -2.5){
-    signalEl.textContent='🔽 UNDER'; signalEl.className='bg-orange-500 text-white px-2 py-1 rounded-full font-bold';
-    boxEl.textContent=`🔽 UNDER ${book.toFixed(1)} — Value`; boxEl.className='mt-2 bg-orange-500 text-white rounded-xl px-3 py-2 text-center font-bold text-sm';
-    edgeEl.className='text-orange-400'; whyEl.textContent=`Léger Under : ${Math.abs(edge).toFixed(1)} pts sous le marché.`;
-  } else {
-    signalEl.textContent='⚪ PASS'; signalEl.className='bg-zinc-700 text-white px-2 py-1 rounded-full font-bold';
-    boxEl.textContent=`⚪ PASS — Pas de value O/U (Edge ${edge.toFixed(1)})`; boxEl.className='mt-2 bg-zinc-800 text-zinc-300 rounded-xl px-3 py-2 text-center font-bold text-sm';
-    edgeEl.className='text-zinc-300'; whyEl.textContent=`Modèle ${model.toFixed(1)} proche du Book ${book.toFixed(1)} → pas de signal.`;
-  }
-}
-['bookTotal1','bookTotal2','bookTotal3','bookSpread1','bookSpread2','bookSpread3'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', ()=>{ const n=id.slice(-1); updateOU(n); }); });
-// Also hook Holmgren to update modelOu3 when OUT → model total rises
-const origRecalc = recalc;
-recalc = function(){
-  origRecalc();
-  // update modelOu3 based on Holmgren
-  const holmIn = document.getElementById('holmgrenToggle').value==='1';
-  document.getElementById('modelOu3').textContent = holmIn ? '231.1' : '232.6';
-  updateOU('3');
-  // Hart/Bona affect modelOu2 slightly
-  const hartIn = document.getElementById('hartToggle').value==='1';
-  const bonaIn = document.getElementById('bonaToggle').value==='1';
-  let m2 = 237.0;
-  if(!hartIn) m2 -= 0.9;
-  if(bonaIn) m2 += 0.4;
-  document.getElementById('modelOu2').textContent = m2.toFixed(1);
-  updateOU('2');
-  updateOU('1');
+const LS = {
+  data: 'plou_data_v1',
+  journal: 'plou_journal_v1',
+  prefs: 'plou_prefs_v1'
 };
 
-holmgrenToggle.addEventListener('input', recalc);
-hartToggle.addEventListener('input', recalc);
-bonaToggle.addEventListener('input', recalc);
+const DATA_URLS = [
+  './data/pl-2026-27.json',
+  '../data/pl-2026-27.json',
+  'https://raw.githubusercontent.com/bilama54-a11y/Bilama54/main/data/pl-2026-27.json'
+];
+const ESPN_STANDINGS = 'https://site.web.api.espn.com/apis/v2/sports/soccer/eng.1/standings';
+const ESPN_SCOREBOARD = 'https://site.web.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard';
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+const state = {
+  data: null,
+  mode: 'split',        // mode de l'analyseur : split | global
+  tiersMode: 'global',  // mode du tableau des tiers
+  tab: 'tiers',
+  dom: '',
+  ext: '',
+  line: 2.5,
+  odds: 1.90,
+  stake: 10,
+  journal: [],
+  sync: 'idle'
+};
+
+/* ----------------------- utilitaires ----------------------- */
+const nf2 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const nf1 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmt2 = v => (v === null || v === undefined || !isFinite(v)) ? '—' : nf2.format(v);
+const fmt1 = v => (v === null || v === undefined || !isFinite(v)) ? '—' : nf1.format(v);
+const fmtPct = v => (v === null || v === undefined || !isFinite(v)) ? '—' : (v * 100 >= 0 ? '+' : '') + nf1.format(v * 100) + ' %';
+const sgn = v => (v > 0 ? '+' : '') + v;
+
+function toast(msg, isErr) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isErr ? ' err' : '');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { el.className = 'toast' + (isErr ? ' err' : ''); }, 2600);
+}
+
+function normName(s) {
+  return (s || '').toString().toLowerCase().normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function teamByKey(key) {
+  if (!key || !state.data) return null;
+  const teams = state.data.teams;
+  let t = teams.find(t => t.id === key);
+  if (t) return t;
+  t = teams.find(t => t.short === key);
+  if (t) return t;
+  const n = normName(key);
+  t = teams.find(t => normName(t.name) === n) || teams.find(t => normName(t.short) === n);
+  if (t) return t;
+  // tolérance (noms FPL/ESPN abrégés : "Man Utd", "Spurs", "Nott'm Forest"…)
+  const cands = teams.filter(t => {
+    const a = normName(t.name);
+    return a.startsWith(n) || n.startsWith(a) || a.includes(n) || n.includes(a);
+  });
+  if (cands.length === 1) return cands[0];
+  if (cands.length > 1) {
+    return cands.sort((a, b) => Math.abs(normName(a.name).length - n.length) - Math.abs(normName(b.name).length - n.length))[0];
+  }
+  return null;
+}
+
+/* ----------------------- rangs & tiers ----------------------- */
+function statLine(team, mode, side) {
+  if (!team) return null;
+  if (mode === 'global') return { mp: team.mp, gf: team.gf, ga: team.ga };
+  const s = side === 'home' ? team.home : team.away;
+  if (!s || !s.mp) return null;
+  return { mp: s.mp, gf: s.gf, ga: s.ga };
+}
+
+const rankCache = new Map();
+
+function ranksFor(mode, side) {
+  const key = mode + '|' + (mode === 'global' ? 'x' : side);
+  if (rankCache.has(key)) return rankCache.get(key);
+
+  const rows = (state.data ? state.data.teams : [])
+    .map(t => ({ t, s: statLine(t, mode, side) }))
+    .filter(r => r.s && r.s.mp > 0);
+
+  const off = rows.slice().sort((a, b) =>
+    (b.s.gf / b.s.mp) - (a.s.gf / a.s.mp) || (b.t.pts - a.t.pts));
+  const def = rows.slice().sort((a, b) =>
+    (a.s.ga / a.s.mp) - (b.s.ga / b.s.mp) || (b.t.pts - a.t.pts));
+
+  const offRank = new Map(), defRank = new Map();
+  off.forEach((r, i) => offRank.set(r.t.id, i + 1));
+  def.forEach((r, i) => defRank.set(r.t.id, i + 1));
+
+  let gf = 0, ga = 0, mp = 0;
+  rows.forEach(r => { gf += r.s.gf; ga += r.s.ga; mp += r.s.mp; });
+  // (GF + GA) / Σmp = buts marqués + encaissés par "équipe-match" = buts par match,
+  // que l'on soit sur le tableau global (20 clubs) ou sur un split (10 matchs à domicile).
+  const avg = mp > 0 ? (gf + ga) / mp : null;
+
+  const res = { offRank, defRank, avg, rows };
+  rankCache.set(key, res);
+  return res;
+}
+
+function tierOf(rank, kind) {
+  if (!rank) return { rank: null, tier: 0, pts: 0 };
+  const tier = rank <= 10 ? 1 : rank <= 16 ? 2 : 3;
+  let pts;
+  if (kind === 'off') pts = tier === 1 ? 1 : tier === 2 ? 0 : -1;
+  else pts = tier === 1 ? -1 : tier === 2 ? 0 : 1;
+  return { rank, tier, pts };
+}
+
+function offRate(team, mode, side) {
+  const l = statLine(team, mode, side);
+  return l && l.mp ? l.gf / l.mp : null;
+}
+function defRate(team, mode, side) {
+  const l = statLine(team, mode, side);
+  return l && l.mp ? l.ga / l.mp : null;
+}
+
+/* ----------------------- analyse ----------------------- */
+function verdictOf(score) {
+  if (score >= 2) return { cls: 'v-red', label: 'OVER 2.5 FORT', advice: 'Value OVER — 2 unités', key: 'over2' };
+  if (score === 1) return { cls: 'v-orange', label: 'OVER 2.5 LÉGER', advice: 'OVER léger — 1 unité max', key: 'over1' };
+  if (score === 0) return { cls: 'v-yellow', label: 'NEUTRE', advice: 'No Bet / Prudence', key: 'neutral' };
+  if (score === -1) return { cls: 'v-sky', label: 'UNDER 2.5 LÉGER', advice: 'UNDER léger — 1 unité max', key: 'under1' };
+  return { cls: 'v-blue', label: 'UNDER 2.5 FORT', advice: 'Value UNDER — 2 unités', key: 'under2' };
+}
+
+function analyse() {
+  if (!state.data) return null;
+  const H = teamByKey(state.dom);
+  const A = teamByKey(state.ext);
+  if (!H || !A) return null;
+  if (H.id === A.id) return null;
+
+  const mode = state.mode;
+  const rMode = mode === 'global' ? 'global' : 'split';
+
+  const build = (team, side, kind, label) => {
+    const r = ranksFor(rMode, side);
+    const rank = (kind === 'off' ? r.offRank : r.defRank).get(team.id) || null;
+    const value = kind === 'off' ? offRate(team, mode, side) : defRate(team, mode, side);
+    const tier = tierOf(rank, kind);
+    return { team, side, kind, label, value, rank, tier };
+  };
+
+  const comps = [
+    build(H, 'home', 'off', 'Off Dom'),
+    build(H, 'home', 'def', 'Déf Dom'),
+    build(A, 'away', 'off', 'Off Ext'),
+    build(A, 'away', 'def', 'Déf Ext')
+  ];
+  const score = comps.reduce((s, c) => s + c.tier.pts, 0);
+
+  const bmH = statLine(H, mode, 'home');
+  const bmA = statLine(A, mode, 'away');
+  const proj = (bmH && bmA && bmH.mp && bmA.mp)
+    ? ((bmH.gf / bmH.mp + bmA.ga / bmA.mp) + (bmA.gf / bmA.mp + bmH.ga / bmH.mp)) / 2
+    : null;
+
+  const verdict = verdictOf(score);
+  return { H, A, comps, score, proj, verdict, mode };
+}
+
+/* probabilité Poisson P(total > ligne) */
+function poissonOver(lambda, line) {
+  if (!isFinite(lambda) || lambda <= 0) return null;
+  const k = Math.floor(line);
+  let p = Math.exp(-lambda), cdf = p;
+  for (let i = 1; i <= k; i++) { p *= lambda / i; cdf += p; }
+  return Math.max(0, Math.min(1, 1 - cdf));
+}
+
+function kelly(p, odds, fraction) {
+  if (!isFinite(p) || !isFinite(odds) || odds <= 1) return null;
+  const b = odds - 1;
+  const f = (p * odds - 1) / b;
+  return f > 0 ? Math.min(f * (fraction || 1), 0.25) : 0;
+}
+
+/* ----------------------- rendu : onglets ----------------------- */
+function showTab(tab) {
+  if (tab === 'install') { promptInstall(); return; }
+  state.tab = tab;
+  ['tiers', 'analyse', 'journal'].forEach(t => {
+    const sec = $('#tab-' + t);
+    if (sec) sec.classList.toggle('hidden', t !== tab);
+  });
+  $$('.tabbar button[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  savePrefs();
+}
+
+/* ----------------------- rendu : tiers ----------------------- */
+function renderTiers() {
+  const body = $('#tiersBody');
+  if (!state.data) { body.innerHTML = '<tr><td colspan="9" class="empty">Chargement…</td></tr>'; return; }
+
+  const mode = state.tiersMode;
+  const modeKey = mode === 'global' ? 'global' : 'split';
+  const r = ranksFor(modeKey, mode === 'global' ? 'home' : mode);
+
+  const rows = state.data.teams.map(t => {
+    const line = statLine(t, mode, mode === 'home' ? 'home' : 'away');
+    const isGlobal = mode === 'global';
+    return {
+      t,
+      mp: line ? line.mp : 0,
+      bm: line && line.mp ? line.gf / line.mp : null,
+      be: line && line.mp ? line.ga / line.mp : null,
+      off: tierOf(r.offRank.get(t.id), 'off'),
+      def: tierOf(r.defRank.get(t.id), 'def'),
+      pos: t.pos || 0
+    };
+  });
+
+  // tri par mérite offensif du mode courant
+  rows.sort((a, b) => (r.offRank.get(a.t.id) || 99) - (r.offRank.get(b.t.id) || 99));
+
+  body.innerHTML = rows.map((row, i) => {
+    const offCls = row.off.pts > 0 ? 't-pos' : row.off.pts < 0 ? 't-neg' : 't-zero';
+    const defCls = row.def.pts < 0 ? 't-def1' : row.def.pts > 0 ? 't-def3' : 't-zero';
+    return '<tr>' +
+      '<td><span class="pos">' + (i + 1) + '</span></td>' +
+      '<td><div class="club">' + esc(row.t.name) + '</div></td>' +
+      '<td>' + row.mp + '</td>' +
+      '<td><b>' + fmt2(row.bm) + '</b></td>' +
+      '<td class="rk">' + (row.off.rank || '—') + '</td>' +
+      '<td><span class="tbadge ' + offCls + '">' + sgn(row.off.pts) + '</span></td>' +
+      '<td><b>' + fmt2(row.be) + '</b></td>' +
+      '<td class="rk">' + (row.def.rank || '—') + '</td>' +
+      '<td><span class="tbadge ' + defCls + '">' + sgn(row.def.pts) + '</span></td>' +
+      '</tr>';
+  }).join('');
+
+  const avg = r.avg;
+  $('#avgTag').textContent = 'Moyenne ligue : ' + fmt2(avg) + ' buts/match';
+}
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ----------------------- rendu : sélecteurs ----------------------- */
+function fillSelects() {
+  if (!state.data) return;
+  const teams = state.data.teams.slice().sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  const opts = teams.map(t => '<option value="' + esc(t.id) + '">' + esc(t.name) + '</option>').join('');
+  const dom = $('#selDom'), ext = $('#selExt');
+  dom.innerHTML = '<option value="">— Choisir —</option>' + opts;
+  ext.innerHTML = '<option value="">— Choisir —</option>' + opts;
+
+  const fx = (state.data.fixtures || [])[0];
+  const fxHome = fx ? teamByKey(fx.home) : null;
+  const fxAway = fx ? teamByKey(fx.away) : null;
+  if (!state.dom) state.dom = (fxHome || teamByKey('arsenal') || teams[0]).id;
+  if (!state.ext) {
+    const other = fxAway && fxAway.id !== state.dom ? fxAway : teams.find(t => t.id !== state.dom);
+    state.ext = other ? other.id : '';
+  }
+  dom.value = state.dom || '';
+  ext.value = state.ext || '';
+}
+
+/* ----------------------- rendu : analyse ----------------------- */
+function renderAnalysis() {
+  const box = $('#compBox');
+  const a = analyse();
+
+  if (!a) {
+    box.innerHTML = '<div class="cbox" style="grid-column:1/-1"><div class="lbl">En attente</div>' +
+      '<div class="meta">Choisissez une équipe à domicile et une à l\'extérieur (différentes).</div></div>';
+    $('#needle').style.left = '50%';
+    $('#verdictBox').className = 'verdict v-yellow';
+    $('#verdictLabel').textContent = 'NEUTRE';
+    $('#verdictAdvice').textContent = 'Sélection incomplète';
+    $('#verdictScore').textContent = '0';
+    $('#projBox').innerHTML = '';
+    $('#betMetrics').innerHTML = '';
+    return;
+  }
+
+  box.innerHTML = a.comps.map(c => {
+    const pts = c.tier.pts;
+    const cls = c.kind === 'off'
+      ? (pts > 0 ? 't-pos' : pts < 0 ? 't-neg' : 't-zero')
+      : (pts < 0 ? 't-def1' : pts > 0 ? 't-def3' : 't-zero');
+    const sideTxt = a.mode === 'global' ? 'global' : (c.side === 'home' ? 'dom.' : 'ext.');
+    return '<div class="cbox">' +
+      '<span class="pts tbadge ' + cls + '">' + sgn(pts) + '</span>' +
+      '<div class="lbl">' + c.label + '</div>' +
+      '<div class="val">' + fmt2(c.value) + '</div>' +
+      '<div class="meta">Rg ' + (c.rank || '—') + ' · T' + (c.tier.tier || '—') + ' · ' + sideTxt + ' ' +
+      esc(c.kind === 'off' ? 'BM/m' : 'BE/m') + '</div>' +
+      '</div>';
+  }).join('');
+
+  // jauge : -4 → 0 %, +4 → 100 %
+  const pct = ((a.score + 4) / 8) * 100;
+  $('#needle').style.left = pct + '%';
+  $('#verdictBox').className = 'verdict ' + a.verdict.cls;
+  $('#verdictLabel').textContent = a.verdict.label;
+  $('#verdictAdvice').textContent = a.verdict.advice + ' · ' + (a.mode === 'global' ? 'mode global' : 'split Dom/Ext');
+  $('#verdictScore').textContent = sgn(a.score);
+
+  const avg = ranksFor(a.mode === 'global' ? 'global' : 'split', 'home').avg;
+  $('#verdictSub').textContent = a.H.name + ' — ' + a.A.name + ' · ' +
+    (a.mode === 'global' ? 'moyennes globales' : 'splits Domicile/Extérieur');
+
+  const staleSplits = state.data.teams.some(t => t.home && t.away && (t.home.mp + t.away.mp) !== t.mp);
+  const staleWarn = (a.mode === 'split' && staleSplits)
+    ? '<div class="kv" style="color:#ffd08a"><span>⚠️ Splits Dom/Ext en retard</span><span>mode Global conseillé</span></div>'
+    : '';
+
+  $('#projBox').innerHTML = staleWarn +
+    '<div class="kv"><span>Projection de buts</span><span>' + fmt2(a.proj) + '</span></div>' +
+    '<div class="kv"><span>Moyenne ligue (ce mode)</span><span>' + fmt2(avg) + '</span></div>' +
+    '<div class="kv"><span>Ligne de référence</span><span>' + fmt2(state.line) + '</span></div>';
+
+  renderBetMetrics(a);
+}
+
+function renderBetMetrics(a) {
+  const box = $('#betMetrics');
+  if (!a || a.proj == null) { box.innerHTML = ''; return; }
+
+  const over = a.score >= 0;
+  const pOver = poissonOver(a.proj, state.line);
+  const pSide = over ? pOver : (1 - pOver);
+  const implied = state.odds > 0 ? 1 / state.odds : null;
+  const edge = (pSide != null && state.odds > 1) ? (pSide * state.odds - 1) : null;
+  const k = kelly(pSide, state.odds, 0.25);
+  const diff = a.proj - state.line;
+
+  box.innerHTML =
+    '<div class="metric"><div class="k">Écart vs ligne</div><div class="v" style="color:' +
+      (diff >= 0 ? '#7fe0a2' : '#9cc4ff') + '">' + (diff >= 0 ? '+' : '') + fmt2(diff) + '</div></div>' +
+    '<div class="metric"><div class="k">P(' + (over ? 'OVER' : 'UNDER') + ') modèle</div><div class="v">' +
+      (pSide != null ? nf1.format(pSide * 100) + ' %' : '—') + '</div></div>' +
+    '<div class="metric"><div class="k">P implicite (' + fmt2(state.odds) + ')</div><div class="v">' +
+      (implied != null ? nf1.format(implied * 100) + ' %' : '—') + '</div></div>' +
+    '<div class="metric"><div class="k">Valeur (edge)</div><div class="v" style="color:' +
+      (edge != null && edge > 0 ? '#7fe0a2' : '#ffb4b4') + '">' + fmtPct(edge) + '</div></div>' +
+    '<div class="metric" style="grid-column:1/-1"><div class="k">Mise conseillée (Kelly ¼)</div><div class="v">' +
+      (k != null ? nf2.format(k * state.stake) + ' € sur ' + fmt2(state.stake) + ' €' : '—') + '</div></div>' +
+    '<div class="metric" style="grid-column:1/-1"><div class="k">Lecture</div><div style="font-size:12px;color:#b8c6d6;margin-top:2px">' +
+      betReading(a) + '</div></div>';
+}
+
+function betReading(a) {
+  const diff = a.proj - state.line;
+  const pick = a.score >= 0 ? 'OVER' : 'UNDER';
+  if (a.verdict.key === 'neutral') {
+    return 'Score 0 : aucun avantage statistique (No Bet). La projection ' + fmt2(a.proj) +
+      ' buts est ' + (diff >= 0 ? 'au-dessus' : 'sous') + ' la ligne ' + fmt2(state.line) + '.';
+  }
+  return pick + ' ' + fmt2(state.line) + ' : projection ' + fmt2(a.proj) + ' buts (' +
+    (diff >= 0 ? '+' : '') + fmt2(diff) + ' vs ligne), soit ' +
+    nf1.format((poissonOver(a.proj, state.line) * 100)) + ' % de chance de OVER selon le modèle Poisson.';
+}
+
+/* ----------------------- rendu : fixtures ----------------------- */
+function renderFixtures() {
+  const box = $('#fixtures');
+  const fx = (state.data && state.data.fixtures) || [];
+  if (!fx.length) { box.innerHTML = '<div class="empty">Aucun match à venir dans l\'instantané.</div>'; return; }
+
+  const round = fx[0].round || '';
+  $('#fxSub').textContent = round ? round + ' · 1 tap = match chargé' : '1 tap = match chargé';
+
+  box.innerHTML = fx.map(f => {
+    const d = f.date ? f.date.slice(8, 10) + '/' + f.date.slice(5, 7) : '';
+    const H = teamByKey(f.home), A = teamByKey(f.away);
+    const ok = H && A;
+    return '<div class="fx">' +
+      '<div class="when">' + esc(d) + '<br>' + esc(f.time || '') + '</div>' +
+      '<div class="who">' + esc(f.home) + ' <span>vs</span> ' + esc(f.away) + '</div>' +
+      (ok
+        ? '<button class="chip" data-fx="split" data-h="' + esc(H.id) + '" data-a="' + esc(A.id) + '">Split</button>' +
+          '<button class="chip alt" data-fx="global" data-h="' + esc(H.id) + '" data-a="' + esc(A.id) + '">Global</button>'
+        : '<span class="fine">—</span>') +
+      '</div>';
+  }).join('');
+
+  $$('#fixtures .chip').forEach(b => b.addEventListener('click', () => {
+    state.dom = b.dataset.h;
+    state.ext = b.dataset.a;
+    state.mode = b.dataset.fx;
+    $('#selDom').value = state.dom;
+    $('#selExt').value = state.ext;
+    setModeButtons(state.mode);
+    renderAnalysis();
+    savePrefs();
+    showTab('analyse');
+    toast('Match chargé : ' + (teamByKey(state.dom) || {}).name + ' vs ' + (teamByKey(state.ext) || {}).name);
+  }));
+}
+
+function setModeButtons(mode) {
+  $$('#analyseMode button').forEach(b => b.classList.toggle('on', b.dataset.m === mode));
+}
+
+/* ----------------------- journal ----------------------- */
+function loadJournal() {
+  try { state.journal = JSON.parse(localStorage.getItem(LS.journal) || '[]') || []; }
+  catch (e) { state.journal = []; }
+}
+
+function saveJournal() {
+  try { localStorage.setItem(LS.journal, JSON.stringify(state.journal)); } catch (e) {}
+}
+
+function betProfit(b) {
+  const stake = Number(b.stake) || 0;
+  if (b.result === 'won') return stake * ((Number(b.odds) || 0) - 1);
+  if (b.result === 'lost') return -stake;
+  return 0;
+}
+
+function renderJournal() {
+  const list = $('#journalList');
+  const bets = state.journal.slice().reverse();
+  const settled = state.journal.filter(b => b.result === 'won' || b.result === 'lost' || b.result === 'push');
+  const staked = settled.reduce((s, b) => s + (Number(b.stake) || 0), 0);
+  const profit = settled.reduce((s, b) => s + betProfit(b), 0);
+  const won = state.journal.filter(b => b.result === 'won').length;
+  const decided = state.journal.filter(b => b.result === 'won' || b.result === 'lost').length;
+  const winrate = decided ? won / decided : null;
+  const roi = staked > 0 ? profit / staked : null;
+
+  $('#journalStats').innerHTML =
+    '<div class="metric"><div class="k">Paris</div><div class="v">' + state.journal.length + '</div></div>' +
+    '<div class="metric"><div class="k">Winrate</div><div class="v">' + (winrate != null ? nf1.format(winrate * 100) + ' %' : '—') + '</div></div>' +
+    '<div class="metric"><div class="k">Profit</div><div class="v" style="color:' + (profit >= 0 ? '#7fe0a2' : '#ffb4b4') + '">' +
+      (profit >= 0 ? '+' : '') + nf2.format(profit) + ' €</div></div>' +
+    '<div class="metric"><div class="k">ROI</div><div class="v" style="color:' + (roi != null && roi >= 0 ? '#7fe0a2' : '#ffb4b4') + '">' +
+      fmtPct(roi) + '</div></div>';
+
+  if (!bets.length) {
+    list.innerHTML = '<div class="empty">Aucun pari.<br>Analysez un match puis touchez « Enregistrer au Journal_Paris ».</div>';
+    return;
+  }
+
+  list.innerHTML = bets.map(b => {
+    const badge = b.result === 'won' ? 'b-won' : b.result === 'lost' ? 'b-lost' : b.result === 'push' ? 'b-push' : 'b-pend';
+    const label = b.result === 'won' ? 'GAGNÉ' : b.result === 'lost' ? 'PERDU' : b.result === 'push' ? 'PUSH' : 'EN ATTENTE';
+    const p = betProfit(b);
+    return '<div class="bet" data-id="' + b.id + '">' +
+      '<div class="top">' +
+        '<div class="who">' + esc(b.dom) + ' vs ' + esc(b.ext) + '</div>' +
+        '<span class="badge ' + badge + '">' + label + '</span>' +
+      '</div>' +
+      '<div class="l2">' +
+        '<span><b>' + esc(b.pick) + '</b> ' + fmt2(b.line) + '</span>' +
+        '<span>Score <b>' + sgn(b.score) + '</b></span>' +
+        '<span>Proj. <b>' + fmt2(b.projection) + '</b></span>' +
+        '<span>Cote ' + fmt2(b.odds) + '</span>' +
+        '<span>Mise ' + nf2.format(Number(b.stake) || 0) + ' €</span>' +
+        '<span>' + (b.mode === 'global' ? 'Global' : 'Split') + '</span>' +
+        '<span>' + esc((b.date || '').slice(0, 10)) + '</span>' +
+      '</div>' +
+      '<div class="l2" style="margin-top:3px"><span>' + esc(b.verdict) + '</span>' +
+        (b.result !== 'pending' ? '<span style="margin-left:auto;color:' + (p >= 0 ? '#7fe0a2' : '#ffb4b4') + ';font-weight:800">' +
+          (p >= 0 ? '+' : '') + nf2.format(p) + ' €</span>' : '') +
+      '</div>' +
+      '<div class="acts">' +
+        '<button data-r="won" class="' + (b.result === 'won' ? 'on won' : '') + '">Gagné</button>' +
+        '<button data-r="lost" class="' + (b.result === 'lost' ? 'on lost' : '') + '">Perdu</button>' +
+        '<button data-r="push" class="' + (b.result === 'push' ? 'on push' : '') + '">Push</button>' +
+        '<button data-r="del">✕</button>' +
+      '</div>' +
+      '</div>';
+  }).join('');
+
+  $$('#journalList .acts button').forEach(btn => btn.addEventListener('click', () => {
+    const card = btn.closest('.bet');
+    const id = card.dataset.id;
+    const bet = state.journal.find(x => x.id === id);
+    if (!bet) return;
+    if (btn.dataset.r === 'del') {
+      state.journal = state.journal.filter(x => x.id !== id);
+      toast('Pari supprimé');
+    } else {
+      bet.result = btn.dataset.r;
+      toast('Pari marqué ' + (bet.result === 'won' ? 'gagné' : bet.result === 'lost' ? 'perdu' : 'push'));
+    }
+    saveJournal();
+    renderJournal();
+  }));
+}
+
+/* ----------------------- actions ----------------------- */
+function saveBet() {
+  const a = analyse();
+  if (!a) { toast('Sélectionnez deux équipes différentes', true); return; }
+  const bet = {
+    id: 'b' + Date.now() + Math.random().toString(36).slice(2, 6),
+    date: new Date().toISOString(),
+    dom: a.H.name,
+    ext: a.A.name,
+    mode: a.mode,
+    score: a.score,
+    verdict: a.verdict.label,
+    pick: a.score > 0 ? 'OVER' : a.score < 0 ? 'UNDER' : 'NO BET',
+    projection: a.proj,
+    line: Number(state.line),
+    odds: Number(state.odds),
+    stake: Number(state.stake),
+    result: 'pending'
+  };
+  state.journal.push(bet);
+  saveJournal();
+  renderJournal();
+  toast('Pari enregistré dans le Journal ✓');
+}
+
+function download(name, text, type) {
+  const blob = new Blob([text], { type: type || 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
+}
+
+function exportCsv() {
+  if (!state.journal.length) { toast('Journal vide', true); return; }
+  const head = ['Date', 'Domicile', 'Exterieur', 'Mode', 'Score', 'Verdict', 'Pari', 'Ligne', 'Projection', 'Cote', 'Mise', 'Resultat', 'Profit'];
+  const rows = state.journal.map(b => [
+    (b.date || '').slice(0, 19).replace('T', ' '), b.dom, b.ext,
+    b.mode === 'global' ? 'Global' : 'Split', b.score, b.verdict, b.pick,
+    String(b.line).replace('.', ','), String(fmt2(b.projection)).replace('.', ','),
+    String(b.odds).replace('.', ','), String(b.stake).replace('.', ','),
+    b.result, String(nf2.format(betProfit(b))).replace('.', ',')
+  ]);
+  const csv = [head, ...rows]
+    .map(r => r.map(c => '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"').join(';'))
+    .join('\r\n');
+  download('journal_paris_pl_2026-27.csv', '\uFEFF' + csv, 'text/csv;charset=utf-8');
+  toast('CSV exporté');
+}
+
+function exportJson() {
+  if (!state.journal.length) { toast('Journal vide', true); return; }
+  download('journal_paris_pl_2026-27.json', JSON.stringify(state.journal, null, 2), 'application/json');
+  toast('JSON exporté');
+}
+
+/* ----------------------- préférences ----------------------- */
+function savePrefs() {
+  try {
+    localStorage.setItem(LS.prefs, JSON.stringify({
+      mode: state.mode, tiersMode: state.tiersMode, tab: state.tab,
+      dom: state.dom, ext: state.ext,
+      line: state.line, odds: state.odds, stake: state.stake
+    }));
+  } catch (e) {}
+}
+
+function loadPrefs() {
+  try {
+    const p = JSON.parse(localStorage.getItem(LS.prefs) || '{}') || {};
+    if (p.mode) state.mode = p.mode;
+    if (p.tiersMode) state.tiersMode = p.tiersMode;
+    if (p.tab && p.tab !== 'install') state.tab = p.tab;
+    if (p.dom) state.dom = p.dom;
+    if (p.ext) state.ext = p.ext;
+    if (p.line) state.line = Number(p.line);
+    if (p.odds) state.odds = Number(p.odds);
+    if (p.stake) state.stake = Number(p.stake);
+  } catch (e) {}
+}
+
+/* ----------------------- synchronisation ----------------------- */
+function setSync(s, txt) {
+  state.sync = s;
+  const btn = $('#syncBtn');
+  btn.dataset.s = s;
+  if (txt) $('#syncTxt').textContent = txt;
+}
+
+function updateNetUi() {
+  const online = navigator.onLine;
+  const t = $('#netTag');
+  t.textContent = online ? 'en ligne' : 'hors-ligne';
+  t.className = 'tag' + (online ? ' live' : '');
+}
+
+function refreshMeta(origin) {
+  const data = state.data;
+  if (!data) return;
+  const when = data.updatedAt ? new Date(data.updatedAt) : new Date();
+  $('#updTag').textContent = 'MAJ ' + when.toLocaleString('fr-FR', {
+    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+  });
+  $('#srcTag').textContent = 'J' + (data.matchday || '?') + ' · ' + (origin || data.source || 'local');
+
+  // les splits Dom/Ext sont-ils alignés sur la journée affichée ?
+  const splitMp = data.teams.reduce((m, t) => Math.max(m, (t.home ? t.home.mp : 0) + (t.away ? t.away.mp : 0)), 0);
+  const tag = $('#splitTag');
+  if (splitMp && data.matchday && splitMp !== data.matchday) {
+    tag.textContent = 'splits J' + splitMp;
+    tag.title = 'Les moyennes Domicile/Extérieur datent de la J' + splitMp +
+      ' : le mode Global est plus fiable jusqu\'à la prochaine synchro complète.';
+    tag.classList.remove('hidden');
+  } else {
+    tag.classList.add('hidden');
+  }
+}
+
+function setData(data, origin) {
+  if (!data || !Array.isArray(data.teams) || data.teams.length < 10) return false;
+  state.data = data;
+  rankCache.clear();
+  refreshMeta(origin);
+  fillSelects();
+  renderTiers();
+  renderFixtures();
+  renderAnalysis();
+  return true;
+}
+
+async function fetchJson(url, timeout) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeout || 9000);
+  try {
+    const res = await fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now(), {
+      cache: 'no-store', signal: ctrl.signal,
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/* Fusion ESPN : uniquement si ESPN a joué plus de matchs que l'instantané. */
+function mergeEspn(local, espnTeams) {
+  if (!espnTeams || espnTeams.length < 18) return { merged: false };
+  const localByNorm = new Map(state.data.teams.map(t => [normName(t.name), t]));
+  let maxLocal = 0, maxEspn = 0;
+  const parsed = [];
+
+  espnTeams.forEach(e => {
+    const name = (e.team && (e.team.displayName || e.team.name)) || '';
+    const stats = e.stats || [];
+    const get = n => {
+      const s = stats.find(x => x.name === n);
+      return s && s.value != null ? Number(s.value) : 0;
+    };
+    const mp = Math.round(get('gamesPlayed'));
+    const w = Math.round(get('wins'));
+    const d = Math.round(get('ties'));
+    const l = Math.round(get('losses'));
+    const gf = Math.round(get('pointsFor'));
+    const ga = Math.round(get('pointsAgainst'));
+    const pts = Math.round(get('points') || (w * 3 + d));
+    if (mp > maxEspn) maxEspn = mp;
+    parsed.push({ name, mp, w, d, l, gf, ga, pts, match: localByNorm.get(normName(name)) });
+  });
+
+  state.data.teams.forEach(t => { if (t.mp > maxLocal) maxLocal = t.mp; });
+  if (maxEspn <= maxLocal) return { merged: false, maxEspn, maxLocal };
+
+  // garde-fou : ESPN doit renvoyer des BUTS (ΣGF = ΣGA et moyenne plausible)
+  const sumGf = parsed.reduce((s, p) => s + p.gf, 0);
+  const sumGa = parsed.reduce((s, p) => s + p.ga, 0);
+  const games = parsed.reduce((s, p) => s + p.mp, 0) / 2;
+  const goalsPerGame = games > 0 ? sumGf / games : 0;
+  if (sumGf !== sumGa || goalsPerGame < 1.5 || goalsPerGame > 4.5) {
+    return { merged: false, rejected: true };
+  }
+
+  let updated = 0;
+  parsed.forEach(p => {
+    if (!p.match) return;
+    const t = p.match;
+    if (p.mp < t.mp) return;
+    // les splits Dom/Ext restent ceux du snapshot si le nombre de matchs diffère
+    const sameMp = p.mp === t.mp;
+    t.mp = p.mp; t.w = p.w; t.d = p.d; t.l = p.l;
+    t.gf = p.gf; t.ga = p.ga; t.pts = p.pts;
+    if (!sameMp) {
+      // on ne peut pas reconstruire les splits exacts : on les laisse tels quels
+      t.splitsStale = true;
+    }
+    updated++;
+  });
+
+  if (!updated) return { merged: false };
+
+  // re-classement
+  state.data.teams.sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf);
+  state.data.teams.forEach((t, i) => { t.pos = i + 1; });
+  state.data.matchday = maxEspn;
+  state.data.updatedAt = new Date().toISOString();
+  state.data.source = 'ESPN live (J' + maxEspn + ')';
+  return { merged: true, maxEspn };
+}
+
+async function syncEspn(silent) {
+  try {
+    const [standings, board] = await Promise.all([
+      fetchJson(ESPN_STANDINGS, 9000),
+      fetchJson(ESPN_SCOREBOARD, 9000).catch(() => null)
+    ]);
+    const entries = (standings && standings.children && standings.children[0] &&
+      standings.children[0].standings && standings.children[0].standings.entries) ||
+      (standings && standings.standings && standings.standings.entries) || [];
+    const res = mergeEspn(state.data, entries);
+
+    if (board && board.events) {
+      const upcoming = [];
+      board.events.forEach(ev => {
+        const comp = (ev.competitions || [{}])[0];
+        const st = comp.status && comp.status.type && comp.status.type.state;
+        if (st === 'post') return;
+        const cs = comp.competitors || [];
+        const h = cs.find(c => c.homeAway === 'home');
+        const a = cs.find(c => c.homeAway === 'away');
+        if (!h || !a) return;
+        const dt = ev.date || '';
+        upcoming.push({
+          date: dt.slice(0, 10),
+          time: dt.length >= 16 ? dt.slice(11, 16) : '',
+          round: 'J' + ((state.data.matchday || 0) + 1),
+          home: (h.team && h.team.displayName) || '',
+          away: (a.team && a.team.displayName) || ''
+        });
+      });
+      if (upcoming.length >= 5) {
+        state.data.fixtures = upcoming.slice(0, 20);
+      }
+    }
+
+    rankCache.clear();
+    if (res.merged) refreshMeta('ESPN live');
+    renderTiers(); renderFixtures(); renderAnalysis();
+    if (res.merged && !silent) toast('ESPN : J' + res.maxEspn + ' fusionnée ✓');
+    return res;
+  } catch (e) {
+    return { merged: false, error: String(e && e.message || e) };
+  }
+}
+
+async function syncAll(opts) {
+  opts = opts || {};
+  updateNetUi();
+  if (!navigator.onLine) {
+    setSync('offline', 'Hors-ligne');
+    if (!opts.silent) toast('Hors-ligne : données locales', true);
+    return;
+  }
+  setSync('loading', 'Sync…');
+
+  let got = false;
+  for (const url of DATA_URLS) {
+    try {
+      const data = await fetchJson(url, 9000);
+      if (setData(data, 'GitHub')) {
+        got = true;
+        try { localStorage.setItem(LS.data, JSON.stringify(data)); } catch (e) {}
+        break;
+      }
+    } catch (e) { /* URL suivante */ }
+  }
+
+  const espn = await syncEspn(opts.silent);
+  if (espn.merged) {
+    try { localStorage.setItem(LS.data, JSON.stringify(state.data)); } catch (e) {}
+  }
+
+  if (got || espn.merged) {
+    setSync('ok', 'À jour');
+    if (!opts.silent) toast(espn.merged ? 'Données synchronisées (ESPN live)' : 'Données synchronisées ✓');
+  } else if (state.data) {
+    setSync('ok', 'Local');
+    if (!opts.silent) toast('Réseau indisponible : instantané local conservé', true);
+  } else {
+    setSync('error', 'Erreur');
+  }
+}
+
+/* ----------------------- installation PWA ----------------------- */
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const b = document.querySelector('.tabbar button[data-tab="install"]');
+  if (b) b.classList.remove('hidden');
+});
+async function promptInstall() {
+  if (!deferredPrompt) {
+    toast('Menu Chrome ⋮ → « Installer l\'application »');
+    return;
+  }
+  deferredPrompt.prompt();
+  const r = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  if (r && r.outcome === 'accepted') toast('Application installée ✓');
+}
+
+/* ----------------------- démarrage ----------------------- */
+function boot() {
+  loadPrefs();
+  loadJournal();
+
+  // 1) instantané embarqué (toujours disponible)
+  setData(FALLBACK_DATA, 'embarqué');
+
+  // 2) dernier instantané réseau
+  try {
+    const cached = JSON.parse(localStorage.getItem(LS.data) || 'null');
+    if (cached && cached.updatedAt) {
+      const a = new Date(cached.updatedAt).getTime();
+      const b = new Date((state.data && state.data.updatedAt) || 0).getTime();
+      if (a > b) setData(cached, 'cache');
+    }
+  } catch (e) {}
+
+  // 3) UI
+  setModeButtons(state.mode);
+  $('#inLine').value = state.line;
+  $('#inOdds').value = state.odds;
+  $('#inStake').value = state.stake;
+  $('#selDom').value = state.dom;
+  $('#selExt').value = state.ext;
+  updateNetUi();
+  showTab(state.tab || 'tiers');
+  renderTiers(); renderFixtures(); renderAnalysis(); renderJournal();
+
+  // 4) réseau
+  syncAll({ silent: true });
+
+  // 5) événements
+  $('#syncBtn').addEventListener('click', () => syncAll({}));
+  window.addEventListener('online', () => { updateNetUi(); toast('Connexion rétablie — mise à jour…'); syncAll({ silent: true }); });
+  window.addEventListener('offline', () => { updateNetUi(); setSync('offline', 'Hors-ligne'); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      updateNetUi();
+      if (navigator.onLine) syncAll({ silent: true });
+    }
+  });
+  setInterval(() => {
+    if (navigator.onLine && document.visibilityState === 'visible') syncAll({ silent: true });
+  }, 10 * 60 * 1000);
+
+  $$('.tabbar button[data-tab]').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+  $$('#tiersMode button').forEach(b => b.addEventListener('click', () => {
+    state.tiersMode = b.dataset.m;
+    $$('#tiersMode button').forEach(x => x.classList.toggle('on', x === b));
+    renderTiers();
+    savePrefs();
+  }));
+
+  $$('#analyseMode button').forEach(b => b.addEventListener('click', () => {
+    state.mode = b.dataset.m;
+    $$('#analyseMode button').forEach(x => x.classList.toggle('on', x === b));
+    renderAnalysis();
+    savePrefs();
+  }));
+
+  $('#selDom').addEventListener('change', e => { state.dom = e.target.value; renderAnalysis(); savePrefs(); });
+  $('#selExt').addEventListener('change', e => { state.ext = e.target.value; renderAnalysis(); savePrefs(); });
+  $('#swapBtn').addEventListener('click', () => {
+    const d = state.dom, x = state.ext;
+    state.dom = x; state.ext = d;
+    $('#selDom').value = state.dom; $('#selExt').value = state.ext;
+    renderAnalysis(); savePrefs();
+  });
+
+  const onLine = e => { state.line = Number(e.target.value) || 2.5; renderAnalysis(); savePrefs(); };
+  const onOdds = e => { state.odds = Number(e.target.value) || 1.9; renderAnalysis(); savePrefs(); };
+  const onStake = e => { state.stake = Number(e.target.value) || 0; renderAnalysis(); savePrefs(); };
+  $('#inLine').addEventListener('input', onLine);
+  $('#inOdds').addEventListener('input', onOdds);
+  $('#inStake').addEventListener('input', onStake);
+
+  $('#saveBet').addEventListener('click', saveBet);
+  $('#resetBet').addEventListener('click', () => {
+    state.dom = ''; state.ext = '';
+    fillSelects(); renderAnalysis(); savePrefs();
+    toast('Sélection réinitialisée');
+  });
+  $('#expCsv').addEventListener('click', exportCsv);
+  $('#expJson').addEventListener('click', exportJson);
+  $('#clearJournal').addEventListener('click', () => {
+    if (!state.journal.length) { toast('Journal déjà vide'); return; }
+    if (confirm('Supprimer définitivement les ' + state.journal.length + ' paris du journal ?')) {
+      state.journal = []; saveJournal(); renderJournal(); toast('Journal vidé');
+    }
+  });
+
+  // service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+  $('#buildTag').textContent = '2026-27 · ' + new Date().getFullYear();
+}
+
+document.addEventListener('DOMContentLoaded', boot);
 </script>
 </body>
 </html>
