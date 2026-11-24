@@ -16,7 +16,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: pl-data-refresh
+  group: gh-pages-deploy
   cancel-in-progress: false
 
 jobs:

@@ -1,0 +1,99 @@
+name: UCL 2026-27 — stats auto + publication PWA
+
+on:
+  # Toutes les 6 h, décalé de la mise à jour PL pour ne pas publier en même temps
+  schedule:
+    - cron: '45 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'ucl/**'
+      - 'scripts/update_ucl_data.py'
+      - '.github/workflows/update-ucl-data.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  refresh-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (branche main)
+        uses: actions/checkout@v4
+
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Récupérer les stats Champions League (ESPN)
+        run: python3 scripts/update_ucl_data.py
+
+      - name: Vérifier le JSON produit
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          d = json.loads(pathlib.Path('data/ucl-2026-27.json').read_text(encoding='utf-8'))
+          assert len(d['teams']) == 36, f"{len(d['teams'])} équipes au lieu de 36"
+          for t in d['teams']:
+              assert t['mp'] == t['home']['mp'] + t['away']['mp'], f"splits incohérents : {t['name']}"
+              assert t['gf'] == t['home']['gf'] + t['away']['gf'], f"buts incohérents : {t['name']}"
+          gf = sum(t['gf'] for t in d['teams'])
+          ga = sum(t['ga'] for t in d['teams'])
+          assert gf == ga, f"ΣGF={gf} != ΣGA={ga}"
+          print(f"OK — J{d['matchday']} · 36 clubs · {d['matchesPlayed']} matchs · "
+                f"{len(d['fixtures'])} à venir · {gf} buts")
+          PY
+
+      - name: Commit de l'instantané sur main
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- data/ucl-2026-27.json; then
+            git add data/ucl-2026-27.json
+            git commit -m "chore(data): MAJ auto stats UCL 2026-27 [skip ci]"
+            git push origin HEAD:main
+          else
+            echo "Statistiques déjà à jour — pas de commit."
+          fi
+
+      - name: Checkout de la branche publiée (gh-pages)
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: .deploy
+
+      - name: Publier l'app UCL sur /ucl/
+        run: |
+          set -e
+          cd .deploy
+          mkdir -p ucl/data
+          cp ../ucl/index.html ../ucl/manifest.webmanifest ../ucl/sw.js \
+             ../ucl/icon.svg ../ucl/icon-192.png ../ucl/icon-512.png \
+             ../ucl/apple-touch-icon.png ucl/
+          cp ../data/ucl-2026-27.json ucl/data/ucl-2026-27.json
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Site déjà à jour — rien à publier."
+          else
+            git commit -m "deploy(ucl): PWA Over/Under Champions League $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push origin HEAD:gh-pages
+          fi
+
+      - name: Résumé
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          d = json.loads(pathlib.Path('data/ucl-2026-27.json').read_text(encoding='utf-8'))
+          print(f"### UCL {d['season']} — League Phase J{d['matchday']}")
+          print(f"Source : {d['source']}")
+          print("Publié sur https://bilama54-a11y.github.io/Bilama54/ucl/")
+          PY
