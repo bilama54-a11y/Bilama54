@@ -1,0 +1,103 @@
+name: H2H Scanner — cotes FootyStats + publication PWA
+
+on:
+  # Décalé de la PL (:15) et de la C1 (:45) pour éviter deux pushes simultanés sur gh-pages
+  schedule:
+    - cron: '30 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'h2h/**'
+      - 'scripts/update_h2h_odds.py'
+      - '.github/workflows/update-h2h-data.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  refresh-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (branche main)
+        uses: actions/checkout@v4
+
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Récupérer les cotes 1X2 + H2H (FootyStats)
+        env:
+          FOOTYSTATS_API_KEY: ${{ secrets.FOOTYSTATS_API_KEY }}
+        run: python3 scripts/update_h2h_odds.py
+
+      - name: Vérifier le JSON de cotes
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          p = pathlib.Path('data/h2h-odds.json')
+          d = json.loads(p.read_text(encoding='utf-8'))
+          ms = d.get('matches') or []
+          for m in ms:
+              assert m['odds']['home'] and m['odds']['draw'] and m['odds']['away'], 'cotes incomplètes'
+          print(f"OK — {len(ms)} match(s) avec cotes · MAJ {d.get('updatedAt') or 'jamais'}")
+          PY
+
+      - name: Commit des cotes sur main
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- data/h2h-odds.json; then
+            git add data/h2h-odds.json
+            git commit -m "chore(h2h): cotes FootyStats + face-à-face [skip ci]"
+            git push origin HEAD:main
+          else
+            echo "Cotes inchangées — pas de commit."
+          fi
+
+      - name: Checkout de la branche publiée (gh-pages)
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: .deploy
+
+      - name: Publier l'app sur /h2h/
+        run: |
+          set -e
+          cd .deploy
+          mkdir -p h2h/data
+          cp ../h2h/index.html ../h2h/manifest.webmanifest ../h2h/sw.js \
+             ../h2h/icon.svg ../h2h/icon-192.png ../h2h/icon-512.png \
+             ../h2h/apple-touch-icon.png h2h/
+          cp ../data/h2h-odds.json h2h/data/h2h-odds.json
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Site déjà à jour — rien à publier."
+          else
+            git commit -m "deploy(h2h): H2H Scanner + cotes $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push origin HEAD:gh-pages
+          fi
+
+      - name: Résumé
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          d = json.loads(pathlib.Path('data/h2h-odds.json').read_text(encoding='utf-8'))
+          ms = d.get('matches') or []
+          print(f"### H2H Scanner — {len(ms)} match(s) coté(s)")
+          for m in ms[:8]:
+              h = m.get('h2h') or {}
+              print(f"- {m['home']} vs {m['away']} : {m['odds']['home']}/{m['odds']['draw']}/{m['odds']['away']} "
+                    f"· H2H {h.get('homeWinPct','?')}% / {h.get('awayWinPct','?')}%")
+          if not ms:
+              print("_Aucune cote : vérifier le secret FOOTYSTATS_API_KEY._")
+          print("Publié sur https://bilama54-a11y.github.io/Bilama54/h2h/")
+          PY

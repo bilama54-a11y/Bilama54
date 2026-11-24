@@ -1,0 +1,42 @@
+{
+  "id": "/Bilama54/h2h/",
+  "name": "H2H Scanner 2026-27",
+  "short_name": "H2H",
+  "description": "Registre H2H : face-à-face ≥ 50 % + cotes FootyStats → victoire sèche si la value dépasse 10 points ; favori à l'extérieur entre 50 % et 60 % → Over 1.5. Journal de paris inclus.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "categories": [
+    "sports",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
