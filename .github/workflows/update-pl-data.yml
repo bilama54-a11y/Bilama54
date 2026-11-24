@@ -1,0 +1,106 @@
+name: PL 2026-27 — stats auto + publication PWA
+
+on:
+  # Toutes les 6 h : les stats sont rafraîchies puis publiées sur GitHub Pages
+  schedule:
+    - cron: '15 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'pl/**'
+      - 'scripts/update_pl_data.py'
+      - '.github/workflows/update-pl-data.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pl-data-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (branche main)
+        uses: actions/checkout@v4
+
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Récupérer les statistiques PL 2026-27 (FPL -> ESPN)
+        run: python3 scripts/update_pl_data.py
+
+      - name: Vérifier le JSON produit
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          d = json.loads(pathlib.Path('data/pl-2026-27.json').read_text(encoding='utf-8'))
+          assert len(d['teams']) >= 18, 'pas assez d\'équipes'
+          for t in d['teams']:
+              assert t['mp'] == t['home']['mp'] + t['away']['mp'], f"splits incohérents : {t['name']}"
+          print(f"OK — J{d['matchday']} · {len(d['teams'])} équipes · {len(d.get('fixtures', []))} matchs à venir")
+          PY
+
+      - name: Commit de l'instantané sur main
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- data/pl-2026-27.json; then
+            git add data/pl-2026-27.json
+            git commit -m "chore(data): MAJ auto stats PL 2026-27 [skip ci]"
+            git push origin HEAD:main
+          else
+            echo "Statistiques déjà à jour — pas de commit."
+          fi
+
+      - name: Checkout de la branche publiée (gh-pages)
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: .deploy
+
+      - name: Publier la PWA + les données sur gh-pages
+        run: |
+          set -e
+          cd .deploy
+
+          # 1. Migrer l'ancienne page d'accueil (dashboard NBA) sans la perdre
+          if [ -f index.html ] && ! grep -q 'data-plou-app' index.html; then
+            [ -f dashboard-nba.html ] || cp index.html dashboard-nba.html
+            echo "Ancien dashboard sauvegardé dans dashboard-nba.html"
+          fi
+
+          # 2. Application PL Over/Under à la racine du site
+          cp ../pl/index.html ./index.html
+          cp ../pl/manifest.webmanifest ./manifest.webmanifest
+          cp ../pl/sw.js ./sw.js
+          cp ../pl/icon.svg ../pl/icon-192.png ../pl/icon-512.png ../pl/apple-touch-icon.png ./
+
+          # 3. Données fraîches
+          mkdir -p data
+          cp ../data/pl-2026-27.json data/pl-2026-27.json
+
+          # 4. Commit + push (uniquement si quelque chose a changé)
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Site déjà à jour — rien à publier."
+          else
+            git commit -m "deploy(pl): PWA Over/Under 2026-27 + données $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push origin HEAD:gh-pages
+          fi
+
+      - name: Résumé
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          d = json.loads(pathlib.Path('data/pl-2026-27.json').read_text(encoding='utf-8'))
+          print(f"### PL {d['season']} — J{d['matchday']}")
+          print(f"Source : {d['source']}")
+          print(f"Publié sur https://bilama54-a11y.github.io/Bilama54/")
+          PY
