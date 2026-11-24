@@ -9,6 +9,7 @@ on:
     branches: [main]
     paths:
       - 'pl/**'
+      - 'paliers/**'
       - 'scripts/update_pl_data.py'
       - '.github/workflows/update-pl-data.yml'
 
@@ -80,11 +81,18 @@ jobs:
           cp ../pl/sw.js ./sw.js
           cp ../pl/icon.svg ../pl/icon-192.png ../pl/icon-512.png ../pl/apple-touch-icon.png ./
 
-          # 3. Données fraîches
+          # 3. App « PL Paliers » (modèle à seuils absolus) sous /paliers/
+          mkdir -p paliers/data
+          cp ../paliers/index.html ../paliers/manifest.webmanifest ../paliers/sw.js \
+             ../paliers/icon.svg ../paliers/icon-192.png ../paliers/icon-512.png \
+             ../paliers/apple-touch-icon.png paliers/
+          cp ../data/pl-2026-27.json paliers/data/pl-2026-27.json
+
+          # 4. Données fraîches
           mkdir -p data
           cp ../data/pl-2026-27.json data/pl-2026-27.json
 
-          # 4. Commit + push (uniquement si quelque chose a changé)
+          # 5. Commit + push (uniquement si quelque chose a changé)
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
