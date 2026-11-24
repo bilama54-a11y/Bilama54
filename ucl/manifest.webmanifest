@@ -1,0 +1,21 @@
+{
+  "id": "/Bilama54/ucl/",
+  "name": "UCL Over/Under 2026-27",
+  "short_name": "UCL O/U",
+  "description": "Modèle Over/Under Ligue des Champions 2026-27 (League Phase, 36 clubs) : tiers offensifs et défensifs, score global -4 à +4, projection de buts et journal de paris. Statistiques synchronisées automatiquement.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#080d19",
+  "theme_color": "#080d19",
+  "categories": ["sports", "productivity"],
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
